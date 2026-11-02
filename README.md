@@ -27,7 +27,7 @@ An academic research prototype, simulation cockpit, and route optimization platf
 13. [Benchmark Results Based on Actual Execution](#13-benchmark-results-based-on-actual-execution)
 14. [Limitations](#14-limitations)
 15. [Future Enhancements](#15-future-enhancements)
-16. [Academic Demonstration & Viva Voce Guide](#16-academic-demonstration--viva-voce-guide)
+16. [Academic Documentation & Viva Voce Suite](#16-academic-documentation--viva-voce-suite)
 
 ---
 
@@ -363,11 +363,27 @@ Generated vector charts are available in [`reports/figures/`](reports/figures/):
 
 ---
 
-## 16. Academic Demonstration & Viva Voce Guide
+## 16. Academic Documentation & Viva Voce Suite
 
-- **Live Demonstration Walkthrough:** Refer to [`docs/academic_demonstration_guide.md`](docs/academic_demonstration_guide.md) for step-by-step presentation scripts and evaluator checkpoints.
-- **Viva Voce Technical Q&A:** Refer to [`docs/viva_technical_qa.md`](docs/viva_technical_qa.md) for 15+ comprehensive technical questions and answers covering algorithms, architecture, database concurrency, security, and kinematics.
-- **Automated Verification Script:** Execute the full 11-step demonstration and invalid safety rejection proof:
-  ```powershell
-  python scripts/demonstrate_full_workflow.py
-  ```
+Comprehensive academic and engineering documentation prepared for project evaluation, external viva examination, and technical auditing:
+
+- **Full Academic Project Report:** [`docs/final_year_project_report.md`](docs/final_year_project_report.md) — Complete 30-section academic thesis document covering abstract, problem formulation, mathematical models, system architecture, database schema, implementation details, experimental results, and citations.
+- **Viva Voce Defense Guide (15 Sections A–O):** [`docs/viva_questions_and_answers.md`](docs/viva_questions_and_answers.md) — Comprehensive technical questions and answers covering clean architecture, 3NF schema, 3D corridors, multi-objective optimization, batch allocation, battery/payload constraints, weather safety, dynamic rerouting, advisory ML evaluation, security, and QA.
+- **Final Presentation & Live Demo Script:** [`docs/final_presentation_demo.md`](docs/final_presentation_demo.md) — Step-by-step 10-phase demonstration script with pre-configured accounts, coordinates, controls, and expected observations.
+- **Academic Demonstration Guide:** [`docs/academic_demonstration_guide.md`](docs/academic_demonstration_guide.md) — Step-by-step presentation scripts and evaluator checkpoints.
+- **Viva Voce Technical Q&A:** [`docs/viva_technical_qa.md`](docs/viva_technical_qa.md) — Quick reference technical defense questions and answers.
+- **Architectural & Security Audit Report:** [`docs/final_audit_report.md`](docs/final_audit_report.md) — Complete system audit of entry points, routes, models, services, concurrency, and security.
+- **Independent ML Evaluation Report:** [`docs/ml_evaluation_report.md`](docs/ml_evaluation_report.md) — Rigorous audit of the advisory ML module, training data trace, leakage verification, and out-of-distribution analysis.
+- **End-to-End Quality Assurance Report:** [`docs/end_to_end_test_report.md`](docs/end_to_end_test_report.md) — Verification of the 16-test E2E lifecycle and database integrity suite.
+
+### Automated Verification Commands
+```powershell
+# 1. Run all 119 automated tests with statement coverage (83% across 2,821 lines):
+pytest -v --cov=app --cov-report=term-missing
+
+# 2. Run independent ML module evaluation:
+python scripts/evaluate_ml_prediction_module.py
+
+# 3. Run full automated demonstration workflow:
+python scripts/demonstrate_full_workflow.py
+```
