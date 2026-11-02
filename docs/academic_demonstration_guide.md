@@ -133,6 +133,56 @@ python run.py
 
 ---
 
+### Step L: Multi-Drone Batch Allocation & Priority Matching (Enhancement 1)
+1. In the Operator Dashboard, click **Batch Allocation Console** (`/operator/multi-allocation`).
+2. The system evaluates all pending emergency requests simultaneously against idle drones in the fleet.
+3. Compare the two allocation strategies presented side-by-side:
+   - **Priority Best-Fit (Proposed):** Sorts requests strictly by medical triage urgency (`CRITICAL` > `HIGH` > `MEDIUM` > `LOW`) and matches each to the drone with the minimal payload capacity headroom waste:
+     $$\text{Cost} = \omega_p \cdot \frac{\text{capacity} - \text{payload}}{\text{capacity}} + \omega_b \cdot \frac{\text{energy\_required}}{\text{current\_battery}}$$
+   - **First-Come, First-Served (FCFS Greedy Baseline):** Dispatches strictly in FIFO order of request creation timestamp without triage reordering.
+4. **Evaluator Checkpoint (Triage Inversion Prevention):** Observe that under limited fleet availability, FCFS allows low-priority routine transfers to exhaust drone capacity, leaving critical blood supplies stranded. In contrast, Priority Best-Fit guarantees that life-threatening `CRITICAL` requests claim the best-fitting airframe first.
+5. Click **Execute Batch Dispatch** (`POST /operator/multi-allocation/dispatch`) to atomically transition and lock all matched assignments.
+
+---
+
+### Step M: Dynamic In-Flight Rerouting Engine & Switching Policies (Enhancement 2)
+1. Open an active simulation in the cockpit (`/simulation/assignment/<id>`).
+2. Trigger an in-flight environmental condition change (via the simulation console or REST API `POST /simulation/api/<id>/reroute`):
+   - Example: Wind gusts increase to 7.5 m/s or localized storm cell approaches corridor.
+3. The dynamic rerouting engine:
+   - Computes the drone's current virtual coordinate $(lat, lon)$.
+   - Generates replacement candidate corridors from current position to destination.
+   - Checks feasibility under updated weather.
+   - Evaluates the selected switching policy:
+     * `SAFETY_MANDATED`: Switches to safe corridor when current corridor is threatened by weather.
+     * `OBJECTIVE_IMPROVEMENT`: Replaces path only if remaining flight energy improves by at least the configured threshold (e.g. 5.0%).
+4. **Evaluator Checkpoint (Audit Integrity):** Verify that the original `Route` entity is preserved in the database for post-flight auditability, while `DroneAssignment.route_id` updates to the replacement route. The entire decision event is recorded immutably in `parameters_json["reroute_history"]`.
+5. **Near-Destination Guard:** If the drone is within 100 meters of landing approach, rerouting is safely skipped.
+
+---
+
+### Step N: ML Advisory Prediction Module vs. Physics Baseline (Enhancement 3)
+1. Navigate to `/analytics/api/ml-model/evaluation` or run automated test `test_prediction_module.py`.
+2. Review the empirical evaluation report:
+   - **Features:** Distance ($km$), Payload ($kg$), Wind Speed ($m/s$), Cruise Speed ($km/h$), Payload $\times$ Distance interaction term, Aerodynamic Drag ($v^2$).
+   - **Validation Methodology:** Strict 80/20 train/test split with zero data leakage.
+   - **Error Metrics:** Reports MAE, RMSE, $R^2$, and MAPE for both duration ($min$) and energy ($Wh$).
+   - **Baseline Comparison:** Demonstrates how non-linear aerodynamic drag and payload power are captured by the regularized Ridge regression model, achieving superior MAE and $R^2 > 0.85$ over simplified analytical formulas.
+3. Test single-mission inference via `POST /analytics/api/ml-model/predict`.
+4. **Evaluator Checkpoint (Safety Boundary):** Verify that all ML predictions prominently include the mandatory advisory notice: *"Deterministic physical safety and battery feasibility constraints strictly govern dispatch."* ML estimates serve as advisory operational guidance and never override hard safety gates.
+
+---
+
+### Step O: Observability, Versioning, and Audit Trails (Enhancement 4)
+1. Inspect the version identifiers logged across the system:
+   - Route Optimizer: `WEIGHTED_MULTI_OBJECTIVE-v1.0`
+   - ML Predictor: `Ridge-OLS-Poly-v1.0`
+   - Dynamic Reroutes: `REROUTE:<corridor_name>`
+2. Open database table `analysis_logs` and `simulation_runs`:
+   - Every completed or aborted mission records predicted vs. actual simulated metrics, timestamped step checkpoints, and explicit feasibility rejection rationales.
+
+---
+
 ## 3. Invalid Scenario Demonstration: Safety Rejection Proof
 
 To demonstrate fail-safe engineering to examiners:

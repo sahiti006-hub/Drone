@@ -1,6 +1,6 @@
 # Smart Multipurpose Emergency Drone Delivery and Route Optimization System
 
-[![Automated Tests](https://img.shields.io/badge/pytest-79%20passed-success)](tests/)
+[![Automated Tests](https://img.shields.io/badge/pytest-95%20passed-success)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-Flask%203.1-informational)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/database-MySQL%20%2F%20SQLAlchemy%202.1-orange)](https://www.sqlalchemy.org/)
@@ -34,7 +34,7 @@ An academic research prototype, simulation cockpit, and route optimization platf
 
 Rapid transit of critical healthcare supplies—such as emergency blood units, snakebite antivenoms, and automated external defibrillators (AEDs)—is frequently hindered by urban road gridlock, mountainous terrain, and disaster-induced infrastructure collapse. This project introduces the **Smart Multipurpose Emergency Drone Delivery and Route Optimization System**, a modular, full-stack platform designed to automate dispatch operations, enforce physical and meteorological safety constraints, and optimize 3D flight paths across urban and rural corridors. 
 
-The system incorporates a **Deterministic Multi-Objective Route Optimizer** that balances flight distance, estimated duration, payload-induced energy consumption, and structural maneuver penalties using min-max normalized scalarization against a shortest-feasible baseline. Built on Python Flask, SQLAlchemy 2.0, Leaflet.js, and Pandas, the platform includes role-based access control (RBAC), an interactive discrete-time simulation cockpit, real-time telemetry checkpointing, operational monitoring dashboards, and a reproducible empirical evaluation suite verified by 79 automated tests.
+The system incorporates a **Deterministic Multi-Objective Route Optimizer** that balances flight distance, estimated duration, payload-induced energy consumption, and structural maneuver penalties using min-max normalized scalarization against a shortest-feasible baseline. Built on Python Flask, SQLAlchemy 2.0, Leaflet.js, and Pandas, the platform includes role-based access control (RBAC), an interactive discrete-time simulation cockpit, real-time telemetry checkpointing, operational monitoring dashboards, priority-based multi-drone batch allocation, dynamic in-flight rerouting, an advisory ML flight duration/energy regression module, and a reproducible empirical evaluation suite verified by 95 automated tests.
 
 ---
 
@@ -114,10 +114,10 @@ Traditional ground emergency logistics suffer from severe systemic vulnerabiliti
 |---|---|---|
 | `app/routes/` | `auth.py`, `drone_routes.py`, `delivery_routes.py`, `simulation_routes.py`, `analytics_routes.py` | Handles HTTP routing, form validation, CSRF verification, and format-negotiated error responses (JSON vs HTML). |
 | `app/models/` | `User`, `Drone`, `DeliveryRequest`, `Route`, `RouteWaypoint`, `DroneAssignment`, `SimulationRun`, `AnalysisLog` | Declarative SQLAlchemy entities normalized to 3NF with foreign keys, indexes, and lifecycle hooks. |
-| `app/services/` | `RouteOptimizer`, `DroneAllocationService`, `AssignmentService`, `SimulationService`, `AnalyticsService` | Core domain engine: corridor generation, feasibility evaluation, multi-objective scoring, discrete-time kinematics, and Pandas analytics. |
+| `app/services/` | `RouteOptimizer`, `DroneAllocationService`, `AssignmentService`, `SimulationService`, `AnalyticsService`, `FlightPredictionService` | Core domain engine: corridor generation, feasibility evaluation, multi-objective scoring, bipartite batch matching, dynamic in-flight rerouting, ML duration/energy prediction, discrete-time kinematics, and Pandas analytics. |
 | `app/templates/` | `base.html`, `auth/`, `dashboard/`, `drones/`, `delivery/`, `simulation/`, `analytics/` | Clean Jinja2 emergency-dispatch UI with role-aware navigation and responsive layout. |
 | `scripts/` | `init_db.py`, `seed_db.py`, `create_admin.py`, `run_optimizer_experiments.py`, `analyze_evaluation_results.py`, `demonstrate_full_workflow.py` | Maintenance, database migration, automated benchmark evaluation, and live demonstration runners. |
-| `tests/` | 11 dedicated test modules (79 automated tests) | Comprehensive unit, integration, RBAC, boundary validation, and security regression suite. |
+| `tests/` | 14 dedicated test modules (95 automated tests) | Comprehensive unit, integration, RBAC, boundary validation, multi-drone allocation, dynamic rerouting, ML prediction, and security regression suite. |
 
 ---
 
