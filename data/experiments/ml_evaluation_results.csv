@@ -1,0 +1,25 @@
+experiment_type,condition,model,target,n_samples,mae,rmse,r2_score,mape_percent
+in_distribution_test,standard_held_out,dummy_mean,duration_minutes,80,7.5248,8.7963,-0.0697,62.3617
+in_distribution_test,standard_held_out,physics_baseline,duration_minutes,80,2.5495,2.7817,0.893,16.4804
+in_distribution_test,standard_held_out,ridge_v1.0,duration_minutes,80,1.0397,1.3334,0.9754,8.3278
+in_distribution_test,standard_held_out,ols_unregularized,duration_minutes,80,1.0257,1.316,0.9761,8.2139
+in_distribution_test,standard_held_out,dummy_mean,energy_wh,80,35.7045,43.8465,-0.0206,71.0098
+in_distribution_test,standard_held_out,physics_baseline,energy_wh,80,21.2845,30.1282,0.5181,26.0949
+in_distribution_test,standard_held_out,ridge_v1.0,energy_wh,80,7.8514,10.9067,0.9368,14.2911
+in_distribution_test,standard_held_out,ols_unregularized,energy_wh,80,7.8613,10.9363,0.9365,14.3333
+ood_extrapolation,Long Distance (25-50km),ridge_v1.0,duration_minutes,100,4.1393,5.048,0.7659,9.573
+ood_extrapolation,Long Distance (25-50km),physics_baseline,duration_minutes,100,4.8708,5.4671,0.7254,10.9551
+ood_extrapolation,Long Distance (25-50km),ridge_v1.0,energy_wh,100,32.8266,41.5441,0.6836,17.9012
+ood_extrapolation,Long Distance (25-50km),physics_baseline,energy_wh,100,50.979,69.7312,0.1085,22.1991
+ood_extrapolation,Heavy Payload (5-10kg),ridge_v1.0,duration_minutes,100,1.0528,1.3826,0.9758,9.5936
+ood_extrapolation,Heavy Payload (5-10kg),physics_baseline,duration_minutes,100,2.5836,2.853,0.8967,19.0457
+ood_extrapolation,Heavy Payload (5-10kg),ridge_v1.0,energy_wh,100,11.8948,17.7734,0.9412,12.1157
+ood_extrapolation,Heavy Payload (5-10kg),physics_baseline,energy_wh,100,37.5589,47.7005,0.5763,31.1893
+ood_extrapolation,High Wind (10-20m/s),ridge_v1.0,duration_minutes,100,1.7563,2.2687,0.9488,12.8854
+ood_extrapolation,High Wind (10-20m/s),physics_baseline,duration_minutes,100,4.7717,5.2731,0.7235,28.6032
+ood_extrapolation,High Wind (10-20m/s),ridge_v1.0,energy_wh,100,46.0986,58.7992,0.7047,38.852
+ood_extrapolation,High Wind (10-20m/s),physics_baseline,energy_wh,100,115.249,141.3101,-0.7058,68.1891
+ood_extrapolation,Extreme Speeds (20-100km/h),ridge_v1.0,duration_minutes,100,3.061,5.346,0.7782,33.9341
+ood_extrapolation,Extreme Speeds (20-100km/h),physics_baseline,duration_minutes,100,2.4734,2.691,0.9438,20.028
+ood_extrapolation,Extreme Speeds (20-100km/h),ridge_v1.0,energy_wh,100,16.2526,27.2404,0.7688,43.3533
+ood_extrapolation,Extreme Speeds (20-100km/h),physics_baseline,energy_wh,100,20.6279,27.6541,0.7617,29.8687

@@ -333,6 +333,15 @@ class FlightPredictionService:
         cruise_speed_kmh: float,
     ) -> FlightPredictionResult:
         """Generate advisory ML predictions alongside physics baseline estimates."""
+        if distance_km <= 0:
+            raise ValueError("distance_km must be positive.")
+        if payload_weight_kg < 0:
+            raise ValueError("payload_weight_kg cannot be negative.")
+        if wind_speed_mps < 0:
+            raise ValueError("wind_speed_mps cannot be negative.")
+        if cruise_speed_kmh <= 0:
+            raise ValueError("cruise_speed_kmh must be positive.")
+
         if cls._duration_model is None or cls._energy_model is None:
             cls.train_and_evaluate()
 

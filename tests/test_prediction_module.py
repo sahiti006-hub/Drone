@@ -148,3 +148,71 @@ def test_ml_api_endpoints(client, app):
     res_invalid = client.post("/analytics/api/ml-model/predict", json={"distance_km": -5.0})
     assert res_invalid.status_code == 400
     assert res_invalid.get_json()["success"] is False
+
+
+def test_flight_prediction_service_direct_input_validation():
+    """Ensure service-layer predict_flight directly enforces physical input invariants."""
+    with pytest.raises(ValueError, match="distance_km must be positive"):
+        FlightPredictionService.predict_flight(distance_km=-1.0, payload_weight_kg=2.0, wind_speed_mps=3.0, cruise_speed_kmh=60.0)
+
+    with pytest.raises(ValueError, match="distance_km must be positive"):
+        FlightPredictionService.predict_flight(distance_km=0.0, payload_weight_kg=2.0, wind_speed_mps=3.0, cruise_speed_kmh=60.0)
+
+    with pytest.raises(ValueError, match="payload_weight_kg cannot be negative"):
+        FlightPredictionService.predict_flight(distance_km=10.0, payload_weight_kg=-0.5, wind_speed_mps=3.0, cruise_speed_kmh=60.0)
+
+    with pytest.raises(ValueError, match="wind_speed_mps cannot be negative"):
+        FlightPredictionService.predict_flight(distance_km=10.0, payload_weight_kg=2.0, wind_speed_mps=-2.0, cruise_speed_kmh=60.0)
+
+    with pytest.raises(ValueError, match="cruise_speed_kmh must be positive"):
+        FlightPredictionService.predict_flight(distance_km=10.0, payload_weight_kg=2.0, wind_speed_mps=3.0, cruise_speed_kmh=0.0)
+
+
+def test_flight_prediction_physical_floor_clamping():
+    """Verify that ML predictions enforce non-negative physical floors (>=0.5 min, >=1.0 Wh)."""
+    # Extremely short distance
+    res = FlightPredictionService.predict_flight(
+        distance_km=0.01,
+        payload_weight_kg=0.0,
+        wind_speed_mps=0.0,
+        cruise_speed_kmh=70.0,
+    )
+    assert res.predicted_duration_minutes >= 0.5
+    assert res.predicted_energy_wh >= 1.0
+
+
+def test_no_target_leakage_and_isolated_feature_standardization():
+    """Verify zero target leakage: feature scaler fits strictly on training partition."""
+    X, y_dur, y_nrg = FlightPredictionService.generate_synthetic_dataset(n_samples=200, random_seed=123)
+    # Check that neither duration nor energy appears in X
+    for col_idx in range(X.shape[1]):
+        corr_dur = abs(float(np.corrcoef(X[:, col_idx], y_dur)[0, 1]))
+        corr_nrg = abs(float(np.corrcoef(X[:, col_idx], y_nrg)[0, 1]))
+        # No single feature should be identically 1.0 (perfect leak) with target
+        assert corr_dur < 0.999
+        assert corr_nrg < 0.999
+
+    # Check standardization isolation
+    model = RidgeRegressor(alpha=1.0)
+    model.fit(X[:150], y_dur[:150])
+    assert model.mean_ is not None
+    assert model.std_ is not None
+    # Training mean must match training partition, not full dataset
+    assert np.allclose(model.mean_, np.mean(X[:150], axis=0))
+    assert not np.allclose(model.mean_, np.mean(X, axis=0))
+
+
+def test_grouped_stratum_generalization():
+    """Verify leave-one-stratum-out evaluation by cruise speed preserves stability."""
+    X, y_dur, y_nrg = FlightPredictionService.generate_synthetic_dataset(n_samples=300, random_seed=42)
+    speeds = X[:, 3]
+    train_mask = (speeds != 60.0)
+    test_mask = (speeds == 60.0)
+
+    model_dur = RidgeRegressor(alpha=1.0).fit(X[train_mask], y_dur[train_mask])
+    pred_dur = model_dur.predict(X[test_mask])
+    metrics = compute_regression_metrics(y_dur[test_mask], pred_dur)
+
+    assert metrics.r2_score > 0.90
+    assert metrics.mae < 2.0
+

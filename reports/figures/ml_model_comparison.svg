@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" style="background-color: #0f172a; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;">
+  <!-- Title -->
+  <text x="450" y="35" text-anchor="middle" fill="#f8fafc" font-size="20" font-weight="700">Advisory ML vs. Physics Baseline Evaluation Benchmark</text>
+  <text x="450" y="55" text-anchor="middle" fill="#94a3b8" font-size="12">Synthetic Emergency Drone Flight Mission Validation (N_train=320, N_test=80)</text>
+
+  <!-- Panel 1 Background (In-Distribution MAE) -->
+  <rect x="50" y="80" width="370" height="420" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="235" y="110" text-anchor="middle" fill="#38bdf8" font-size="15" font-weight="600">In-Distribution Test Error (MAE)</text>
+  <text x="235" y="128" text-anchor="middle" fill="#94a3b8" font-size="11">Standard Held-Out Set (Lower is Better)</text>
+
+  <!-- Duration Bars -->
+  <!-- Base Dur: 2.55 min, Ridge Dur: 1.04 min -->
+  <text x="70" y="165" fill="#f8fafc" font-size="13" font-weight="600">Flight Duration (min):</text>
+  
+  <!-- Physics Base Bar -->
+  <text x="70" y="195" fill="#cbd5e1" font-size="12">Physics Baseline</text>
+  <rect x="180" y="182" width="165" height="18" rx="4" fill="#f59e0b" />
+  <text x="350" y="196" fill="#f8fafc" font-size="11" font-weight="600">2.55 min</text>
+
+  <!-- Ridge ML Bar -->
+  <text x="70" y="225" fill="#cbd5e1" font-size="12">Ridge Regressor</text>
+  <rect x="180" y="212" width="67" height="18" rx="4" fill="#10b981" />
+  <text x="252" y="226" fill="#f8fafc" font-size="11" font-weight="600">1.04 min (-59%)</text>
+
+  <!-- Energy Bars -->
+  <!-- Base Nrg: 21.28 Wh, Ridge Nrg: 7.85 Wh -->
+  <text x="70" y="275" fill="#f8fafc" font-size="13" font-weight="600">Energy Consumption (Wh):</text>
+
+  <!-- Physics Base Bar -->
+  <text x="70" y="305" fill="#cbd5e1" font-size="12">Physics Baseline</text>
+  <rect x="180" y="292" width="191" height="18" rx="4" fill="#f59e0b" />
+  <text x="376" y="306" fill="#f8fafc" font-size="11" font-weight="600">21.3 Wh</text>
+
+  <!-- Ridge ML Bar -->
+  <text x="70" y="335" fill="#cbd5e1" font-size="12">Ridge Regressor</text>
+  <rect x="180" y="322" width="70" height="18" rx="4" fill="#10b981" />
+  <text x="255" y="336" fill="#f8fafc" font-size="11" font-weight="600">7.9 Wh (-63%)</text>
+
+  <!-- In-Dist Metrics Box -->
+  <rect x="70" y="375" width="330" height="105" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="85" y="398" fill="#e2e8f0" font-size="12" font-weight="600">Test Accuracy &amp; Fit Summary:</text>
+  <text x="85" y="420" fill="#94a3b8" font-size="11">Duration R²:  ML = <tspan fill="#34d399" font-weight="600">0.9754</tspan>  vs. Baseline = 0.8930</text>
+  <text x="85" y="440" fill="#94a3b8" font-size="11">Energy R²:    ML = <tspan fill="#34d399" font-weight="600">0.9368</tspan>  vs. Baseline = 0.5181</text>
+  <text x="85" y="460" fill="#94a3b8" font-size="11">MAPE Error:   Duration = 8.3% | Energy = 14.3%</text>
+
+  <!-- Panel 2 Background (OOD Extrapolation) -->
+  <rect x="470" y="80" width="380" height="420" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="660" y="110" text-anchor="middle" fill="#a78bfa" font-size="15" font-weight="600">Out-of-Distribution (OOD) Extrapolation</text>
+  <text x="660" y="128" text-anchor="middle" fill="#94a3b8" font-size="11">Stress Testing Beyond Training Support</text>
+
+  <!-- Table Header -->
+  <text x="490" y="160" fill="#94a3b8" font-size="11" font-weight="600">DOMAIN</text>
+  <text x="640" y="160" fill="#38bdf8" font-size="11" font-weight="600">DUR MAE</text>
+  <text x="730" y="160" fill="#fbbf24" font-size="11" font-weight="600">NRG MAE</text>
+  <text x="815" y="160" fill="#34d399" font-size="11" font-weight="600">R² (NRG)</text>
+  <line x1="490" y1="168" x2="830" y2="168" stroke="#334155" stroke-width="1"/>
+
+  <text x="490" y="190" fill="#f8fafc" font-size="11" font-weight="500">Long Distance</text>
+  <text x="640" y="190" fill="#94a3b8" font-size="11">4.14 m</text>
+  <text x="730" y="190" fill="#94a3b8" font-size="11">32.8 Wh</text>
+  <text x="815" y="190" fill="#f87171" font-size="11" font-weight="600">0.68</text>
+
+  <text x="490" y="218" fill="#f8fafc" font-size="11" font-weight="500">Heavy Payload</text>
+  <text x="640" y="218" fill="#94a3b8" font-size="11">1.05 m</text>
+  <text x="730" y="218" fill="#94a3b8" font-size="11">11.9 Wh</text>
+  <text x="815" y="218" fill="#34d399" font-size="11" font-weight="600">0.94</text>
+
+  <text x="490" y="246" fill="#f8fafc" font-size="11" font-weight="500">High Wind</text>
+  <text x="640" y="246" fill="#94a3b8" font-size="11">1.76 m</text>
+  <text x="730" y="246" fill="#94a3b8" font-size="11">46.1 Wh</text>
+  <text x="815" y="246" fill="#f87171" font-size="11" font-weight="600">0.70</text>
+
+  <text x="490" y="274" fill="#f8fafc" font-size="11" font-weight="500">Extreme Speeds</text>
+  <text x="640" y="274" fill="#94a3b8" font-size="11">3.06 m</text>
+  <text x="730" y="274" fill="#94a3b8" font-size="11">16.3 Wh</text>
+  <text x="815" y="274" fill="#f87171" font-size="11" font-weight="600">0.77</text>
+
+  <!-- OOD Insights Box -->
+  <rect x="490" y="325" width="340" height="155" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="505" y="348" fill="#e2e8f0" font-size="12" font-weight="600">Methodological Generalization Insights:</text>
+  <text x="505" y="370" fill="#cbd5e1" font-size="11">1. <tspan fill="#38bdf8">High Wind (10-20 m/s):</tspan> ML captures wind-drag</text>
+  <text x="520" y="386" fill="#94a3b8" font-size="10">where baseline formula fails (Baseline R² = -0.74).</text>
+  <text x="505" y="406" fill="#cbd5e1" font-size="11">2. <tspan fill="#fbbf24">Extreme Speeds:</tspan> Baseline t = d/s is mathematically</text>
+  <text x="520" y="422" fill="#94a3b8" font-size="10">superior for sub-40 km/h due to asymptotic 1/s.</text>
+  <text x="505" y="442" fill="#cbd5e1" font-size="11">3. <tspan fill="#a78bfa">Safety Boundary:</tspan> Confirms ML must remain strictly</text>
+  <text x="520" y="458" fill="#94a3b8" font-size="10">advisory; hard physical models must govern dispatch.</text>
+</svg>
