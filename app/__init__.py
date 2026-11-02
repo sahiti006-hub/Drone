@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from app.config import config_by_name
-from app.extensions import db
+from app.extensions import db, migrate
 
 
 def create_app(config_name=None):
@@ -18,29 +18,39 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.getenv("FLASK_ENV", "development").lower()
 
-    app = Flask(__name__)
+    flask_app = Flask(__name__, instance_relative_config=True)
+
+    # Ensure instance directory exists for local runtime databases or logs
+    try:
+        os.makedirs(flask_app.instance_path, exist_ok=True)
+    except OSError:
+        pass
 
     # Load configuration
     config_class = config_by_name.get(config_name, config_by_name["default"])
-    app.config.from_object(config_class)
-    app.config["ENV"] = config_name
+    flask_app.config.from_object(config_class)
+    flask_app.config["ENV"] = config_name
 
     # Initialize extensions
-    # In testing mode or when explicitly enabled, bind the db extension
-    if app.config.get("TESTING"):
-        db.init_app(app)
+    db.init_app(flask_app)
+    migrate.init_app(flask_app, db)
+
+    # Import models so SQLAlchemy and Alembic register all table metadata
+    import app.models  # noqa: F401
 
     # Register blueprints
     from app.routes.health import health_bp
 
-    app.register_blueprint(health_bp, url_prefix="/api")
+    flask_app.register_blueprint(health_bp, url_prefix="/api")
 
     # Optional root route to guide users
-    @app.route("/", methods=["GET"])
+    @flask_app.route("/", methods=["GET"])
     def root():
         return {
             "message": "Welcome to the Smart Emergency Drone Delivery System API",
             "documentation": "/api/health",
+            "environment": flask_app.config["ENV"],
+            "database_configured": bool(flask_app.config.get("SQLALCHEMY_DATABASE_URI")),
         }, 200
 
-    return app
+    return flask_app

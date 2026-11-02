@@ -5,14 +5,19 @@ from app.extensions import db
 
 @pytest.fixture(scope="session")
 def app():
-    """Create and configure a Flask application for automated tests."""
+    """Create and configure a Flask application instance for automated testing."""
     app_instance = create_app("testing")
-
     with app_instance.app_context():
-        # Create all tables in the in-memory SQLite test database
-        db.create_all()
         yield app_instance
-        # Drop all tables after testing session finishes
+
+
+@pytest.fixture(scope="function", autouse=True)
+def clean_db(app):
+    """Ensure each test runs with a clean, isolated database and fresh session."""
+    with app.app_context():
+        db.create_all()
+        yield
+        db.session.remove()
         db.drop_all()
 
 
