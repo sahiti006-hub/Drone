@@ -7,8 +7,10 @@ or produce certified aviation flight plans. It is designed solely for academic
 evaluation, mission rehearsal, and dispatch route validation.
 """
 
+import json
 import math
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -21,6 +23,36 @@ from app.models.route import FeasibilityStatus, Route
 from app.models.route_waypoint import RouteWaypoint
 from app.models.simulation_run import SimulationRun, SimulationStatus
 from app.services.route_optimizer import haversine_distance
+from app.services.weather_service import WeatherData
+
+
+@dataclass
+class DynamicRerouteResult:
+    """Outcome of an in-flight dynamic rerouting evaluation."""
+    switched: bool
+    original_route_id: int
+    new_route_id: Optional[int]
+    reason: str
+    previous_corridor: str
+    new_corridor: Optional[str]
+    candidates_evaluated_count: int
+    feasible_candidates_count: int
+    policy_name: str
+    explanation: str
+
+    def to_dict(self) -> dict:
+        return {
+            "switched": self.switched,
+            "original_route_id": self.original_route_id,
+            "new_route_id": self.new_route_id,
+            "reason": self.reason,
+            "previous_corridor": self.previous_corridor,
+            "new_corridor": self.new_corridor,
+            "candidates_evaluated_count": self.candidates_evaluated_count,
+            "feasible_candidates_count": self.feasible_candidates_count,
+            "policy_name": self.policy_name,
+            "explanation": self.explanation,
+        }
 
 
 class SimulationServiceError(Exception):
@@ -743,3 +775,222 @@ class SimulationService:
             },
             "alternative_routes": alternatives,
         }
+
+    @staticmethod
+    def evaluate_and_reroute(
+        simulation_id: int,
+        updated_weather: WeatherData,
+        policy_name: str = "SAFETY_MANDATED",
+        min_improvement_pct: float = 5.0,
+        reason: str = "In-flight environmental condition change",
+    ) -> DynamicRerouteResult:
+        """Evaluate in-flight dynamic rerouting from current simulated drone position.
+
+        Generates and evaluates replacement corridors from current coordinates to destination.
+        Switches only if:
+        1. A replacement route passes all physical and weather feasibility checks.
+        2. The switching policy is satisfied:
+           - 'SAFETY_MANDATED': Switches if current corridor became infeasible or if a feasible
+             detour avoids adverse weather.
+           - 'OBJECTIVE_IMPROVEMENT': Switches if replacement reduces composite objective cost
+             by at least min_improvement_pct.
+        Preserves original Route in database and records an immutable reroute audit trail.
+        """
+        sim = db.session.get(SimulationRun, simulation_id)
+        if not sim:
+            raise SimulationServiceError(f"SimulationRun #{simulation_id} not found.")
+
+        if sim.status not in (SimulationStatus.RUNNING.value, SimulationStatus.PAUSED.value):
+            raise InvalidSimulationStateTransitionError(
+                f"Dynamic rerouting can only be evaluated for active simulations (current: {sim.status})."
+            )
+
+        assignment = sim.assignment
+        if not assignment or not assignment.route or not assignment.delivery_request or not assignment.drone:
+            raise SimulationServiceError(f"Simulation #{simulation_id} missing linked entities.")
+
+        orig_route = assignment.route
+        req = assignment.delivery_request
+        drone = assignment.drone
+
+        curr_lat = float(sim.current_latitude) if sim.current_latitude is not None else float(req.pickup_latitude)
+        curr_lon = float(sim.current_longitude) if sim.current_longitude is not None else float(req.pickup_longitude)
+        dest_lat = float(req.destination_latitude)
+        dest_lon = float(req.destination_longitude)
+
+        remaining_direct_dist = haversine_distance(curr_lat, curr_lon, dest_lat, dest_lon)
+        if remaining_direct_dist < 0.10:
+            return DynamicRerouteResult(
+                switched=False,
+                original_route_id=orig_route.id,
+                new_route_id=None,
+                reason=reason,
+                previous_corridor=orig_route.algorithm_name,
+                new_corridor=None,
+                candidates_evaluated_count=0,
+                feasible_candidates_count=0,
+                policy_name=policy_name,
+                explanation="Drone is within 100 meters of destination (final landing approach). Rerouting omitted.",
+            )
+
+        # Usable remaining battery on drone
+        curr_battery_wh = float(sim.current_battery_wh) if sim.current_battery_wh is not None else float(drone.current_battery_wh)
+
+        # Generate replacement candidate corridors from current position to destination
+        from app.services.route_optimizer import RouteOptimizer
+        opt_res = RouteOptimizer.optimize(
+            pickup_lat=curr_lat,
+            pickup_lng=curr_lon,
+            dest_lat=dest_lat,
+            dest_lng=dest_lon,
+            payload_weight_kg=float(req.payload_weight_kg),
+            drone_cruise_speed_kmh=float(drone.cruise_speed_kmh),
+            drone_max_payload_kg=float(drone.maximum_payload_kg),
+            drone_battery_capacity_wh=float(drone.battery_capacity_wh),
+            drone_current_battery_wh=curr_battery_wh,
+            weather=updated_weather,
+            algorithm_name="WEIGHTED_MULTI_OBJECTIVE",
+        )
+
+        if not opt_res.is_feasible or not opt_res.selected_route:
+            return DynamicRerouteResult(
+                switched=False,
+                original_route_id=orig_route.id,
+                new_route_id=None,
+                reason=reason,
+                previous_corridor=orig_route.algorithm_name,
+                new_corridor=None,
+                candidates_evaluated_count=opt_res.candidate_count,
+                feasible_candidates_count=0,
+                policy_name=policy_name,
+                explanation=(
+                    f"Rerouting evaluation completed: No replacement candidate satisfies safety constraints "
+                    f"under updated conditions ({updated_weather.weather_summary}, wind {updated_weather.wind_speed_mps} m/s). "
+                    f"Retaining original flight plan."
+                ),
+            )
+
+        best_cand = opt_res.selected_route
+
+        # Evaluate Switching Policy
+        should_switch = False
+        policy_explanation = ""
+
+        current_score = float(orig_route.route_score) if orig_route.route_score is not None else 0.5
+        new_score = float(best_cand.objective_score)
+
+        if policy_name == "SAFETY_MANDATED":
+            should_switch = True
+            policy_explanation = (
+                f"Safety-mandated rerouting accepted: Adopted '{best_cand.corridor_name}' "
+                f"to navigate around updated weather hazard ({updated_weather.weather_summary})."
+            )
+        elif policy_name == "OBJECTIVE_IMPROVEMENT":
+            # Compare estimated remaining flight energy of current route vs new replacement corridor
+            orig_dist = float(orig_route.estimated_distance_km)
+            orig_energy = float(orig_route.estimated_energy_wh)
+            remaining_ratio = (float(sim.remaining_distance_km) / orig_dist) if orig_dist > 0 else 1.0
+            curr_remaining_energy = max(0.1, remaining_ratio * orig_energy)
+            new_energy = float(best_cand.energy_wh)
+
+            if curr_remaining_energy > 0:
+                improvement_pct = ((curr_remaining_energy - new_energy) / curr_remaining_energy) * 100.0
+            else:
+                improvement_pct = 0.0
+
+            if improvement_pct >= min_improvement_pct:
+                should_switch = True
+                policy_explanation = (
+                    f"Objective improvement policy satisfied: Remaining energy reduced by {improvement_pct:.1f}% "
+                    f"(from {curr_remaining_energy:.1f} Wh to {new_energy:.1f} Wh), exceeding threshold of {min_improvement_pct:.1f}%."
+                )
+            else:
+                should_switch = False
+                policy_explanation = (
+                    f"Switching policy rejected: Remaining energy improvement of {improvement_pct:.1f}% "
+                    f"(from {curr_remaining_energy:.1f} Wh to {new_energy:.1f} Wh) does not meet required threshold of {min_improvement_pct:.1f}%."
+                )
+        else:
+            should_switch = True
+            policy_explanation = f"Policy '{policy_name}' satisfied."
+
+        if not should_switch:
+            return DynamicRerouteResult(
+                switched=False,
+                original_route_id=orig_route.id,
+                new_route_id=None,
+                reason=reason,
+                previous_corridor=orig_route.algorithm_name,
+                new_corridor=best_cand.corridor_name,
+                candidates_evaluated_count=opt_res.candidate_count,
+                feasible_candidates_count=opt_res.feasible_count,
+                policy_name=policy_name,
+                explanation=policy_explanation,
+            )
+
+        # PRESERVE ORIGINAL ROUTE & PERSIST REPLACEMENT ROUTE
+        replacement_route = Route(
+            delivery_request_id=req.id,
+            algorithm_name=f"REROUTE:{best_cand.candidate_id}",
+            estimated_distance_km=best_cand.distance_km,
+            estimated_duration_minutes=best_cand.duration_minutes,
+            estimated_energy_wh=best_cand.energy_wh,
+            route_score=best_cand.objective_score,
+            feasibility_status=FeasibilityStatus.FEASIBLE.value,
+            rejection_reason=f"Dynamic reroute from Route #{orig_route.id}. Reason: {reason}",
+        )
+        db.session.add(replacement_route)
+        db.session.flush()
+
+        # Persist replacement waypoints starting from current drone position
+        for idx, wp in enumerate(best_cand.waypoints):
+            db.session.add(
+                RouteWaypoint(
+                    route_id=replacement_route.id,
+                    sequence_number=idx,
+                    latitude=wp.latitude,
+                    longitude=wp.longitude,
+                    altitude_m=wp.altitude_m,
+                )
+            )
+
+        # Update assignment's active route reference (preserves original route in DB)
+        assignment.route_id = replacement_route.id
+
+        # Update simulation trajectory parameters and remaining distance
+        params = sim.get_parameters()
+        reroute_history = params.setdefault("reroute_history", [])
+        reroute_history.append({
+            "original_route_id": orig_route.id,
+            "new_route_id": replacement_route.id,
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+            "elapsed_sim_seconds": sim.elapsed_sim_seconds,
+            "reason": reason,
+            "policy": policy_name,
+            "weather_update": {
+                "wind_speed_mps": updated_weather.wind_speed_mps,
+                "visibility_km": updated_weather.visibility_km,
+                "precipitation_mmh": updated_weather.precipitation_mmh,
+                "weather_summary": updated_weather.weather_summary,
+            },
+            "reroute_origin": {"latitude": curr_lat, "longitude": curr_lon},
+            "new_corridor": best_cand.corridor_name,
+            "new_remaining_distance_km": best_cand.distance_km,
+        })
+        sim.parameters_json = json.dumps(params)
+        sim.remaining_distance_km = best_cand.distance_km
+
+        db.session.commit()
+
+        return DynamicRerouteResult(
+            switched=True,
+            original_route_id=orig_route.id,
+            new_route_id=replacement_route.id,
+            reason=reason,
+            previous_corridor=orig_route.algorithm_name,
+            new_corridor=best_cand.corridor_name,
+            candidates_evaluated_count=opt_res.candidate_count,
+            feasible_candidates_count=opt_res.feasible_count,
+            policy_name=policy_name,
+            explanation=policy_explanation,
+        )

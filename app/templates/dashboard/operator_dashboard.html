@@ -79,9 +79,9 @@
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px;">
   <!-- Dispatch Form Card -->
   <div class="dashboard-card">
-    <div class="card-header">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
       <h2 class="card-title">Dispatch Drone Mission</h2>
-      <span class="badge badge-pending">ACID Guaranteed</span>
+      <a href="{{ url_for('dashboard.multi_drone_allocation') }}" class="btn btn-primary btn-sm">⚡ Multi-Drone Batch Allocator</a>
     </div>
     <div class="card-body">
       {% if pending_requests and available_drones and available_routes %}

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Multi-Drone Batch Allocation Console{% endblock %}
+{% block page_title %}Multi-Drone Batch Allocation & Triage Console{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+  <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 18px; margin-bottom: 24px;">
+    <h3 style="color: #f8fafc; font-size: 1.1rem; margin-top: 0; margin-bottom: 8px;">Multi-Drone Bipartite Matching Overview</h3>
+    <p style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.5; margin: 0;">
+      This console evaluates all pending emergency requests against available fleet airframes simultaneously.
+      It contrasts the <strong>Priority-Driven Best-Fit Optimizer</strong> against the <strong>First-Come, First-Served (FCFS) Greedy Baseline</strong>
+      while enforcing strict physical constraints (cargo mass $\le$ airframe payload capacity, battery storage $\ge$ route energy $+ 15\%$ reserve, and environmental thresholds).
+    </p>
+  </div>
+
+  <!-- Comparison KPI Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 24px;">
+    <!-- Priority Best-Fit Card -->
+    <div class="dashboard-card" style="border-top: 3px solid #10b981;">
+      <div class="card-header">
+        <h3 class="card-title" style="font-size: 1rem;">Priority Best-Fit Optimizer</h3>
+        <span class="badge badge-success">Recommended</span>
+      </div>
+      <div class="card-body">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <span style="color: #94a3b8; font-size: 0.85rem;">High Priority Fulfillment:</span>
+          <strong style="color: #10b981;">{{ priority_plan.high_priority_fulfillment_rate_pct }}%</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <span style="color: #94a3b8; font-size: 0.85rem;">Overall Matched:</span>
+          <strong style="color: #f8fafc;">{{ priority_plan.matches|length }} / {{ priority_plan.total_evaluated_requests }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <span style="color: #94a3b8; font-size: 0.85rem;">Total Fleet Energy:</span>
+          <strong style="color: #38bdf8;">{{ priority_plan.total_fleet_energy_wh }} Wh</strong>
+        </div>
+        {% if priority_plan.matches %}
+        <form action="{{ url_for('dashboard.dispatch_multi_drone_allocation') }}" method="POST" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="algorithm" value="PRIORITY_BEST_FIT">
+          <button type="submit" class="btn btn-success" style="width: 100%;">
+            ⚡ Dispatch Priority Best-Fit Batch ({{ priority_plan.matches|length }})
+          </button>
+        </form>
+        {% else %}
+        <button class="btn btn-secondary" style="width: 100%; opacity: 0.6;" disabled>No Feasible Matches</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- FCFS Greedy Baseline Card -->
+    <div class="dashboard-card" style="border-top: 3px solid #64748b;">
+      <div class="card-header">
+        <h3 class="card-title" style="font-size: 1rem;">FCFS Greedy Baseline</h3>
+        <span class="badge badge-secondary">Baseline</span>
+      </div>
+      <div class="card-body">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <span style="color: #94a3b8; font-size: 0.85rem;">High Priority Fulfillment:</span>
+          <strong style="color: #cbd5e1;">{{ baseline_plan.high_priority_fulfillment_rate_pct }}%</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <span style="color: #94a3b8; font-size: 0.85rem;">Overall Matched:</span>
+          <strong style="color: #f8fafc;">{{ baseline_plan.matches|length }} / {{ baseline_plan.total_evaluated_requests }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <span style="color: #94a3b8; font-size: 0.85rem;">Total Fleet Energy:</span>
+          <strong style="color: #94a3b8;">{{ baseline_plan.total_fleet_energy_wh }} Wh</strong>
+        </div>
+        {% if baseline_plan.matches %}
+        <form action="{{ url_for('dashboard.dispatch_multi_drone_allocation') }}" method="POST" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="algorithm" value="FCFS_GREEDY_BASELINE">
+          <button type="submit" class="btn btn-secondary" style="width: 100%;">
+            Dispatch FCFS Baseline Batch ({{ baseline_plan.matches|length }})
+          </button>
+        </form>
+        {% else %}
+        <button class="btn btn-secondary" style="width: 100%; opacity: 0.6;" disabled>No Feasible Matches</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Priority Best-Fit Matched Pairs Table -->
+  <div class="dashboard-card" style="margin-bottom: 24px;">
+    <div class="card-header">
+      <h3 class="card-title">Priority Best-Fit Allocation Solution</h3>
+      <span class="badge badge-active">{{ priority_plan.matches|length }} Pairings</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Request</th>
+              <th>Priority & Cargo</th>
+              <th>Assigned Drone</th>
+              <th>Route Corridor</th>
+              <th>Distance / Time</th>
+              <th>Energy</th>
+              <th>Allocation Explanation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in priority_plan.matches %}
+            <tr>
+              <td><strong>#{{ m.request_id }}</strong></td>
+              <td>
+                <span class="badge badge-{{ m.request_priority.lower() }}">{{ m.request_priority }}</span>
+                <div style="font-size: 0.8rem; color: #94a3b8;">{{ m.request_payload_kg }} kg</div>
+              </td>
+              <td>
+                <strong>{{ m.drone_code }}</strong>
+                <div style="font-size: 0.78rem; color: #64748b;">{{ m.drone_model }} (Max: {{ m.drone_max_payload_kg }} kg)</div>
+              </td>
+              <td>{{ m.corridor_name }}</td>
+              <td>{{ m.distance_km }} km &bull; {{ m.duration_min }} min</td>
+              <td>{{ m.energy_wh }} Wh</td>
+              <td style="font-size: 0.8rem; color: #cbd5e1;">{{ m.explanation }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: #94a3b8; padding: 24px;">
+                No pending requests were eligible or matched.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unmatched Requests Table -->
+  {% if priority_plan.unmatched_requests %}
+  <div class="dashboard-card" style="border-top: 3px solid #f43f5e; margin-bottom: 24px;">
+    <div class="card-header">
+      <h3 class="card-title" style="color: #f43f5e;">Unassigned / Infeasible Requests</h3>
+      <span class="badge badge-danger">{{ priority_plan.unmatched_requests|length }} Unmatched</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Request #</th>
+              <th>Priority</th>
+              <th>Cargo Mass</th>
+              <th>Constraint Bottleneck Code</th>
+              <th>System Explanation & Safety Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in priority_plan.unmatched_requests %}
+            <tr>
+              <td><strong>#{{ u.request_id }}</strong></td>
+              <td><span class="badge badge-{{ u.priority.lower() }}">{{ u.priority }}</span></td>
+              <td>{{ u.payload_weight_kg }} kg</td>
+              <td><span style="color: #f43f5e; font-family: monospace; font-size: 0.8rem;">{{ u.reason_code }}</span></td>
+              <td style="color: #cbd5e1; font-size: 0.85rem;">{{ u.explanation }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Idle Fleet Drones -->
+  {% if priority_plan.idle_drones %}
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h3 class="card-title">Remaining Idle Fleet Units</h3>
+      <span class="badge badge-secondary">{{ priority_plan.idle_drones|length }} Idle</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Drone Code</th>
+              <th>Model Name</th>
+              <th>Max Cargo Capacity</th>
+              <th>Current Battery</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in priority_plan.idle_drones %}
+            <tr>
+              <td><strong>{{ d.drone_code }}</strong></td>
+              <td>{{ d.model_name }}</td>
+              <td>{{ d.maximum_payload_kg }} kg</td>
+              <td>{{ d.current_battery_wh }} Wh ({{ d.battery_percentage }}%)</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

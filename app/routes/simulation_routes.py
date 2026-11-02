@@ -269,3 +269,44 @@ def checkpoint_api(simulation_id: int):
         return jsonify({"success": True, "checkpoint": res}), 200
     except (ValueError, SimulationServiceError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
+
+
+@simulation_bp.route("/api/<int:simulation_id>/reroute", methods=["POST"])
+@login_required
+def reroute_api(simulation_id: int):
+    """Dynamically evaluate and execute in-flight route replacement."""
+    user = AuthService.get_current_user()
+    sim = db.session.get(SimulationRun, simulation_id)
+    if not sim:
+        return jsonify({"success": False, "error": "Simulation not found"}), 404
+
+    _verify_simulation_access(sim, user, require_operator=True)
+
+    data = request.get_json(silent=True) or {}
+    try:
+        from app.services.weather_service import WeatherData
+        wind = float(data.get("wind_speed_mps", 4.0))
+        precip = float(data.get("precipitation_mmh", 0.0))
+        vis = float(data.get("visibility_km", 10.0))
+        summary = str(data.get("weather_summary", "In-flight environmental update"))
+        policy = str(data.get("policy", "SAFETY_MANDATED"))
+        min_improvement = float(data.get("min_improvement_pct", 5.0))
+        reason = str(data.get("reason", "Operator dynamic reroute request"))
+
+        weather = WeatherData(
+            wind_speed_mps=wind,
+            precipitation_mmh=precip,
+            visibility_km=vis,
+            weather_summary=summary,
+        )
+
+        res = SimulationService.evaluate_and_reroute(
+            simulation_id=sim.id,
+            updated_weather=weather,
+            policy_name=policy,
+            min_improvement_pct=min_improvement,
+            reason=reason,
+        )
+        return jsonify({"success": True, "reroute": res.to_dict()}), 200
+    except (ValueError, SimulationServiceError) as e:
+        return jsonify({"success": False, "error": str(e)}), 400

@@ -139,6 +139,51 @@ def operator_dashboard():
     )
 
 
+@dashboard_bp.route("/operator/multi-allocation", methods=["GET"])
+@login_required
+@role_required(UserRole.ADMIN, UserRole.OPERATOR)
+def multi_drone_allocation():
+    """Operator console to evaluate multi-drone allocation across all pending requests."""
+    user = AuthService.get_current_user()
+    from app.services.drone_allocation_service import DroneAllocationService
+
+    priority_plan = DroneAllocationService.evaluate_multi_drone_allocation(
+        algorithm_name="PRIORITY_BEST_FIT"
+    )
+    baseline_plan = DroneAllocationService.evaluate_multi_drone_allocation(
+        algorithm_name="FCFS_GREEDY_BASELINE"
+    )
+
+    return render_template(
+        "dashboard/multi_allocation.html",
+        current_user=user,
+        priority_plan=priority_plan,
+        baseline_plan=baseline_plan,
+    )
+
+
+@dashboard_bp.route("/operator/multi-allocation/dispatch", methods=["POST"])
+@login_required
+@role_required(UserRole.ADMIN, UserRole.OPERATOR)
+def dispatch_multi_drone_allocation():
+    """Execute batch dispatch for the evaluated multi-drone allocation plan."""
+    from app.services.drone_allocation_service import DroneAllocationService, AllocationServiceError
+
+    algo = request.form.get("algorithm", "PRIORITY_BEST_FIT")
+    plan = DroneAllocationService.evaluate_multi_drone_allocation(algorithm_name=algo)
+
+    try:
+        assignments = DroneAllocationService.execute_batch_dispatch(plan)
+        flash(
+            f"Batch dispatch successful: {len(assignments)} missions allocated and dispatched under {algo}.",
+            "success",
+        )
+    except AllocationServiceError as e:
+        flash(f"Batch dispatch failed: {str(e)}", "danger")
+
+    return redirect(url_for("dashboard.operator_dashboard"))
+
+
 # ==============================================================================
 # REQUESTER DASHBOARD
 # ==============================================================================
