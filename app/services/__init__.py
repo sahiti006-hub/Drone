@@ -43,6 +43,16 @@ from app.services.drone_allocation_service import (
     DroneAllocationService,
     AllocationServiceError,
 )
+from app.services.simulation_service import (
+    SimulationService,
+    SimulationServiceError,
+    InvalidAssignmentStateError,
+    DuplicateSimulationError,
+    InvalidSimulationStateTransitionError,
+    interpolate_position,
+    compute_bearing,
+    get_route_segment_metrics,
+)
 
 __all__ = [
     "DroneService",

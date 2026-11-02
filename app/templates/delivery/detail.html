@@ -176,6 +176,7 @@
             <th>Dispatched At</th>
             <th>Completed At</th>
             <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -191,10 +192,15 @@
             <td>{{ a.assigned_at.strftime('%Y-%m-%d %H:%M UTC') if a.assigned_at else '-' }}</td>
             <td>{{ a.completed_at.strftime('%Y-%m-%d %H:%M UTC') if a.completed_at else 'In Flight / Pending' }}</td>
             <td><span class="badge badge-{{ a.status.lower() }}">{{ a.status }}</span></td>
+            <td>
+              <a href="{{ url_for('simulation.view_by_assignment', assignment_id=a.id) }}" class="btn btn-sm btn-primary">
+                🎮 Simulation Cockpit
+              </a>
+            </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="empty-state">
                 <div class="empty-state-title">No Drone Assigned</div>
                 <div class="empty-state-desc">This request has not yet been dispatched to an active drone unit.</div>

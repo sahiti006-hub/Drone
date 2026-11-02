@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Simulation Cockpit - Mission #{{ simulation.id }}{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet.js Offline/Local Stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">
+      <a href="{{ url_for('delivery.list_requests') }}" style="color: var(--color-primary); text-decoration: none;">Delivery Requests</a>
+      &nbsp;/&nbsp;
+      <a href="{{ url_for('delivery.request_detail', request_id=full_state.delivery_request.id) }}" style="color: var(--color-primary); text-decoration: none;">Request #{{ full_state.delivery_request.id }}</a>
+      &nbsp;/&nbsp;
+      <span>Simulation Cockpit</span>
+    </div>
+    <h1 class="page-title">Drone Delivery Simulation Cockpit</h1>
+    <p class="page-subtitle">Discrete-time flight kinematics and trajectory evaluation console</p>
+  </div>
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <a href="{{ url_for('delivery.request_detail', request_id=full_state.delivery_request.id) }}" class="btn btn-secondary">
+      ← Back to Request
+    </a>
+  </div>
+</div>
+
+<!-- Prominent Simulation-Only Notice Banner -->
+<div class="simulation-banner">
+  <div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+      <span class="sim-mode-pill">⚠️ SIMULATION MODE ACTIVE</span>
+      <span style="font-size: 0.85rem; opacity: 0.9;">Run Code: <strong>{{ simulation.run_code }}</strong></span>
+    </div>
+    <div style="font-size: 0.82rem; opacity: 0.85;">
+      Kinematic simulation models mathematical waypoints, battery depletion, and progress estimates. Real drone hardware is NOT engaged.
+    </div>
+  </div>
+  <div>
+    <span id="status-badge" class="badge badge-{{ simulation.status.lower() }}">
+      {{ simulation.status }}
+    </span>
+  </div>
+</div>
+
+<div class="cockpit-grid">
+  <!-- Left Side: Interactive Map & Primary Controls -->
+  <div>
+    <div class="map-wrapper">
+      <div id="tile-offline-notice" class="tile-offline-notice">
+        ⚠️ Map tiles offline or unreachable. Displaying route vectors on coordinate grid.
+      </div>
+
+      <div id="simulation-map"></div>
+
+      <!-- Map Legend Overlay -->
+      <div class="map-legend-box">
+        <div class="legend-item">
+          <div class="legend-dot pickup"></div>
+          <span>Pickup Origin</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot destination"></div>
+          <span>Destination</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot drone"></div>
+          <span>Simulated UAV Position</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color selected"></div>
+          <span>Selected Corridor ({{ full_state.selected_route.algorithm_name }})</span>
+        </div>
+        {% if full_state.alternative_routes %}
+        <div class="legend-item">
+          <div class="legend-color alternative"></div>
+          <span>Alternative Corridors ({{ full_state.alternative_routes|length }})</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Flight Control Instrumentation Bar -->
+    <div class="control-card" style="margin-top: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">Mission Flight Controls</h3>
+          <p style="font-size: 0.82rem; color: #64748b; margin-top: 2px;">
+            Control the virtual simulation clock and advance the UAV along the planned corridor.
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 0.8rem; color: #64748b;">Progress: </span>
+          <strong id="progress-pct-text" style="font-size: 1.1rem; color: var(--color-primary);">
+            {{ "%.1f"|format(simulation.current_progress_percent) }}%
+          </strong>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-track">
+        <div id="progress-bar-fill" class="progress-fill" style="width: {{ simulation.current_progress_percent }}%;"></div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #64748b; margin-bottom: 16px;">
+        <span>Covered: <strong id="dist-covered-val">{{ "%.2f"|format(simulation.distance_covered_km) }} km</strong></span>
+        <span>Remaining: <strong id="dist-remaining-val">{{ "%.2f"|format(simulation.remaining_distance_km) }} km</strong></span>
+      </div>
+
+      <!-- Control Buttons -->
+      <div class="sim-controls-bar">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          {% if is_controller %}
+            <button id="btn-start-sim" class="btn btn-primary" style="display: none;">
+              ▶ Start Simulation
+            </button>
+            <button id="btn-pause-sim" class="btn btn-secondary" style="display: none;">
+              ⏸ Pause
+            </button>
+            <button id="btn-resume-sim" class="btn btn-primary" style="display: none;">
+              ▶ Resume
+            </button>
+            <button id="btn-cancel-sim" class="btn btn-danger">
+              ⏹ Abort Mission
+            </button>
+          {% else %}
+            <span style="font-size: 0.85rem; color: #64748b; font-style: italic;">
+              Telemetry view mode (controls available to Operators and Admins).
+            </span>
+          {% endif %}
+        </div>
+
+        <!-- Clock Multiplier -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Clock Rate:</span>
+          <div class="btn-group">
+            <button type="button" class="btn btn-speed active" data-speed="1.0">1x</button>
+            <button type="button" class="btn btn-speed" data-speed="2.0">2x</button>
+            <button type="button" class="btn btn-speed" data-speed="5.0">5x</button>
+            <button type="button" class="btn btn-speed" data-speed="10.0">10x</button>
+            <button type="button" class="btn btn-speed" data-speed="20.0">20x</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate Corridors Summary -->
+    <div class="dashboard-card" style="margin-top: 20px;">
+      <div class="card-header">
+        <h3 class="card-title">Calculated Flight Corridors</h3>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">
+          Multi-Objective Optimizer Alternatives
+        </span>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Corridor Name</th>
+                <th>Distance</th>
+                <th>Est. Time</th>
+                <th>Est. Energy</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background-color: #f0fdf4; font-weight: 600;">
+                <td>
+                  <span style="color: #2563eb;">●</span> {{ full_state.selected_route.algorithm_name }} (Active)
+                </td>
+                <td>{{ full_state.selected_route.estimated_distance_km }} km</td>
+                <td>{{ full_state.selected_route.estimated_duration_minutes }} min</td>
+                <td>{{ full_state.selected_route.estimated_energy_wh }} Wh</td>
+                <td><span class="badge badge-feasible">ACTIVE ROUTE</span></td>
+              </tr>
+              {% for alt in full_state.alternative_routes %}
+              <tr>
+                <td><span style="color: #f59e0b;">●</span> {{ alt.algorithm_name }}</td>
+                <td>{{ alt.estimated_distance_km }} km</td>
+                <td>{{ alt.estimated_duration_minutes }} min</td>
+                <td>{{ alt.estimated_energy_wh }} Wh</td>
+                <td>
+                  <span class="badge badge-{{ alt.feasibility_status.lower() }}">{{ alt.feasibility_status }}</span>
+                  {% if alt.rejection_reason %}
+                    <div style="font-size: 0.72rem; color: #dc2626;">{{ alt.rejection_reason }}</div>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Real-Time Telemetry & Hardware State -->
+  <div>
+    <!-- Live Telemetry Card -->
+    <div class="telemetry-card" style="margin-bottom: 20px;">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <span>📡 Simulated Telemetry</span>
+        <span class="badge badge-in_transit" style="font-size: 0.7rem;">VIRTUAL SENSORS</span>
+      </h3>
+
+      <div class="telemetry-item">
+        <span class="telemetry-label">Latitude</span>
+        <span id="telemetry-lat" class="telemetry-val">{{ "%.6f"|format(full_state.telemetry.latitude) }}</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Longitude</span>
+        <span id="telemetry-lon" class="telemetry-val">{{ "%.6f"|format(full_state.telemetry.longitude) }}</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Altitude (AGL)</span>
+        <span id="telemetry-alt" class="telemetry-val">{{ "%.1f"|format(full_state.telemetry.altitude_m) }} m</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Compass Heading</span>
+        <span id="telemetry-heading" class="telemetry-val">{{ "%.1f"|format(full_state.heading_deg) }}°</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Sim Time Elapsed</span>
+        <span id="time-elapsed-val" class="telemetry-val">00:00</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Est. Time Remaining</span>
+        <span id="time-remaining-val" class="telemetry-val">--:--</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Battery Level</span>
+        <div class="battery-meter">
+          <div class="battery-bar">
+            <div id="battery-bar-fill" class="battery-level" style="width: {{ full_state.telemetry.battery_percent }}%;"></div>
+          </div>
+          <span id="battery-pct-val" class="telemetry-val">{{ full_state.telemetry.battery_percent }}%</span>
+        </div>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Battery Energy</span>
+        <span id="battery-wh-val" class="telemetry-val">{{ "%.1f"|format(full_state.telemetry.current_battery_wh or full_state.drone.battery_capacity_wh) }} Wh</span>
+      </div>
+    </div>
+
+    <!-- Assigned Drone Hardware Specifications -->
+    <div class="telemetry-card" style="margin-bottom: 20px;">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 12px;">
+        🚁 Dispatched UAV Unit
+      </h3>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Drone Code</span>
+        <span class="telemetry-val" style="color: var(--color-primary);">{{ full_state.drone.drone_code }}</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Hardware Model</span>
+        <span class="telemetry-val" style="font-family: inherit;">{{ full_state.drone.model_name }}</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Nominal Cruise Speed</span>
+        <span class="telemetry-val">{{ full_state.drone.cruise_speed_kmh }} km/h</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Battery Capacity</span>
+        <span class="telemetry-val">{{ full_state.drone.battery_capacity_wh }} Wh</span>
+      </div>
+    </div>
+
+    <!-- Emergency Payload Summary -->
+    <div class="telemetry-card">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 12px;">
+        📦 Emergency Manifest
+      </h3>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Emergency Category</span>
+        <span class="badge badge-info">{{ full_state.delivery_request.emergency_type }}</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Triage Priority</span>
+        <span class="badge badge-{{ full_state.delivery_request.priority.lower() }}">{{ full_state.delivery_request.priority }}</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">Payload Mass</span>
+        <span class="telemetry-val">{{ full_state.delivery_request.payload_weight_kg }} kg</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Embedded Serialized JSON Data for Safe Client Hydration -->
+<script id="sim-data" type="application/json">
+  {{ full_state | tojson }}
+</script>
+
+<!-- Leaflet.js Offline/Local Engine -->
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<!-- Simulation Kinematics & Visualizer Script -->
+<script src="{{ url_for('static', filename='js/simulation.js') }}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const dataElement = document.getElementById('sim-data');
+    if (!dataElement) return;
+
+    try {
+      const initialState = JSON.parse(dataElement.textContent);
+      new window.DroneSimulationApp({
+        simulationId: {{ simulation.id }},
+        initialState: initialState,
+        isController: {{ 'true' if is_controller else 'false' }}
+      });
+    } catch (e) {
+      console.error('Failed to initialize simulation cockpit:', e);
+    }
+  });
+</script>
+{% endblock %}

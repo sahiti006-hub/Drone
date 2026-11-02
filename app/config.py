@@ -31,7 +31,7 @@ class Config:
     DB_PASSWORD = os.getenv("DB_PASSWORD", "")
     DB_NAME = os.getenv("DB_NAME", "smart_emergency_drone_db")
 
-    # Priority: explicit DATABASE_URL -> constructed MySQL URI
+    # Priority: explicit DATABASE_URL -> local SQLite if present -> constructed MySQL URI
     _raw_db_url = os.getenv("DATABASE_URL")
     if _raw_db_url and _raw_db_url.startswith("sqlite:///") and not _raw_db_url.startswith("sqlite:////") and _raw_db_url != "sqlite:///:memory:":
         _rel_path = _raw_db_url.replace("sqlite:///", "")
@@ -40,7 +40,11 @@ class Config:
     elif _raw_db_url:
         SQLALCHEMY_DATABASE_URI = _raw_db_url
     else:
-        SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
+        _local_sqlite = (BASE_DIR / "instance" / "drone_system.db").resolve()
+        if (BASE_DIR / "instance" / "drone_system.db").exists() or os.getenv("FLASK_ENV") == "development":
+            SQLALCHEMY_DATABASE_URI = f"sqlite:///{_local_sqlite}"
+        else:
+            SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 280,

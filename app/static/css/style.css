@@ -581,3 +581,306 @@ body {
 .demo-credentials-box strong {
   color: #0f172a;
 }
+
+/* ==============================================================================
+   Simulation Cockpit & Interactive Leaflet Map
+   ============================================================================== */
+
+.simulation-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  color: #f8fafc;
+  padding: 16px 24px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  border-left: 6px solid #6366f1;
+  box-shadow: var(--shadow-md);
+}
+
+.sim-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cockpit-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .cockpit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.map-wrapper {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  background-color: #0f172a;
+  /* Grid pattern fallback for offline/blocked tiles */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+#simulation-map {
+  width: 100%;
+  height: 560px;
+  z-index: 10;
+}
+
+.tile-offline-notice {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background-color: rgba(15, 23, 42, 0.92);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: none;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+}
+
+.map-legend-box {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  color: #e2e8f0;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-md);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.legend-color {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.legend-color.selected {
+  background-color: #2563eb;
+  height: 5px;
+}
+
+.legend-color.alternative {
+  background: repeating-linear-gradient(90deg, #f59e0b, #f59e0b 4px, transparent 4px, transparent 8px);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-dot.pickup {
+  background-color: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.legend-dot.destination {
+  background-color: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.legend-dot.drone {
+  background-color: #06b6d4;
+  box-shadow: 0 0 6px #06b6d4;
+}
+
+/* Custom Marker CSS Icons */
+.custom-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  border: 2px solid #ffffff;
+  transition: transform 0.2s ease;
+}
+
+.pin-pickup {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.pin-dest {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.custom-drone-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  border: 2px solid #06b6d4;
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.65), 0 4px 8px rgba(0, 0, 0, 0.4);
+  font-size: 20px;
+  transition: transform 0.15s linear;
+}
+
+/* Controls & Flight Instrumentation */
+.control-card {
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+}
+
+.sim-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.btn-group {
+  display: inline-flex;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.btn-group .btn {
+  border-radius: 0;
+  border: none;
+  border-right: 1px solid var(--border-color);
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  background-color: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+}
+
+.btn-group .btn:last-child {
+  border-right: none;
+}
+
+.btn-group .btn.active {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.progress-track {
+  width: 100%;
+  height: 12px;
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin: 12px 0 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #06b6d4);
+  width: 0%;
+  transition: width 0.2s ease-in-out;
+  border-radius: 9999px;
+}
+
+.telemetry-card {
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.telemetry-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.85rem;
+}
+
+.telemetry-item:last-child {
+  border-bottom: none;
+}
+
+.telemetry-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.telemetry-val {
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: monospace, monospace;
+  font-size: 0.9rem;
+}
+
+.battery-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.battery-bar {
+  width: 60px;
+  height: 12px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.battery-level {
+  height: 100%;
+  background-color: #10b981;
+  width: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
