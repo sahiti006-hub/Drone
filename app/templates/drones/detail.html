@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Drone {{ drone.drone_code }} Details{% endblock %}
+{% block page_title %}Drone Unit: {{ drone.drone_code }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <a href="{{ url_for('drone.list_drones') }}" class="btn btn-sm" style="background: none; border: 1px solid var(--border-color); color: var(--text-main);">
+    &larr; Back to Fleet
+  </a>
+
+  <div style="display: flex; gap: 10px;">
+    {% if not drone.is_decommissioned and current_user.role in ['ADMIN', 'OPERATOR'] %}
+      <a href="{{ url_for('drone.edit_drone', drone_id=drone.id) }}" class="btn btn-primary btn-sm">
+        Edit Specifications
+      </a>
+    {% endif %}
+
+    {% if not drone.is_decommissioned and current_user.role == 'ADMIN' %}
+      <form action="{{ url_for('drone.decommission', drone_id=drone.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Retire Drone {{ drone.drone_code }}? This soft-decommissions the drone while preserving historical mission audit trails.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger btn-sm">Decommission Unit</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 24px;">
+  <!-- Hardware Specifications Card -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Hardware Specifications</h2>
+      <span class="badge badge-{{ drone.status.lower() }}">{{ drone.status }}</span>
+    </div>
+    <div class="card-body">
+      <table class="data-table" style="border: none;">
+        <tbody>
+          <tr>
+            <td style="font-weight: 600; width: 40%;">Model Name:</td>
+            <td><strong>{{ drone.model_name }}</strong></td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Maximum Payload:</td>
+            <td>{{ drone.maximum_payload_kg }} kg</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Cruise Speed:</td>
+            <td>{{ drone.cruise_speed_kmh }} km/h</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Battery Capacity:</td>
+            <td>{{ drone.battery_capacity_wh }} Watt-hours (Wh)</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Current Charge:</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; background-color: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                  <div style="width: {{ drone.battery_percentage }}%; background-color: {% if drone.battery_percentage < 25 %}var(--color-danger){% elif drone.battery_percentage < 50 %}var(--color-warning){% else %}var(--color-success){% endif %}; height: 100%;"></div>
+                </div>
+                <span style="font-weight: 700;">{{ drone.battery_percentage }}%</span>
+              </div>
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">{{ drone.current_battery_wh }} Wh remaining</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Commission Date:</td>
+            <td>{{ drone.created_at.strftime('%Y-%m-%d %H:%M UTC') if drone.created_at else '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Status Transition Control Card -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Maintenance & State Control</h2>
+      <span class="badge badge-optimal">State Machine Enforced</span>
+    </div>
+    <div class="card-body">
+      {% if drone.is_decommissioned %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🛡️</div>
+          <div class="empty-state-title">Drone is Decommissioned</div>
+          <div class="empty-state-desc">This unit is retired from service. Historical records remain preserved for audits.</div>
+        </div>
+      {% else %}
+        <form action="{{ url_for('drone.change_status', drone_id=drone.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="status" class="form-label">Transition State</label>
+            <select name="status" id="status" class="form-select" required>
+              {% for s in statuses %}
+                <option value="{{ s }}" {% if drone.status == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+            <span style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
+              Transitions are validated on the server. Actively assigned units cannot be switched to AVAILABLE without completing or aborting the active mission.
+            </span>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            Execute State Transition
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Historical Assignments Table -->
+<div class="dashboard-card">
+  <div class="card-header">
+    <h2 class="card-title">Mission Dispatch History</h2>
+    <span class="badge badge-healthy">{{ drone.assignments.count() }} Missions</span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Assignment #</th>
+            <th>Delivery Request</th>
+            <th>Cargo Type</th>
+            <th>Route Distance</th>
+            <th>Energy Used</th>
+            <th>Dispatched</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in drone.assignments %}
+          <tr>
+            <td><strong>#{{ a.id }}</strong></td>
+            <td>
+              <a href="{{ url_for('delivery.view_detail', request_id=a.delivery_request_id) }}" style="color: var(--color-primary); font-weight: 700;">
+                Request #{{ a.delivery_request_id }}
+              </a>
+            </td>
+            <td>{{ a.delivery_request.emergency_type.replace('_', ' ') }}</td>
+            <td>{{ a.route.estimated_distance_km }} km</td>
+            <td>{{ a.route.estimated_energy_wh }} Wh</td>
+            <td style="font-size: 0.8rem; color: #64748b;">{{ a.assigned_at.strftime('%Y-%m-%d %H:%M UTC') if a.assigned_at else '-' }}</td>
+            <td><span class="badge badge-{{ a.status.lower() }}">{{ a.status }}</span></td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-state-title">No Mission History</div>
+                <div class="empty-state-desc">This drone has not participated in any delivery missions yet.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Edit Drone {{ drone.drone_code }}{% else %}Register New Drone{% endif %}{% endblock %}
+{% block page_title %}{% if is_edit %}Edit Drone Specifications{% else %}Register Drone Hardware{% endif %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 750px; margin: 0 auto;">
+  <div style="margin-bottom: 16px;">
+    <a href="{{ url_for('drone.list_drones') }}" class="btn btn-sm" style="background: none; border: 1px solid var(--border-color); color: var(--text-main);">
+      &larr; Back to Fleet
+    </a>
+  </div>
+
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">{% if is_edit %}Hardware Configuration ({{ drone.drone_code }}){% else %}Hardware Registration{% endif %}</h2>
+      <span class="badge badge-healthy">Aviation Specs</span>
+    </div>
+    <div class="card-body">
+      <form action="{% if is_edit %}{{ url_for('drone.edit_drone', drone_id=drone.id) }}{% else %}{{ url_for('drone.new_drone') }}{% endif %}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="drone_code" class="form-label">Drone Identifier Code *</label>
+            <input 
+              type="text" 
+              name="drone_code" 
+              id="drone_code" 
+              class="form-input" 
+              placeholder="e.g. DRONE-ECHO-05" 
+              value="{{ form_data.get('drone_code', '') if not is_edit else drone.drone_code }}" 
+              {% if is_edit %}readonly style="background-color: #f1f5f9;"{% else %}required{% endif %}
+            >
+            {% if is_edit %}
+              <span style="font-size: 0.72rem; color: #64748b;">Drone identifier codes cannot be renamed to preserve audit trails.</span>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="model_name" class="form-label">Hardware Model Name *</label>
+            <input 
+              type="text" 
+              name="model_name" 
+              id="model_name" 
+              class="form-input" 
+              placeholder="e.g. SkyMedic Hexacopter X6" 
+              value="{{ form_data.get('model_name', '') if not is_edit else drone.model_name }}" 
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="maximum_payload_kg" class="form-label">Maximum Payload Capacity (kg) *</label>
+            <input 
+              type="number" 
+              step="0.05" 
+              min="0.1" 
+              max="50.0" 
+              name="maximum_payload_kg" 
+              id="maximum_payload_kg" 
+              class="form-input" 
+              value="{{ form_data.get('maximum_payload_kg', 5.0) if not is_edit else drone.maximum_payload_kg }}" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="cruise_speed_kmh" class="form-label">Cruise Speed (km/h) *</label>
+            <input 
+              type="number" 
+              step="0.5" 
+              min="10.0" 
+              max="200.0" 
+              name="cruise_speed_kmh" 
+              id="cruise_speed_kmh" 
+              class="form-input" 
+              value="{{ form_data.get('cruise_speed_kmh', 60.0) if not is_edit else drone.cruise_speed_kmh }}" 
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="battery_capacity_wh" class="form-label">Total Battery Capacity (Watt-hours) *</label>
+            <input 
+              type="number" 
+              step="1.0" 
+              min="10.0" 
+              max="10000.0" 
+              name="battery_capacity_wh" 
+              id="battery_capacity_wh" 
+              class="form-input" 
+              value="{{ form_data.get('battery_capacity_wh', 850.0) if not is_edit else drone.battery_capacity_wh }}" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="current_battery_wh" class="form-label">Current Battery Charge (Watt-hours)</label>
+            <input 
+              type="number" 
+              step="1.0" 
+              min="0.0" 
+              max="10000.0" 
+              name="current_battery_wh" 
+              id="current_battery_wh" 
+              class="form-input" 
+              value="{{ form_data.get('current_battery_wh', 850.0) if not is_edit else drone.current_battery_wh }}"
+            >
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 10px;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">
+            {% if is_edit %}Update Hardware Specifications{% else %}Register Drone Unit{% endif %}
+          </button>
+          <a href="{{ url_for('drone.list_drones') }}" class="btn" style="background-color: #f1f5f9; color: #475569;">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

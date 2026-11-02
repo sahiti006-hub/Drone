@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Drone Fleet Inventory{% endblock %}
+{% block page_title %}Drone Fleet Inventory{% endblock %}
+
+{% block content %}
+<!-- Filter Toolbar -->
+<div class="dashboard-card" style="margin-bottom: 20px;">
+  <div class="card-body" style="padding: 16px 20px;">
+    <form method="GET" action="{{ url_for('drone.list_drones') }}" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+      <div style="flex: 1; min-width: 160px;">
+        <label for="status" class="form-label">Operational Status</label>
+        <select name="status" id="status" class="form-select">
+          <option value="">All Statuses</option>
+          {% for s in statuses %}
+            <option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="flex: 1; min-width: 160px;">
+        <label for="min_payload" class="form-label">Minimum Payload (kg)</label>
+        <input type="number" step="0.1" name="min_payload" id="min_payload" class="form-input" placeholder="e.g. 5.0" value="{{ filters.min_payload or '' }}">
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 10px;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: #475569; cursor: pointer;">
+          <input type="checkbox" name="include_decommissioned" value="1" {% if filters.include_decommissioned %}checked{% endif %}>
+          <span>Include Decommissioned</span>
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        <a href="{{ url_for('drone.list_drones') }}" class="btn btn-sm" style="background-color: #f1f5f9; color: #475569;">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Fleet List Table -->
+<div class="dashboard-card">
+  <div class="card-header">
+    <h2 class="card-title">Registered Fleet Hardware Units ({{ drones|length }})</h2>
+    {% if current_user.role in ['ADMIN', 'OPERATOR'] %}
+      <a href="{{ url_for('drone.new_drone') }}" class="btn btn-primary btn-sm">+ Register Drone</a>
+    {% endif %}
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Drone Code</th>
+            <th>Model Name</th>
+            <th>Max Payload</th>
+            <th>Battery Charge</th>
+            <th>Cruise Speed</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in drones %}
+          <tr {% if d.is_decommissioned %}style="opacity: 0.6; background-color: #fafafa;"{% endif %}>
+            <td>
+              <strong>{{ d.drone_code }}</strong>
+              {% if d.is_decommissioned %}
+                <span class="badge badge-maintenance" style="font-size: 0.65rem;">RETIRED</span>
+              {% endif %}
+            </td>
+            <td>{{ d.model_name }}</td>
+            <td>{{ d.maximum_payload_kg }} kg</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; background-color: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
+                  <div style="width: {{ d.battery_percentage }}%; background-color: {% if d.battery_percentage < 25 %}var(--color-danger){% elif d.battery_percentage < 50 %}var(--color-warning){% else %}var(--color-success){% endif %}; height: 100%;"></div>
+                </div>
+                <span style="font-size: 0.78rem; font-weight: 700;">{{ d.battery_percentage }}%</span>
+              </div>
+              <div style="font-size: 0.72rem; color: #64748b;">{{ d.current_battery_wh }} / {{ d.battery_capacity_wh }} Wh</div>
+            </td>
+            <td>{{ d.cruise_speed_kmh }} km/h</td>
+            <td><span class="badge badge-{{ d.status.lower() }}">{{ d.status }}</span></td>
+            <td>
+              <a href="{{ url_for('drone.view_detail', drone_id=d.id) }}" class="btn btn-sm" style="border: 1px solid var(--border-color); color: var(--color-primary);">
+                Manage &rarr;
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-state-icon">🚁</div>
+                <div class="empty-state-title">No Drone Units Found</div>
+                <div class="empty-state-desc">No drones match the filter criteria. Register a drone unit above.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

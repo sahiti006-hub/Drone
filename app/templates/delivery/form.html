@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Edit Request #{{ req.id }}{% else %}New Emergency Delivery Request{% endif %}{% endblock %}
+{% block page_title %}{% if is_edit %}Edit Delivery Request #{{ req.id }}{% else %}Submit Emergency Request{% endif %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 16px;">
+    <a href="{{ url_for('delivery.list_requests') }}" class="btn btn-sm" style="background: none; border: 1px solid var(--border-color); color: var(--text-main);">
+      &larr; Back to Requests
+    </a>
+  </div>
+
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">{% if is_edit %}Modify Request Parameters{% else %}Emergency Cargo Dispatch Intake{% endif %}</h2>
+      <span class="badge badge-critical">Priority Protocol</span>
+    </div>
+    <div class="card-body">
+      <form action="{% if is_edit %}{{ url_for('delivery.edit_request', request_id=req.id) }}{% else %}{{ url_for('delivery.new_request') }}{% endif %}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="emergency_type" class="form-label">Emergency Cargo Type *</label>
+            <select name="emergency_type" id="emergency_type" class="form-select" required>
+              {% for et in emergency_types %}
+                <option value="{{ et }}" {% if (form_data.get('emergency_type') == et) or (is_edit and req.emergency_type == et) %}selected{% endif %}>
+                  {{ et.replace('_', ' ') }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="priority" class="form-label">Urgency Priority *</label>
+            <select name="priority" id="priority" class="form-select" required>
+              {% for p in priorities %}
+                <option value="{{ p }}" {% if (form_data.get('priority') == p) or (is_edit and req.priority == p) %}selected{% endif %}>
+                  {{ p }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="payload_weight_kg" class="form-label">Payload Weight (kg) *</label>
+            <input 
+              type="number" 
+              step="0.01" 
+              min="0.05" 
+              max="25.0" 
+              name="payload_weight_kg" 
+              id="payload_weight_kg" 
+              class="form-input" 
+              value="{{ form_data.get('payload_weight_kg', 1.5) if not is_edit else req.payload_weight_kg }}" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="form-label">Clinical / Mission Notes (Optional)</label>
+            <input 
+              type="text" 
+              name="description" 
+              id="description" 
+              class="form-input" 
+              placeholder="e.g. Type O-Negative blood unit for acute trauma"
+              value="{{ form_data.get('description', '') if not is_edit else (req.description or '') }}"
+            >
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="pickup_latitude" class="form-label">Pickup Latitude (-90 to +90) *</label>
+            <input 
+              type="number" 
+              step="0.0000001" 
+              min="-90" 
+              max="90" 
+              name="pickup_latitude" 
+              id="pickup_latitude" 
+              class="form-input" 
+              value="{{ form_data.get('pickup_latitude', 12.9716000) if not is_edit else req.pickup_latitude }}" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="pickup_longitude" class="form-label">Pickup Longitude (-180 to +180) *</label>
+            <input 
+              type="number" 
+              step="0.0000001" 
+              min="-180" 
+              max="180" 
+              name="pickup_longitude" 
+              id="pickup_longitude" 
+              class="form-input" 
+              value="{{ form_data.get('pickup_longitude', 77.5946000) if not is_edit else req.pickup_longitude }}" 
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="destination_latitude" class="form-label">Destination Latitude (-90 to +90) *</label>
+            <input 
+              type="number" 
+              step="0.0000001" 
+              min="-90" 
+              max="90" 
+              name="destination_latitude" 
+              id="destination_latitude" 
+              class="form-input" 
+              value="{{ form_data.get('destination_latitude', 12.9352000) if not is_edit else req.destination_latitude }}" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="destination_longitude" class="form-label">Destination Longitude (-180 to +180) *</label>
+            <input 
+              type="number" 
+              step="0.0000001" 
+              min="-180" 
+              max="180" 
+              name="destination_longitude" 
+              id="destination_longitude" 
+              class="form-input" 
+              value="{{ form_data.get('destination_longitude', 77.6245000) if not is_edit else req.destination_longitude }}" 
+              required
+            >
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 10px;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">
+            {% if is_edit %}Save Changes{% else %}Submit Emergency Request{% endif %}
+          </button>
+          <a href="{{ url_for('delivery.list_requests') }}" class="btn" style="background-color: #f1f5f9; color: #475569;">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

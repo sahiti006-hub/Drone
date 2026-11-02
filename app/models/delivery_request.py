@@ -49,6 +49,7 @@ class DeliveryRequest(db.Model):
     destination_latitude = db.Column(db.Numeric(10, 7), nullable=False)
     destination_longitude = db.Column(db.Numeric(10, 7), nullable=False)
     payload_weight_kg = db.Column(db.Numeric(6, 2), nullable=False)
+    description = db.Column(db.String(255), nullable=True)
     priority = db.Column(
         db.String(20),
         nullable=False,
@@ -103,6 +104,7 @@ class DeliveryRequest(db.Model):
         payload_weight_kg: float,
         priority: str = RequestPriority.HIGH.value,
         status: str = RequestStatus.PENDING.value,
+        description: str = None,
     ):
         self.validate_coordinates(pickup_latitude, pickup_longitude, "Pickup")
         self.validate_coordinates(destination_latitude, destination_longitude, "Destination")
@@ -119,6 +121,7 @@ class DeliveryRequest(db.Model):
         self.payload_weight_kg = payload_weight_kg
         self.priority = priority.value if isinstance(priority, RequestPriority) else str(priority).upper()
         self.status = status.value if isinstance(status, RequestStatus) else str(status).upper()
+        self.description = description.strip() if description else None
 
     @staticmethod
     def validate_coordinates(lat: float, lng: float, label: str = "Coordinate") -> None:
@@ -145,6 +148,7 @@ class DeliveryRequest(db.Model):
                 "longitude": float(self.destination_longitude),
             },
             "payload_weight_kg": float(self.payload_weight_kg),
+            "description": self.description,
             "priority": self.priority,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
