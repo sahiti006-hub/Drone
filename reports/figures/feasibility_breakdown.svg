@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="650" height="360" viewBox="0 0 650 360" style="background-color: #0f172a; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;">
+  <text x="325.0" y="32" text-anchor="middle" fill="#f8fafc" font-size="16" font-weight="bold">Mission Feasibility & Fail-Safe Infeasibility Categorization</text>
+  <path d="M 200.00 70.00 A 110 110 0 1 1 152.27 279.11 L 173.97 234.06 A 60 60 0 1 0 200.00 120.00 Z" fill="#10b981" stroke="#0f172a" stroke-width="2">
+    <title>Feasible Missions: 8 (57.1%)</title>
+  </path>
+  <path d="M 152.27 279.11 A 110 110 0 0 1 114.00 248.58 L 153.09 217.41 A 60 60 0 0 0 173.97 234.06 Z" fill="#f43f5e" stroke="#0f172a" stroke-width="2">
+    <title>Battery Depletion: 1 (7.1%)</title>
+  </path>
+  <path d="M 114.00 248.58 A 110 110 0 0 1 92.76 204.48 L 141.50 193.35 A 60 60 0 0 0 153.09 217.41 Z" fill="#f59e0b" stroke="#0f172a" stroke-width="2">
+    <title>Payload Capacity: 1 (7.1%)</title>
+  </path>
+  <path d="M 92.76 204.48 A 110 110 0 0 1 92.76 155.52 L 141.50 166.65 A 60 60 0 0 0 141.50 193.35 Z" fill="#8b5cf6" stroke="#0f172a" stroke-width="2">
+    <title>High Wind Velocity: 1 (7.1%)</title>
+  </path>
+  <path d="M 92.76 155.52 A 110 110 0 0 1 114.00 111.42 L 153.09 142.59 A 60 60 0 0 0 141.50 166.65 Z" fill="#06b6d4" stroke="#0f172a" stroke-width="2">
+    <title>Low Visibility: 1 (7.1%)</title>
+  </path>
+  <path d="M 114.00 111.42 A 110 110 0 0 1 152.27 80.89 L 173.97 125.94 A 60 60 0 0 0 153.09 142.59 Z" fill="#ec4899" stroke="#0f172a" stroke-width="2">
+    <title>Excessive Precipitation: 1 (7.1%)</title>
+  </path>
+  <path d="M 152.27 80.89 A 110 110 0 0 1 200.00 70.00 L 200.00 120.00 A 60 60 0 0 0 173.97 125.94 Z" fill="#64748b" stroke="#0f172a" stroke-width="2">
+    <title>Unverified Weather: 1 (7.1%)</title>
+  </path>
+  <text x="200" y="175" text-anchor="middle" fill="#94a3b8" font-size="12">Total Scenarios</text>
+  <text x="200" y="200" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="bold">14</text>
+  <rect x="380" y="70" width="14" height="14" fill="#10b981" rx="3" />
+  <text x="402" y="82" fill="#cbd5e1" font-size="12">Feasible Missions: <tspan font-weight="bold" fill="#f8fafc">8</tspan> (57.1%)</text>
+  <rect x="380" y="102" width="14" height="14" fill="#f43f5e" rx="3" />
+  <text x="402" y="114" fill="#cbd5e1" font-size="12">Battery Depletion: <tspan font-weight="bold" fill="#f8fafc">1</tspan> (7.1%)</text>
+  <rect x="380" y="134" width="14" height="14" fill="#f59e0b" rx="3" />
+  <text x="402" y="146" fill="#cbd5e1" font-size="12">Payload Capacity: <tspan font-weight="bold" fill="#f8fafc">1</tspan> (7.1%)</text>
+  <rect x="380" y="166" width="14" height="14" fill="#8b5cf6" rx="3" />
+  <text x="402" y="178" fill="#cbd5e1" font-size="12">High Wind Velocity: <tspan font-weight="bold" fill="#f8fafc">1</tspan> (7.1%)</text>
+  <rect x="380" y="198" width="14" height="14" fill="#06b6d4" rx="3" />
+  <text x="402" y="210" fill="#cbd5e1" font-size="12">Low Visibility: <tspan font-weight="bold" fill="#f8fafc">1</tspan> (7.1%)</text>
+  <rect x="380" y="230" width="14" height="14" fill="#ec4899" rx="3" />
+  <text x="402" y="242" fill="#cbd5e1" font-size="12">Excessive Precipitation: <tspan font-weight="bold" fill="#f8fafc">1</tspan> (7.1%)</text>
+  <rect x="380" y="262" width="14" height="14" fill="#64748b" rx="3" />
+  <text x="402" y="274" fill="#cbd5e1" font-size="12">Unverified Weather: <tspan font-weight="bold" fill="#f8fafc">1</tspan> (7.1%)</text>
+</svg>

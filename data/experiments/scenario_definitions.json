@@ -1,0 +1,471 @@
+[
+  {
+    "scenario_id": "EXP-01-SHORT-LIGHT-CALM",
+    "name": "Short Distance Urban Transfer (Blood Units)",
+    "description": "Routine urban clinic transfer over 4.2 km with light antivenom package under calm skies.",
+    "distance_category": "SHORT",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.412345,
+      78.508912
+    ],
+    "payload_weight_kg": 1.0,
+    "drone_specs": {
+      "model_name": "AeroMedic Rapid",
+      "maximum_payload_kg": 2.5,
+      "battery_capacity_wh": 450.0,
+      "current_battery_wh": 450.0,
+      "cruise_speed_kmh": 65.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 2.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 12.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  },
+  {
+    "scenario_id": "EXP-02-SHORT-HEAVY-CALM",
+    "name": "Short Distance Heavy Transfer (Surgical Kit)",
+    "description": "Short 4.8 km transfer carrying heavy emergency surgical kit (4.5 kg) within capacity.",
+    "distance_category": "SHORT",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.425,
+      78.47
+    ],
+    "payload_weight_kg": 4.5,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 3.2,
+      "precipitation_mmh": 0.5,
+      "visibility_km": 10.0,
+      "weather_summary": "Partly Cloudy",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  },
+  {
+    "scenario_id": "EXP-03-MED-STD-HEADWIND",
+    "name": "Suburban Hospital Transit with Headwind",
+    "description": "Medium 11.8 km flight with 2.2 kg diagnostic kit facing 6.5 m/s headwind.",
+    "distance_category": "MEDIUM",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.45,
+      78.39
+    ],
+    "payload_weight_kg": 2.2,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 6.5,
+      "precipitation_mmh": 1.2,
+      "visibility_km": 8.0,
+      "weather_summary": "Moderate Wind",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  },
+  {
+    "scenario_id": "EXP-04-LONG-STD-FAVORABLE",
+    "name": "Rural Health Outpost Relief (Long Range)",
+    "description": "Long distance 21.5 km flight to rural outpost carrying pediatric vaccines.",
+    "distance_category": "LONG",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.55,
+      78.35
+    ],
+    "payload_weight_kg": 2.0,
+    "drone_specs": {
+      "model_name": "SkyLifter HeavyLoad",
+      "maximum_payload_kg": 8.0,
+      "battery_capacity_wh": 1400.0,
+      "current_battery_wh": 1400.0,
+      "cruise_speed_kmh": 55.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 3.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 15.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  },
+  {
+    "scenario_id": "EXP-05-LONG-HEAVY-SPEED",
+    "name": "High-Priority Trauma Dispatch (Long & Heavy)",
+    "description": "Long range 24.2 km flight carrying 6.0 kg defibrillator with speed-priority weighting.",
+    "distance_category": "LONG",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.58,
+      78.33
+    ],
+    "payload_weight_kg": 6.0,
+    "drone_specs": {
+      "model_name": "SkyLifter HeavyLoad",
+      "maximum_payload_kg": 8.0,
+      "battery_capacity_wh": 1400.0,
+      "current_battery_wh": 1400.0,
+      "cruise_speed_kmh": 55.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 4.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 10.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "SPEED_CRITICAL",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  },
+  {
+    "scenario_id": "EXP-06-MED-ENERGY-PROFILE",
+    "name": "Energy Conservation Weight Profile Test",
+    "description": "Identical 12.5 km corridor evaluated under energy-conserving optimization weights.",
+    "distance_category": "MEDIUM",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.445,
+      78.385
+    ],
+    "payload_weight_kg": 2.5,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 2.5,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 10.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "ENERGY_CONSERVING",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  },
+  {
+    "scenario_id": "EXP-07-LOW-BATT-MARGINAL",
+    "name": "Partial Battery State (Marginal Feasibility)",
+    "description": "Drone operating at 30% battery capacity (255 Wh of 850 Wh) across 6.5 km path.",
+    "distance_category": "SHORT",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.43,
+      78.45
+    ],
+    "payload_weight_kg": 1.8,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser (Low Battery)",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 255.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 2.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 12.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  },
+  {
+    "scenario_id": "EXP-08-INFEASIBLE-LOW-BATTERY",
+    "name": "Infeasible: Insufficient Usable Battery",
+    "description": "Drone battery severely depleted (45 Wh). Fails mandatory 15% reserve check.",
+    "distance_category": "MEDIUM",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.48,
+      78.36
+    ],
+    "payload_weight_kg": 2.0,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser (Depleted)",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 45.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 2.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 10.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": false,
+    "infeasibility_category": "Battery Depletion"
+  },
+  {
+    "scenario_id": "EXP-09-INFEASIBLE-OVERLOAD",
+    "name": "Infeasible: Cargo Payload Exceeds Capacity",
+    "description": "Cargo mass 5.5 kg submitted for light drone unit with max payload limit of 2.5 kg.",
+    "distance_category": "SHORT",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.41,
+      78.5
+    ],
+    "payload_weight_kg": 5.5,
+    "drone_specs": {
+      "model_name": "AeroMedic Rapid",
+      "maximum_payload_kg": 2.5,
+      "battery_capacity_wh": 450.0,
+      "current_battery_wh": 450.0,
+      "cruise_speed_kmh": 65.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 2.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 10.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": false,
+    "infeasibility_category": "Payload Capacity"
+  },
+  {
+    "scenario_id": "EXP-10-INFEASIBLE-WIND",
+    "name": "Infeasible: High Atmospheric Wind Hazard",
+    "description": "Observed sustained wind velocity 16.5 m/s exceeds aviation limit threshold (12.0 m/s).",
+    "distance_category": "SHORT",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.42,
+      78.49
+    ],
+    "payload_weight_kg": 1.5,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 16.5,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 10.0,
+      "weather_summary": "Gale Wind",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": false,
+    "infeasibility_category": "High Wind Velocity"
+  },
+  {
+    "scenario_id": "EXP-11-INFEASIBLE-FOG",
+    "name": "Infeasible: Low Visibility Fog Hazard",
+    "description": "Ground visibility 1.2 km falls below VFR regulatory minimum (3.0 km).",
+    "distance_category": "SHORT",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.415,
+      78.48
+    ],
+    "payload_weight_kg": 1.5,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 3.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 1.2,
+      "weather_summary": "Dense Fog",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": false,
+    "infeasibility_category": "Low Visibility"
+  },
+  {
+    "scenario_id": "EXP-12-INFEASIBLE-RAIN",
+    "name": "Infeasible: Torrential Rain Storm",
+    "description": "Precipitation rate 14.5 mm/h exceeds airframe water-ingress safety tolerance (8.0 mm/h).",
+    "distance_category": "MEDIUM",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.44,
+      78.43
+    ],
+    "payload_weight_kg": 2.0,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 5.0,
+      "precipitation_mmh": 14.5,
+      "visibility_km": 6.0,
+      "weather_summary": "Heavy Rain",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "BALANCED",
+    "expected_feasibility": false,
+    "infeasibility_category": "Excessive Precipitation"
+  },
+  {
+    "scenario_id": "EXP-13-INFEASIBLE-WEATHER-DATA",
+    "name": "Infeasible: Unverified Weather Observation",
+    "description": "Missing weather telemetry. Fail-safe system policy explicitly forbids blind dispatches.",
+    "distance_category": "SHORT",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.42,
+      78.47
+    ],
+    "payload_weight_kg": 1.5,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": null,
+    "weight_profile": "BALANCED",
+    "expected_feasibility": false,
+    "infeasibility_category": "Unverified Weather"
+  },
+  {
+    "scenario_id": "EXP-14-DISTANCE-MIN-PROFILE",
+    "name": "Distance-Minimized Weight Profile Test",
+    "description": "Medium 13.0 km flight using high distance weight (0.70) to examine corridor selection.",
+    "distance_category": "MEDIUM",
+    "pickup": [
+      17.385044,
+      78.486671
+    ],
+    "destination": [
+      17.46,
+      78.41
+    ],
+    "payload_weight_kg": 2.0,
+    "drone_specs": {
+      "model_name": "LifeLine HexaCruiser",
+      "maximum_payload_kg": 5.0,
+      "battery_capacity_wh": 850.0,
+      "current_battery_wh": 850.0,
+      "cruise_speed_kmh": 60.0,
+      "battery_reserve_margin": 0.15
+    },
+    "weather": {
+      "wind_speed_mps": 2.0,
+      "precipitation_mmh": 0.0,
+      "visibility_km": 10.0,
+      "weather_summary": "Clear",
+      "is_simulated": true,
+      "captured_at": null
+    },
+    "weight_profile": "DISTANCE_MINIMIZED",
+    "expected_feasibility": true,
+    "infeasibility_category": null
+  }
+]

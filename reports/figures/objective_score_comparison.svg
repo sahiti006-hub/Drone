@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="420" viewBox="0 0 820 420" style="background-color: #0f172a; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;">
+  <!-- Title -->
+  <text x="410.0" y="32" text-anchor="middle" fill="#f8fafc" font-size="16" font-weight="bold">Normalized Objective Cost Score Comparison (Lower is Better)</text>
+  <!-- Legend -->
+  <rect x="580" y="18" width="14" height="14" fill="#38bdf8" rx="2" />
+  <text x="600" y="30" fill="#cbd5e1" font-size="12">Baseline Cost Score</text>
+  <rect x="700" y="18" width="14" height="14" fill="#f43f5e" rx="2" />
+  <text x="720" y="30" fill="#cbd5e1" font-size="12">Optimizer Cost Score</text>
+  <!-- Y-Axis Gridlines & Ticks -->
+  <line x1="70" y1="340.0" x2="790" y2="340.0" stroke="#334155" stroke-dasharray="3,3" />
+  <text x="60" y="344.0" text-anchor="end" fill="#94a3b8" font-size="11">0.0 Score</text>
+  <line x1="70" y1="270.0" x2="790" y2="270.0" stroke="#334155" stroke-dasharray="3,3" />
+  <text x="60" y="274.0" text-anchor="end" fill="#94a3b8" font-size="11">0.0 Score</text>
+  <line x1="70" y1="200.0" x2="790" y2="200.0" stroke="#334155" stroke-dasharray="3,3" />
+  <text x="60" y="204.0" text-anchor="end" fill="#94a3b8" font-size="11">0.1 Score</text>
+  <line x1="70" y1="130.0" x2="790" y2="130.0" stroke="#334155" stroke-dasharray="3,3" />
+  <text x="60" y="134.0" text-anchor="end" fill="#94a3b8" font-size="11">0.1 Score</text>
+  <line x1="70" y1="60.0" x2="790" y2="60.0" stroke="#334155" stroke-dasharray="3,3" />
+  <text x="60" y="64.0" text-anchor="end" fill="#94a3b8" font-size="11">0.1 Score</text>
+  <line x1="70" y1="340" x2="790" y2="340" stroke="#64748b" stroke-width="1.5" />
+  <line x1="70" y1="60" x2="70" y2="340" stroke="#64748b" stroke-width="1.5" />
+  <rect x="85.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="117.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="115.0" y="360" text-anchor="end" transform="rotate(-30, 115.0, 360)" fill="#cbd5e1" font-size="11">01-SHORT-LIGHT-CALM</text>
+  <rect x="175.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="207.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="205.0" y="360" text-anchor="end" transform="rotate(-30, 205.0, 360)" fill="#cbd5e1" font-size="11">02-SHORT-HEAVY-CALM</text>
+  <rect x="265.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="297.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="295.0" y="360" text-anchor="end" transform="rotate(-30, 295.0, 360)" fill="#cbd5e1" font-size="11">03-MED-STD-HEADWIND</text>
+  <rect x="355.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="387.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="385.0" y="360" text-anchor="end" transform="rotate(-30, 385.0, 360)" fill="#cbd5e1" font-size="11">04-LONG-STD-FAVORABLE</text>
+  <rect x="445.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="477.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="475.0" y="360" text-anchor="end" transform="rotate(-30, 475.0, 360)" fill="#cbd5e1" font-size="11">05-LONG-HEAVY-SPEED</text>
+  <rect x="535.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="567.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="565.0" y="360" text-anchor="end" transform="rotate(-30, 565.0, 360)" fill="#cbd5e1" font-size="11">06-MED-ENERGY-PROFILE</text>
+  <rect x="625.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="657.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="655.0" y="360" text-anchor="end" transform="rotate(-30, 655.0, 360)" fill="#cbd5e1" font-size="11">07-LOW-BATT-MARGINAL</text>
+  <rect x="715.0" y="96.5" width="28" height="243.5" fill="#38bdf8" rx="3">
+    <title>Baseline Cost Score: 0.10 Score</title>
+  </rect>
+  <rect x="747.0" y="340.0" width="28" height="0.0" fill="#f43f5e" rx="3">
+    <title>Optimizer Cost Score: 0.00 Score</title>
+  </rect>
+  <text x="745.0" y="360" text-anchor="end" transform="rotate(-30, 745.0, 360)" fill="#cbd5e1" font-size="11">14-DISTANCE-MIN-PROFILE</text>
+</svg>

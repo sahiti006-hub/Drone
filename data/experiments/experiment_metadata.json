@@ -1,0 +1,48 @@
+{
+  "framework": "Smart Emergency Drone System - Comparative Route Optimizer Evaluation",
+  "timestamp_utc": "2026-11-02T16:49:53.466927+00:00",
+  "git_commit": "b1efe2fca61d32e66f6add128eda72e6d693d302",
+  "environment": {
+    "python_version": "3.14.6",
+    "os_platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 197 Stepping 2, GenuineIntel"
+  },
+  "total_scenarios_evaluated": 14,
+  "algorithms_compared": [
+    {
+      "name": "SHORTEST_FEASIBLE (Baseline)",
+      "selection_criterion": "Lexicographic sorting: minimum cumulative distance km, tiebreak on energy and duration."
+    },
+    {
+      "name": "WEIGHTED_MULTI_OBJECTIVE",
+      "selection_criterion": "Min-max normalized multi-criteria objective function: J = w_d*d + w_t*t + w_e*e + w_p*p."
+    }
+  ],
+  "weight_profiles": {
+    "BALANCED": {
+      "distance": 0.25,
+      "duration": 0.35,
+      "energy": 0.3,
+      "penalty": 0.1
+    },
+    "SPEED_CRITICAL": {
+      "distance": 0.1,
+      "duration": 0.6,
+      "energy": 0.2,
+      "penalty": 0.1
+    },
+    "ENERGY_CONSERVING": {
+      "distance": 0.15,
+      "duration": 0.15,
+      "energy": 0.6,
+      "penalty": 0.1
+    },
+    "DISTANCE_MINIMIZED": {
+      "distance": 0.7,
+      "duration": 0.1,
+      "energy": 0.1,
+      "penalty": 0.1
+    }
+  },
+  "disclaimer": "Simulation software benchmark. Energy estimates use analytical kinematic power models and do NOT reflect physical flight-tested battery telemetry."
+}
