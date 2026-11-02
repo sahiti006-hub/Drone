@@ -18,19 +18,18 @@ The system integrates real-time geospatial tracking (via Leaflet.js and OpenStre
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | HTML5, CSS3, Vanilla JavaScript (ES6+) | Interactive operator dashboard, status telemetry, request intake forms |
+| **Frontend** | HTML5, CSS3, Vanilla JavaScript (ES6+) | Interactive operator dashboard, status telemetry, request intake forms, responsive layouts |
 | **Map Engine** | Leaflet.js, OpenStreetMap | Geospatial rendering, live path interpolation, waypoint and base station markers |
 | **Backend** | Python 3.10+, Flask | Modular REST API service, application factory pattern, service-layer orchestration |
-| **Database** | MySQL (with SQLite dev fallback), SQLAlchemy, Flask-Migrate | Normalized relational schema for drones, orders, routes, assignments, and telemetry |
+| **Security & Auth** | Flask Session, Flask-WTF CSRF, Scrypt Hashing | Role-based access control (RBAC), rate-limiting brute force protection, IDOR guard |
+| **Database** | MySQL (with SQLite dev fallback), SQLAlchemy, Flask-Migrate | Normalized 3NF relational schema for drones, orders, routes, assignments, and telemetry |
 | **Analytics** | Pandas, NumPy | Route analysis, energy consumption metrics, dispatch efficiency reports |
-| **Testing** | Pytest, Pytest-Cov | Unit testing, integration testing, and API contract test automation |
+| **Testing** | Pytest, Pytest-Cov | Unit testing, integration testing, and API contract test automation (28 automated tests) |
 | **Version Control** | Git | Distributed version management and change traceability |
 
 ---
 
 ## 3. Architecture & Modular Design
-
-The project uses the **Flask Application Factory Pattern** combined with strict separation of concerns:
 
 ```text
 smart-emergency-drone-system/
@@ -38,10 +37,12 @@ smart-emergency-drone-system/
 ├── app/
 │   ├── __init__.py          # Flask Application Factory (create_app)
 │   ├── config.py            # Environment-aware configurations (Dev, Test, Prod)
-│   ├── extensions.py        # Extensions lifecycle management (SQLAlchemy, Migrate)
+│   ├── extensions.py        # Extensions lifecycle (SQLAlchemy, Migrate, CSRFProtect)
 │   ├── routes/              # HTTP Route Blueprints & Request Handlers
 │   │   ├── __init__.py
-│   │   └── health.py        # Health-check and system readiness endpoints
+│   │   ├── health.py        # Health-check and system readiness endpoints
+│   │   ├── auth.py          # Authentication (Login, Logout, Rate limiting)
+│   │   └── dashboard.py     # Role-specific dashboards & dispatch actions
 │   ├── models/              # Normalized Relational Models
 │   │   ├── __init__.py      # Package export for models and enums
 │   │   ├── user.py          # Users & backend role-based permissions
@@ -55,23 +56,38 @@ smart-emergency-drone-system/
 │   │   └── analysis_log.py  # Prediction vs actual telemetry logs
 │   ├── services/            # Pure Business & Database Access Services
 │   │   ├── __init__.py
+│   │   ├── auth_service.py  # Session lifecycle, rate-limiting & decorators
 │   │   ├── user_service.py  # User authentication & RBAC authorization
 │   │   ├── drone_service.py # Fleet management & status transition rules
 │   │   └── assignment_service.py # Transactional dispatch & conflict prevention
-│   ├── templates/           # Server-side HTML Jinja2 templates
-│   └── static/              # Client-side static assets (CSS, JS, images)
+│   ├── templates/           # Jinja2 Templates
+│   │   ├── base.html        # Shared master layout with role-aware sidebar & topbar
+│   │   ├── auth/
+│   │   │   └── login.html   # Professional login portal with demo credentials
+│   │   ├── dashboard/
+│   │   │   ├── admin_dashboard.html     # System-wide metrics, fleet oversight & logs
+│   │   │   ├── operator_dashboard.html  # Live missions, dispatch console & queue
+│   │   │   ├── requester_dashboard.html # Emergency order intake & personal logs
+│   │   │   └── request_detail.html      # Cargo specifications & telemetry
+│   │   └── errors/
+│   │       ├── 403.html     # Forbidden / IDOR violation screen
+│   │       ├── 404.html     # Page not found screen
+│   │       └── 500.html     # Internal error screen
+│   └── static/              # Client-side static assets
+│       ├── css/style.css    # Emergency-operations design system
+│       └── js/main.js       # Vanilla JS (alerts, form double-submission prevention)
 │
 ├── migrations/              # Alembic / Flask-Migrate versioned migrations
-│   └── versions/
-│       └── d0eddf8e4e58_initial_normalized_database_schema.py
 ├── scripts/                 # Maintenance, migration, and simulation seed scripts
 │   ├── init_db.py           # Database auto-creation & schema initializer
-│   └── seed_db.py           # Demonstration dataset seeder
+│   ├── seed_db.py           # Demonstration dataset seeder
+│   └── create_admin.py      # Secure interactive/automated administrator initializer
 ├── instance/                # Local runtime instances / sqlite fallbacks
 │   └── drone_system.db
-├── tests/                   # Pytest test suite (20 automated tests)
+├── tests/                   # Pytest test suite (28 automated tests)
 │   ├── __init__.py
 │   ├── conftest.py          # App context, HTTP client, and clean DB fixtures
+│   ├── test_auth_and_dashboards.py # Login, logout, rate limiting, RBAC, IDOR tests
 │   ├── test_health.py       # Health endpoint unit and integration tests
 │   ├── test_user_model.py   # User hashing, roles, and RBAC tests
 │   ├── test_drone_model.py  # Drone state transitions and lifecycle tests
@@ -87,237 +103,101 @@ smart-emergency-drone-system/
 
 ---
 
-## 4. Entity-Relationship (ER) Architecture
+## 4. Role-Based Access Control (RBAC) & Security
 
-The database is normalized to 3NF with strict relational integrity, cascade constraints, composite indexes, and UTC timestamp auditing.
+| Role | Permitted Actions | Portal Route |
+| :--- | :--- | :--- |
+| **`ADMIN`** | System-wide statistics, fleet oversight, manage users, all delivery requests, route evaluations, simulation logs, system health. | `/admin/dashboard` |
+| **`OPERATOR`** | Operational delivery requests queue, available fleet inspection, dispatching eligible drones to requests, aborting/completing missions. | `/operator/dashboard` |
+| **`REQUESTER`** | Emergency cargo order submission, tracking personal delivery requests, viewing estimated delivery arrival. | `/requester/dashboard` |
 
-```mermaid
-erDiagram
-    users ||--o{ delivery_requests : "submits"
-    delivery_requests ||--o{ routes : "generates"
-    routes ||--|{ route_waypoints : "contains (ordered)"
-    delivery_requests ||--o{ weather_snapshots : "captures"
-    drones ||--o{ drone_assignments : "dispatched_to"
-    delivery_requests ||--o{ drone_assignments : "fulfilled_by"
-    routes ||--o{ drone_assignments : "navigates"
-    simulation_runs ||--o{ analysis_logs : "records"
+### Security Protections Enforced:
+1. **Server-Side Authorization**: Evaluated in decorators `@login_required` and `@role_required(*roles)`.
+2. **Insecure Direct Object Reference (IDOR) Guard**: In `/requests/<request_id>`, requesters are restricted from viewing any delivery request where `req.requester_id != current_user.id` (returns HTTP `403 Forbidden`).
+3. **Password Security**: Scrypt hashing via Werkzeug (`generate_password_hash`); plaintext passwords are never stored or logged.
+4. **Brute-Force Rate Limiting**: Temporary 5-minute lockout triggered after 5 consecutive failed attempts per IP/account.
+5. **CSRF Protection**: All state-changing HTML forms (`POST`) require valid CSRF tokens via Flask-WTF.
+6. **Session Fixation Prevention**: Session regenerates upon login (`session.clear()`) with `HttpOnly` and `SameSite=Lax` cookie flags.
 
-    users {
-        int id PK
-        string full_name
-        string email UK "Indexed"
-        string password_hash
-        string role "ADMIN | OPERATOR | REQUESTER"
-        boolean is_active
-        datetime created_at "UTC"
-    }
+---
 
-    drones {
-        int id PK
-        string drone_code UK "Indexed"
-        string model_name
-        decimal maximum_payload_kg "Strictly > 0"
-        decimal battery_capacity_wh "Strictly > 0"
-        decimal current_battery_wh "0 <= current <= capacity"
-        decimal cruise_speed_kmh
-        string status "AVAILABLE | RESERVED | IN_TRANSIT | CHARGING | MAINTENANCE"
-        boolean is_decommissioned "Soft-retirement preserve history"
-        datetime created_at "UTC"
-        datetime updated_at "UTC"
-    }
+## 5. Pre-Seeded Demonstration Accounts
 
-    delivery_requests {
-        int id PK
-        int requester_id FK "users.id (RESTRICT)"
-        string emergency_type "BLOOD_SUPPLY | ANTIVENOM | DEFIBRILLATOR | ..."
-        decimal pickup_latitude "-90 to +90"
-        decimal pickup_longitude "-180 to +180"
-        decimal destination_latitude "-90 to +90"
-        decimal destination_longitude "-180 to +180"
-        decimal payload_weight_kg "Strictly > 0"
-        string priority "CRITICAL | HIGH | MEDIUM | LOW"
-        string status "PENDING | ROUTE_CALCULATED | ASSIGNED | DELIVERED | ..."
-        datetime created_at "UTC"
-        datetime updated_at "UTC"
-    }
+When the database is seeded (`python scripts/seed_db.py`), three accounts are available:
 
-    routes {
-        int id PK
-        int delivery_request_id FK "delivery_requests.id (CASCADE)"
-        string algorithm_name "A_STAR | DIJKSTRA | ..."
-        decimal estimated_distance_km
-        decimal estimated_duration_minutes
-        decimal estimated_energy_wh
-        decimal route_score "Composite fitness"
-        string feasibility_status "FEASIBLE | INFEASIBLE"
-        text rejection_reason
-        datetime created_at "UTC"
-    }
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin@emergencydrone.org` | `AdminSecurePassword123!` |
+| **Operator** | `operator@emergencydrone.org` | `OperatorSecurePassword123!` |
+| **Requester** | `requester@hospital.org` | `RequesterSecurePassword123!` |
 
-    route_waypoints {
-        int id PK
-        int route_id FK "routes.id (CASCADE)"
-        int sequence_number "0-based ordering"
-        decimal latitude
-        decimal longitude
-        decimal altitude_m "AGL in meters"
-    }
+---
 
-    weather_snapshots {
-        int id PK
-        int delivery_request_id FK "delivery_requests.id (SET NULL)"
-        string source "SIMULATED_ENGINE | OPENWEATHER_API"
-        string simulated_or_live "SIMULATED | LIVE"
-        decimal wind_speed "m/s"
-        decimal precipitation "mm/h"
-        decimal visibility "km"
-        string weather_summary
-        datetime captured_at "UTC"
-    }
+## 6. Creating New Users & Safe Admin Setup
 
-    drone_assignments {
-        int id PK
-        int delivery_request_id FK "delivery_requests.id (RESTRICT)"
-        int drone_id FK "drones.id (RESTRICT)"
-        int route_id FK "routes.id (RESTRICT)"
-        string status "ACTIVE | COMPLETED | ABORTED | FAILED"
-        datetime assigned_at "UTC"
-        datetime completed_at "UTC"
-    }
+### Method 1: Safe Administrator Setup Script
+To create the first production administrator without committing default passwords to version control:
+```powershell
+# Interactive mode (prompts securely for password):
+python scripts/create_admin.py
 
-    simulation_runs {
-        int id PK
-        string run_code UK "Indexed"
-        text parameters_json
-        string status "PENDING | RUNNING | COMPLETED | FAILED"
-        datetime start_time "UTC"
-        datetime end_time "UTC"
-        text summary_metrics_json
-        datetime created_at "UTC"
-    }
+# Or via environment variables:
+$env:ADMIN_NAME="Chief Administrator"
+$env:ADMIN_EMAIL="superadmin@emergencydrone.org"
+$env:ADMIN_PASSWORD="CustomSecurePassword123!"
+python scripts/create_admin.py
+```
 
-    analysis_logs {
-        int id PK
-        int simulation_run_id FK "simulation_runs.id (SET NULL)"
-        string algorithm_name
-        string scenario_reference
-        text predicted_metrics_json
-        text actual_simulated_metrics_json
-        string evaluation_status "OPTIMAL | SUB_OPTIMAL | FAILED | PENDING"
-        text notes
-        datetime created_at "UTC"
-    }
+### Method 2: Programmatic Service Layer
+New users of any role can be provisioned in code via `UserService`:
+```python
+from app.services.user_service import UserService
+
+user = UserService.register_user(
+    full_name="Dr. Marcus Bell",
+    email="mbell@hospital.org",
+    password="SecurePassword123!",
+    role="REQUESTER",  # "ADMIN", "OPERATOR", or "REQUESTER"
+)
 ```
 
 ---
 
-## 5. Security & Data Integrity Rules
+## 7. Windows PowerShell Quickstart Guide
 
-1. **Backend Role-Based Access Control (RBAC)**:
-   - Authorization is enforced programmatically in the service layer (`app/services/user_service.py`), not by hiding client-side UI elements.
-   - Roles:
-     - `ADMIN`: User management, drone registration, fleet configuration, full analytics.
-     - `OPERATOR`: Drone dispatch, mission abort, telemetry monitoring, simulation runs.
-     - `REQUESTER`: Emergency order submission and tracking own delivery requests.
-2. **ACID Transaction Guarantees & Conflict Prevention**:
-   - `AssignmentService.create_assignment()` wraps dispatch in a database transaction.
-   - Prevents multiple concurrent active missions for the same drone or delivery request.
-   - Verifies drone payload capacity $\ge$ cargo weight and available battery $\ge$ route energy + 15% safety buffer.
-   - Automatic rollback upon any constraint or validation failure.
-3. **Data Audit Retention**:
-   - Drones are never hard-deleted when taken out of service; `is_decommissioned = True` preserves historical missions and flight logs.
-   - Foreign key constraints use `ON DELETE RESTRICT` for users, drones, and completed assignments.
-4. **Coordinate & Physical Boundary Validation**:
-   - Latitude validated strictly between $-90.0^{\circ}$ and $+90.0^{\circ}$.
-   - Longitude validated strictly between $-180.0^{\circ}$ and $+180.0^{\circ}$.
-   - Payload and battery metrics must be strictly positive.
-
----
-
-## 6. Quickstart & Setup Guide (Windows PowerShell)
-
-### Step 1: Open Terminal in Project Directory
+### Step 1: Open Terminal & Activate Virtual Environment
 ```powershell
 Set-Location "C:\Users\Sahiti\.gemini\antigravity\scratch\smart-emergency-drone-system"
-```
-
-### Step 2: Activate Python Virtual Environment
-```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-### Step 3: Install Dependencies
-```powershell
-pip install -r requirements.txt
-```
-
-### Step 4: Configure Environment Variables
-Copy `.env.example` to `.env` if not already present:
-```powershell
-Copy-Item .env.example .env
-```
-Default MySQL parameters are configured in `.env`.
-*For offline or local development without a running MySQL server, you can set SQLite fallback in `.env`:*
-```ini
-DATABASE_URL=sqlite:///instance/drone_system.db
-```
-
-### Step 5: Initialize Database & Apply Migrations
-Execute the automated database setup script:
+### Step 2: Initialize Database & Seed Demo Data
 ```powershell
 python scripts/init_db.py
-```
-Or use Flask-Migrate:
-```powershell
-flask --app run.py db upgrade
-```
-
-### Step 6: Seed Demonstration Dataset
-Populate demo users (Admin, Operator, Requester), drones, sample emergency requests, routes, waypoints, and simulation logs:
-```powershell
 python scripts/seed_db.py
 ```
 
-### Step 7: Run Automated Test Suite
-Execute the 20 automated unit and integration tests:
+### Step 3: Run Full Automated Test Suite (28 Tests)
 ```powershell
 pytest -v
 ```
 
-### Step 8: Start the Application Server
+### Step 4: Launch Development Server
 ```powershell
 python run.py
 ```
-
-Verify the health check endpoint:
-```powershell
-Invoke-RestMethod -Uri "http://127.0.0.1:5000/api/health" -Method Get
-```
+Open **`http://127.0.0.1:5000/login`** in your browser.
 
 ---
 
-## 7. Phased Development Roadmap
+## 8. Development Roadmap
 
 | Phase | Title | Scope & Deliverables | Status |
 | :---: | :--- | :--- | :---: |
-| **Phase 1** | **Foundation & Architecture** | Project structure, environment configuration, application factory, dependency definition, health-check endpoint, and automated test suite. | **Completed** |
-| **Phase 2** | **Data Models & Persistence Layer** | Normalized 3NF MySQL/SQLAlchemy schema, Flask-Migrate versioning, RBAC model, state machines, conflict prevention transactions, demonstration seeder, and test suite. | **Completed** |
-| **Phase 3** | **Route Optimization Engine** | Haversine distance, Dijkstra/A* routing with no-fly zone avoidance, battery and payload feasibility validator. | Upcoming |
-| **Phase 4** | **Delivery Simulation Engine** | Discrete-time simulation service, waypoint interpolation, simulated telemetry broadcast, incident handling (battery low, rerouting). | Planned |
-| **Phase 5** | **Interactive Web Dashboard** | Leaflet.js real-time drone tracking map, dispatch console, order submission form, emergency telemetry metrics. | Planned |
-| **Phase 6** | **Analytics & System Verification** | Pandas analytics pipeline for post-flight metrics, full integration test suite, deployment documentation. | Planned |
-
----
-
-## 8. Phase 2 Acceptance Criteria
-
-- [x] Normalized 3NF models designed for Users, Drones, DeliveryRequests, Routes, RouteWaypoints, WeatherSnapshots, DroneAssignments, SimulationRuns, and AnalysisLogs.
-- [x] SQLAlchemy configured via `.env` with MySQL default and SQLite development fallback.
-- [x] Versioned migration repository generated with Flask-Migrate (`migrations/`).
-- [x] Automated database initializer (`scripts/init_db.py`) handling database creation and graceful failure reporting.
-- [x] Demonstration dataset seeder (`scripts/seed_db.py`) with labeled users, drones, requests, and simulated routes.
-- [x] Drone state machine enforcing allowed status transitions (`AVAILABLE`, `RESERVED`, `IN_TRANSIT`, `CHARGING`, `MAINTENANCE`).
-- [x] Transactional dispatch service (`AssignmentService`) preventing conflicting active assignments.
-- [x] Backend role-based permissions matrix implemented and verified.
-- [x] Full Pytest test suite with 20 passing unit/integration tests across all entities and service layers.
-- [x] Mermaid ER diagram and table relationships documented in `README.md`.
+| **Phase 1** | **Foundation & Architecture** | Project structure, environment config, application factory, health-check endpoint, and initial test suite. | **Completed** |
+| **Phase 2** | **Data Models & Persistence Layer** | Normalized 3NF MySQL/SQLAlchemy schema, Flask-Migrate versioning, state machines, conflict prevention transactions, demonstration seeder, and test suite. | **Completed** |
+| **Phase 3** | **Authentication, RBAC & Dashboards** | Secure session authentication, CSRF protection, rate limiting, shared emergency layout, role-specific dashboards, IDOR guard, and admin creator. | **Completed** |
+| **Phase 4** | **Route Optimization Engine** | Haversine distance calculations, Dijkstra / A* routing with no-fly zone polygon avoidance, battery and payload feasibility validator. | Upcoming |
+| **Phase 5** | **Delivery Simulation Engine** | Discrete-time simulation service, waypoint interpolation, simulated telemetry broadcast, incident handling (battery low, rerouting). | Planned |
+| **Phase 6** | **Interactive Web Dashboard** | Leaflet.js real-time drone tracking map, dispatch console, order submission form, emergency telemetry metrics. | Planned |
+| **Phase 7** | **Analytics & System Verification** | Pandas analytics pipeline for post-flight metrics, full integration test suite, deployment documentation. | Planned |

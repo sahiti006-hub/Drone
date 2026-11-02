@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -14,6 +15,14 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
     DEBUG = False
     TESTING = False
+
+    # Security & Session Settings
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "0") == "1"
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = 3600  # 1 hour validity
 
     # MySQL Database Settings
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
@@ -53,6 +62,7 @@ class TestingConfig(Config):
     """Configuration for automated unit and integration tests."""
     TESTING = True
     DEBUG = True
+    WTF_CSRF_ENABLED = False
     # Test suite always uses fast, isolated in-memory SQLite
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     SQLALCHEMY_ENGINE_OPTIONS = {}

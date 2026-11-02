@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}System Administration{% endblock %}
+{% block page_title %}Fleet & System Administration{% endblock %}
+
+{% block content %}
+<!-- Real Database Statistics Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-title">Fleet Deployment</span>
+    <span class="stat-value">{{ stats.total_drones }}</span>
+    <span class="stat-meta">{{ stats.available_drones }} Available &bull; {{ stats.in_transit_drones }} In Flight</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-title">Active Missions</span>
+    <span class="stat-value" style="color: var(--color-primary);">{{ stats.active_assignments }}</span>
+    <span class="stat-meta">Dispatched & tracking</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-title">Emergency Requests</span>
+    <span class="stat-value">{{ stats.total_requests }}</span>
+    <span class="stat-meta">{{ stats.pending_requests }} Pending &bull; {{ stats.delivered_requests }} Delivered</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-title">Fleet Maintenance</span>
+    <span class="stat-value" style="color: var(--color-warning);">{{ stats.charging_drones + stats.maintenance_drones }}</span>
+    <span class="stat-meta">{{ stats.charging_drones }} Charging &bull; {{ stats.maintenance_drones }} Service</span>
+  </div>
+</div>
+
+<!-- Fleet Status Table -->
+<div class="dashboard-card">
+  <div class="card-header">
+    <h2 class="card-title">Drone Fleet Overview</h2>
+    <span class="badge badge-healthy">Online</span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Drone Code</th>
+            <th>Hardware Model</th>
+            <th>Max Payload</th>
+            <th>Battery Charge</th>
+            <th>Cruise Speed</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for drone in recent_drones %}
+          <tr>
+            <td><strong>{{ drone.drone_code }}</strong></td>
+            <td>{{ drone.model_name }}</td>
+            <td>{{ drone.maximum_payload_kg }} kg</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; background-color: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
+                  <div style="width: {{ drone.battery_percentage }}%; background-color: {% if drone.battery_percentage < 25 %}var(--color-danger){% elif drone.battery_percentage < 50 %}var(--color-warning){% else %}var(--color-success){% endif %}; height: 100%;"></div>
+                </div>
+                <span style="font-size: 0.78rem; font-weight: 700;">{{ drone.battery_percentage }}%</span>
+              </div>
+            </td>
+            <td>{{ drone.cruise_speed_kmh }} km/h</td>
+            <td>
+              <span class="badge badge-{{ drone.status.lower() }}">{{ drone.status }}</span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-state-icon">🚁</div>
+                <div class="empty-state-title">No Drones Found</div>
+                <div class="empty-state-desc">No drone units have been added to the database yet.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Delivery Requests & Simulation Audits -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px;">
+  <!-- Requests Card -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Delivery Requests</h2>
+      <a href="{{ url_for('dashboard.operator_dashboard') }}" class="btn btn-sm" style="color: var(--color-primary);">Dispatch &rarr;</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Emergency Type</th>
+              <th>Priority</th>
+              <th>Weight</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in recent_requests %}
+            <tr>
+              <td><a href="{{ url_for('dashboard.view_request_detail', request_id=req.id) }}" style="color: var(--color-primary); font-weight: 700;">#{{ req.id }}</a></td>
+              <td>{{ req.emergency_type.replace('_', ' ') }}</td>
+              <td>
+                <span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span>
+              </td>
+              <td>{{ req.payload_weight_kg }} kg</td>
+              <td>
+                <span class="badge badge-{{ req.status.lower() }}">{{ req.status }}</span>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-state-title">No Requests Yet</div>
+                  <div class="empty-state-desc">No incoming emergency delivery requests logged.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Simulation Runs -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Simulation Runs</h2>
+      <span class="badge badge-optimal">Evaluated</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Run Code</th>
+              <th>Status</th>
+              <th>Start Time</th>
+              <th>Metrics</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sim in recent_simulations %}
+            <tr>
+              <td><strong>{{ sim.run_code }}</strong></td>
+              <td><span class="badge badge-{{ sim.status.lower() }}">{{ sim.status }}</span></td>
+              <td style="font-size: 0.8rem; color: #64748b;">{{ sim.created_at.strftime('%Y-%m-%d %H:%M') if sim.created_at else '-' }}</td>
+              <td>
+                {% set metrics = sim.get_summary_metrics() %}
+                {% if metrics %}
+                  <span style="font-size: 0.8rem; color: #0f172a; font-weight: 600;">Success: {{ metrics.get('success_rate_percent', metrics.get('successful_deliveries', '100%')) }}</span>
+                {% else %}
+                  <span style="color: #94a3b8; font-size: 0.8rem;">Pending metrics</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <div class="empty-state-title">No Simulation Runs</div>
+                  <div class="empty-state-desc">Simulation metrics will appear after batch executions.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Request #{{ req.id }} Details{% endblock %}
+{% block page_title %}Delivery Request #{{ req.id }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+  <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm" style="background: none; border: 1px solid var(--border-color); color: var(--text-main);">
+    &larr; Back to Dashboard
+  </a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px;">
+  <!-- Request Overview -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Emergency Cargo Specification</h2>
+      <span class="badge badge-{{ req.status.lower() }}">{{ req.status }}</span>
+    </div>
+    <div class="card-body">
+      <table class="data-table" style="border: none;">
+        <tbody>
+          <tr>
+            <td style="font-weight: 600; width: 40%;">Emergency Type:</td>
+            <td><strong>{{ req.emergency_type.replace('_', ' ') }}</strong></td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Priority Level:</td>
+            <td><span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Payload Weight:</td>
+            <td>{{ req.payload_weight_kg }} kg</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Requester:</td>
+            <td>{{ req.requester.full_name }} ({{ req.requester.email }})</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Submitted Time:</td>
+            <td>{{ req.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') if req.created_at else '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Geospatial Coordinates -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Geospatial Waypoints (Simulation)</h2>
+      <span class="badge badge-optimal">WGS84</span>
+    </div>
+    <div class="card-body">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="padding: 12px; background-color: #f8fafc; border-radius: var(--radius-sm); border-left: 4px solid var(--color-primary);">
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Pickup Station</div>
+          <div style="font-size: 0.95rem; font-weight: 700; margin-top: 2px;">
+            Lat: {{ req.pickup_latitude }}&deg; &bull; Lng: {{ req.pickup_longitude }}&deg;
+          </div>
+        </div>
+
+        <div style="padding: 12px; background-color: #f8fafc; border-radius: var(--radius-sm); border-left: 4px solid var(--color-danger);">
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Emergency Destination</div>
+          <div style="font-size: 0.95rem; font-weight: 700; margin-top: 2px;">
+            Lat: {{ req.destination_latitude }}&deg; &bull; Lng: {{ req.destination_longitude }}&deg;
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Active or Historic Assignments -->
+<div class="dashboard-card">
+  <div class="card-header">
+    <h2 class="card-title">Assigned Drone Mission Telemetry</h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Assignment ID</th>
+            <th>Drone Code</th>
+            <th>Hardware Model</th>
+            <th>Route Algorithm</th>
+            <th>Est. Distance</th>
+            <th>Est. Duration</th>
+            <th>Mission Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in req.assignments %}
+          <tr>
+            <td><strong>#{{ a.id }}</strong></td>
+            <td><strong>{{ a.drone.drone_code }}</strong></td>
+            <td>{{ a.drone.model_name }}</td>
+            <td>{{ a.route.algorithm_name }}</td>
+            <td>{{ a.route.estimated_distance_km }} km</td>
+            <td>{{ a.route.estimated_duration_minutes }} min</td>
+            <td><span class="badge badge-{{ a.status.lower() }}">{{ a.status }}</span></td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-state-title">No Drone Assigned Yet</div>
+                <div class="empty-state-desc">This emergency delivery request is pending dispatch by an operator.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

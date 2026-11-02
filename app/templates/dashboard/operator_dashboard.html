@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Operator Dispatch Console{% endblock %}
+{% block page_title %}Operator Dispatch Console{% endblock %}
+
+{% block content %}
+<!-- Active Drone Missions In-Flight -->
+<div class="dashboard-card">
+  <div class="card-header">
+    <h2 class="card-title">Live Missions In-Flight (Active Assignments)</h2>
+    <span class="badge badge-active">{{ active_assignments|length }} Active</span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Assignment #</th>
+            <th>Drone Code</th>
+            <th>Cargo & Priority</th>
+            <th>Route / Distance</th>
+            <th>Dispatched At</th>
+            <th>Mission Control Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for assignment in active_assignments %}
+          <tr>
+            <td><strong>#{{ assignment.id }}</strong></td>
+            <td>
+              <strong>{{ assignment.drone.drone_code }}</strong>
+              <div style="font-size: 0.75rem; color: #64748b;">{{ assignment.drone.model_name }}</div>
+            </td>
+            <td>
+              <div>{{ assignment.delivery_request.emergency_type.replace('_', ' ') }} ({{ assignment.delivery_request.payload_weight_kg }} kg)</div>
+              <span class="badge badge-{{ assignment.delivery_request.priority.lower() }}">{{ assignment.delivery_request.priority }}</span>
+            </td>
+            <td>
+              <div>{{ assignment.route.algorithm_name }}</div>
+              <div style="font-size: 0.78rem; color: #64748b;">{{ assignment.route.estimated_distance_km }} km &bull; {{ assignment.route.estimated_energy_wh }} Wh</div>
+            </td>
+            <td style="font-size: 0.8rem; color: #64748b;">
+              {{ assignment.assigned_at.strftime('%H:%M:%S UTC') if assignment.assigned_at else '-' }}
+            </td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <!-- Complete Mission Form -->
+                <form action="{{ url_for('dashboard.complete_mission', assignment_id=assignment.id) }}" method="POST" style="margin: 0;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                </form>
+
+                <!-- Abort Mission Form -->
+                <form action="{{ url_for('dashboard.abort_mission', assignment_id=assignment.id) }}" method="POST" style="margin: 0;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Abort this mission and return drone?');">Abort</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-state-icon">🛰️</div>
+                <div class="empty-state-title">No Active Drone Missions</div>
+                <div class="empty-state-desc">All deployed drones are currently idle, charging, or awaiting assignment.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Dispatch Console: Assign Drone to Request -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px;">
+  <!-- Dispatch Form Card -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Dispatch Drone Mission</h2>
+      <span class="badge badge-pending">ACID Guaranteed</span>
+    </div>
+    <div class="card-body">
+      {% if pending_requests and available_drones and available_routes %}
+      <form action="{{ url_for('dashboard.assign_mission') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="delivery_request_id" class="form-label">Select Pending Request</label>
+          <select name="delivery_request_id" id="delivery_request_id" class="form-select" required>
+            <option value="" disabled selected>-- Choose Request --</option>
+            {% for req in pending_requests %}
+              <option value="{{ req.id }}">
+                #{{ req.id }} - {{ req.emergency_type }} ({{ req.payload_weight_kg }} kg, {{ req.priority }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="drone_id" class="form-label">Select Available Drone</label>
+          <select name="drone_id" id="drone_id" class="form-select" required>
+            <option value="" disabled selected>-- Choose Drone --</option>
+            {% for drone in available_drones %}
+              <option value="{{ drone.id }}">
+                {{ drone.drone_code }} - {{ drone.model_name }} (Max: {{ drone.maximum_payload_kg }} kg, Batt: {{ drone.battery_percentage }}%)
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label for="route_id" class="form-label">Select Feasible Route</label>
+          <select name="route_id" id="route_id" class="form-select" required>
+            <option value="" disabled selected>-- Choose Route --</option>
+            {% for route in available_routes %}
+              <option value="{{ route.id }}">
+                Route #{{ route.id }} (Req #{{ route.delivery_request_id }} &bull; {{ route.algorithm_name }} &bull; {{ route.estimated_distance_km }} km &bull; {{ route.estimated_energy_wh }} Wh)
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Authorize & Dispatch Drone</button>
+      </form>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-title">Dispatch Requirements Incomplete</div>
+        <div class="empty-state-desc">
+          {% if not pending_requests %}• No pending delivery requests requiring dispatch.<br>{% endif %}
+          {% if not available_drones %}• No available drones (all units are in-flight, charging, or in maintenance).<br>{% endif %}
+          {% if not available_routes %}• No feasible routes generated yet.<br>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Operational Pending Requests Queue -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Pending Requests Queue</h2>
+      <span class="badge badge-warning">{{ pending_requests|length }} Waiting</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Emergency Type</th>
+              <th>Priority</th>
+              <th>Payload</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in pending_requests %}
+            <tr>
+              <td><a href="{{ url_for('dashboard.view_request_detail', request_id=req.id) }}" style="color: var(--color-primary); font-weight: 700;">#{{ req.id }}</a></td>
+              <td>{{ req.emergency_type.replace('_', ' ') }}</td>
+              <td><span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span></td>
+              <td>{{ req.payload_weight_kg }} kg</td>
+              <td><span class="badge badge-{{ req.status.lower() }}">{{ req.status }}</span></td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-state-title">Queue is Empty</div>
+                  <div class="empty-state-desc">No incoming emergency delivery requests pending dispatch.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

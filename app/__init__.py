@@ -1,7 +1,7 @@
 import os
-from flask import Flask
+from flask import Flask, redirect, url_for
 from app.config import config_by_name
-from app.extensions import db, migrate
+from app.extensions import db, migrate, csrf
 
 
 def create_app(config_name=None):
@@ -34,23 +34,57 @@ def create_app(config_name=None):
     # Initialize extensions
     db.init_app(flask_app)
     migrate.init_app(flask_app, db)
+    csrf.init_app(flask_app)
 
     # Import models so SQLAlchemy and Alembic register all table metadata
     import app.models  # noqa: F401
 
     # Register blueprints
     from app.routes.health import health_bp
+    from app.routes.auth import auth_bp
+    from app.routes.dashboard import dashboard_bp
+
+    # Exempt health API from CSRF since it's a read-only telemetry API
+    csrf.exempt(health_bp)
 
     flask_app.register_blueprint(health_bp, url_prefix="/api")
+    flask_app.register_blueprint(auth_bp)
+    flask_app.register_blueprint(dashboard_bp)
 
-    # Optional root route to guide users
+    # Root route: if browser request direct to dashboard/login, else API JSON metadata
     @flask_app.route("/", methods=["GET"])
     def root():
+        from flask import request
+        if "text/html" in request.headers.get("Accept", ""):
+            from app.services.auth_service import AuthService
+            user = AuthService.get_current_user()
+            if user:
+                return redirect(url_for("dashboard.index"))
+            return redirect(url_for("auth.login"))
+
         return {
             "message": "Welcome to the Smart Emergency Drone Delivery System API",
             "documentation": "/api/health",
+            "dashboard": "/dashboard",
+            "login": "/login",
             "environment": flask_app.config["ENV"],
             "database_configured": bool(flask_app.config.get("SQLALCHEMY_DATABASE_URI")),
         }, 200
+
+    # Custom Error Handlers
+    @flask_app.errorhandler(403)
+    def forbidden_error(error):
+        from flask import render_template
+        return render_template("errors/403.html", error=error), 403
+
+    @flask_app.errorhandler(404)
+    def not_found_error(error):
+        from flask import render_template
+        return render_template("errors/404.html", error=error), 404
+
+    @flask_app.errorhandler(500)
+    def internal_error(error):
+        from flask import render_template
+        return render_template("errors/500.html", error=error), 500
 
     return flask_app

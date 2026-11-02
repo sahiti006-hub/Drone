@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Requester Portal{% endblock %}
+{% block page_title %}Medical & Emergency Requester Portal{% endblock %}
+
+{% block content %}
+<!-- Requester Overview Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-title">My Total Requests</span>
+    <span class="stat-value">{{ total_count }}</span>
+    <span class="stat-meta">Lifetime submitted</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-title">In Flight / Dispatched</span>
+    <span class="stat-value" style="color: var(--color-primary);">{{ in_transit_count }}</span>
+    <span class="stat-meta">Active drone transit</span>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-title">Successfully Delivered</span>
+    <span class="stat-value" style="color: var(--color-success);">{{ delivered_count }}</span>
+    <span class="stat-meta">Completed orders</span>
+  </div>
+</div>
+
+<!-- Submit Request & History Layout -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px;">
+  <!-- Order Intake Form -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Request Emergency Drone Dispatch</h2>
+      <span class="badge badge-critical">Priority Channel</span>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('dashboard.create_delivery_request') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="emergency_type" class="form-label">Emergency Cargo Type</label>
+            <select name="emergency_type" id="emergency_type" class="form-select" required>
+              {% for et in emergency_types %}
+                <option value="{{ et }}">{{ et.replace('_', ' ') }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="priority" class="form-label">Urgency Priority</label>
+            <select name="priority" id="priority" class="form-select" required>
+              {% for p in priorities %}
+                <option value="{{ p }}" {% if p == 'CRITICAL' %}selected{% endif %}>{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="payload_weight_kg" class="form-label">Payload Weight (kg)</label>
+            <input type="number" step="0.05" min="0.1" max="10.0" name="payload_weight_kg" id="payload_weight_kg" class="form-input" value="1.50" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Presets / Quick-fill</label>
+            <button type="button" class="btn btn-sm" style="background-color: #f1f5f9; color: #334155;" onclick="quickfillHospitalRoute()">
+              Fill Sample Hospital Coordinates
+            </button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="pickup_latitude" class="form-label">Pickup Latitude (&deg;)</label>
+            <input type="number" step="0.0000001" min="-90" max="90" name="pickup_latitude" id="pickup_latitude" class="form-input" value="12.9716000" required>
+          </div>
+
+          <div class="form-group">
+            <label for="pickup_longitude" class="form-label">Pickup Longitude (&deg;)</label>
+            <input type="number" step="0.0000001" min="-180" max="180" name="pickup_longitude" id="pickup_longitude" class="form-input" value="77.5946000" required>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="destination_latitude" class="form-label">Destination Latitude (&deg;)</label>
+            <input type="number" step="0.0000001" min="-90" max="90" name="destination_latitude" id="destination_latitude" class="form-input" value="12.9352000" required>
+          </div>
+
+          <div class="form-group">
+            <label for="destination_longitude" class="form-label">Destination Longitude (&deg;)</label>
+            <input type="number" step="0.0000001" min="-180" max="180" name="destination_longitude" id="destination_longitude" class="form-input" value="77.6245000" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Submit Emergency Dispatch Order
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- My Requests List -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">My Emergency Requests Log</h2>
+      <span class="badge badge-healthy">{{ my_requests|length }} Tracked</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cargo Type</th>
+              <th>Weight</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in my_requests %}
+            <tr>
+              <td><strong>#{{ req.id }}</strong></td>
+              <td>{{ req.emergency_type.replace('_', ' ') }}</td>
+              <td>{{ req.payload_weight_kg }} kg</td>
+              <td><span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span></td>
+              <td><span class="badge badge-{{ req.status.lower() }}">{{ req.status }}</span></td>
+              <td>
+                <a href="{{ url_for('dashboard.view_request_detail', request_id=req.id) }}" class="btn btn-sm" style="color: var(--color-primary); border: 1px solid var(--border-color);">
+                  View Details &rarr;
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="empty-state-icon">📦</div>
+                  <div class="empty-state-title">No Requests Submitted Yet</div>
+                  <div class="empty-state-desc">Use the form on the left to submit an emergency cargo dispatch order.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function quickfillHospitalRoute() {
+  document.getElementById('pickup_latitude').value = "12.9716000";
+  document.getElementById('pickup_longitude').value = "77.5946000";
+  document.getElementById('destination_latitude').value = "12.9352000";
+  document.getElementById('destination_longitude').value = "77.6245000";
+}
+</script>
+{% endblock %}
