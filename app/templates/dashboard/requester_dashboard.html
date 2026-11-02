@@ -130,7 +130,7 @@
               <td><span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span></td>
               <td><span class="badge badge-{{ req.status.lower() }}">{{ req.status }}</span></td>
               <td>
-                <a href="{{ url_for('dashboard.view_request_detail', request_id=req.id) }}" class="btn btn-sm" style="color: var(--color-primary); border: 1px solid var(--border-color);">
+                <a href="{{ url_for('delivery.view_detail', request_id=req.id) }}" class="btn btn-sm" style="color: var(--color-primary); border: 1px solid var(--border-color);">
                   View Details &rarr;
                 </a>
               </td>

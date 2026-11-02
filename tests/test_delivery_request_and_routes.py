@@ -150,3 +150,106 @@ def test_weather_snapshot_units(app, requester_user):
     assert snap_dict["precipitation_mmh"] == 0.0
     assert snap_dict["visibility_km"] == 12.0
     assert snap_dict["simulated_or_live"] == "SIMULATED"
+
+
+def test_canonical_request_detail_view_renders_route_optimization_controls(client, app, requester_user):
+    """Regression test: verify /requests/<id> routes to canonical delivery.view_detail with full optimization controls."""
+    operator = User("Operator Chief", "operator.chief@emergency.org", "ChiefPass123!", UserRole.OPERATOR.value)
+    db.session.add(operator)
+    db.session.commit()
+
+    req = DeliveryRequest(
+        requester_id=requester_user.id,
+        emergency_type=EmergencyType.BLOOD_SUPPLY.value,
+        pickup_latitude=17.385044,
+        pickup_longitude=78.486671,
+        destination_latitude=17.442000,
+        destination_longitude=78.388000,
+        payload_weight_kg=2.0,
+        priority=RequestPriority.CRITICAL.value,
+    )
+    db.session.add(req)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = operator.id
+        sess["_fresh"] = True
+
+    resp = client.get(f"/requests/{req.id}")
+    assert resp.status_code == 200
+    assert b"Calculated Flight Routes" in resp.data
+    assert b"Run Route Optimization" in resp.data
+    assert b"Back to Requests" in resp.data
+
+
+def test_simulation_view_by_assignment_error_redirects_to_canonical_detail(client, app, requester_user):
+    """Regression test: verify simulation error redirection targets delivery.view_detail rather than broken endpoint."""
+    operator = User("Operator Ops", "operator.ops@emergency.org", "OpsPass123!", UserRole.OPERATOR.value)
+    from app.models.drone import Drone, DroneStatus
+    drone = Drone("UAV-ERR-TEST", "Carrier-X", 5.0, 500.0, 500.0, 60.0, DroneStatus.AVAILABLE.value)
+    db.session.add_all([operator, drone])
+    db.session.commit()
+
+    req = DeliveryRequest(
+        requester_id=requester_user.id,
+        emergency_type=EmergencyType.ANTIVENOM.value,
+        pickup_latitude=17.385044,
+        pickup_longitude=78.486671,
+        destination_latitude=17.442000,
+        destination_longitude=78.388000,
+        payload_weight_kg=1.5,
+        priority=RequestPriority.HIGH.value,
+    )
+    db.session.add(req)
+    db.session.commit()
+
+    route = Route(req.id, "TEST_ALGO", 10.0, 10.0, 60.0, 0.5, FeasibilityStatus.FEASIBLE.value)
+    db.session.add(route)
+    db.session.commit()
+
+    from app.models.drone_assignment import DroneAssignment, AssignmentStatus
+    # Create an ABORTED assignment (cannot be simulated)
+    asg = DroneAssignment(req.id, drone.id, route.id, AssignmentStatus.ABORTED.value)
+    db.session.add(asg)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = operator.id
+        sess["_fresh"] = True
+
+    # Accessing simulation for aborted assignment triggers InvalidAssignmentStateError
+    resp = client.get(f"/simulation/assignment/{asg.id}", follow_redirects=False)
+    assert resp.status_code == 302
+    assert f"/requests/{req.id}" in resp.headers["Location"]
+
+
+def test_stateless_ml_prediction_csrf_exemption(app):
+    """Regression test: verify that stateless POST to /analytics/api/ml-model/predict succeeds with CSRF protection enabled."""
+    with app.app_context():
+        operator = User("Operator CSRF", "csrf.op@emergency.org", "CsrfPass123!", UserRole.OPERATOR.value)
+        db.session.add(operator)
+        db.session.commit()
+        op_id = operator.id
+
+    orig_csrf = app.config.get("WTF_CSRF_ENABLED", False)
+    try:
+        app.config["WTF_CSRF_ENABLED"] = True
+        test_client = app.test_client()
+
+        with test_client.session_transaction() as sess:
+            sess["user_id"] = op_id
+            sess["_fresh"] = True
+
+        payload = {
+            "distance_km": 12.0,
+            "payload_weight_kg": 2.0,
+            "wind_speed_mps": 3.0,
+            "cruise_speed_kmh": 60.0,
+        }
+        # Send POST without CSRF token
+        resp = test_client.post("/analytics/api/ml-model/predict", json=payload)
+        assert resp.status_code == 200
+        assert resp.get_json()["success"] is True
+    finally:
+        app.config["WTF_CSRF_ENABLED"] = orig_csrf
+

@@ -59,7 +59,7 @@ def view_by_assignment(assignment_id: int):
         return redirect(url_for("simulation.view_simulation", simulation_id=sim.id))
     except (InvalidAssignmentStateError, SimulationServiceError) as e:
         flash(f"Simulation could not be launched: {e}", "warning")
-        return redirect(url_for("delivery.request_detail", request_id=assignment.delivery_request_id))
+        return redirect(url_for("delivery.view_detail", request_id=assignment.delivery_request_id))
 
 
 @simulation_bp.route("/<int:simulation_id>")

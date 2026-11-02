@@ -22,6 +22,7 @@ from app.models.simulation_run import SimulationRun
 from app.models.analysis_log import AnalysisLog
 from app.services.auth_service import AuthService, login_required, role_required
 from app.services.analytics_service import AnalyticsService
+from app.services.delivery_service import DeliveryService, DeliveryServiceError
 from app.services.assignment_service import (
     AssignmentService,
     ConflictingAssignmentError,
@@ -220,7 +221,7 @@ def requester_dashboard():
 
 
 # ==============================================================================
-# REQUEST CREATION & DETAIL (WITH IDOR PROTECTION)
+# REQUEST CREATION (VIA DELIVERY SERVICE)
 # ==============================================================================
 @dashboard_bp.route("/requester/requests", methods=["POST"])
 @login_required
@@ -231,6 +232,7 @@ def create_delivery_request():
 
     emergency_type = request.form.get("emergency_type", "").strip()
     priority = request.form.get("priority", RequestPriority.HIGH.value).strip()
+    description = request.form.get("description", "").strip() or None
 
     try:
         pickup_lat = float(request.form.get("pickup_latitude", 0))
@@ -239,7 +241,7 @@ def create_delivery_request():
         dest_lng = float(request.form.get("destination_longitude", 0))
         payload_weight = float(request.form.get("payload_weight_kg", 0))
 
-        req = DeliveryRequest(
+        req = DeliveryService.create_request(
             requester_id=user.id,
             emergency_type=emergency_type,
             pickup_latitude=pickup_lat,
@@ -248,48 +250,18 @@ def create_delivery_request():
             destination_longitude=dest_lng,
             payload_weight_kg=payload_weight,
             priority=priority,
-            status=RequestStatus.PENDING.value,
+            description=description,
         )
 
-        db.session.add(req)
-        db.session.commit()
         flash(f"Emergency Delivery Request #{req.id} created successfully.", "success")
         return redirect(url_for("dashboard.requester_dashboard"))
 
-    except ValueError as val_err:
-        db.session.rollback()
+    except (ValueError, DeliveryServiceError) as val_err:
         flash(f"Validation error: {val_err}", "danger")
         return redirect(url_for("dashboard.requester_dashboard"))
     except Exception as exc:
-        db.session.rollback()
         flash(f"Database error while creating request: {exc}", "danger")
         return redirect(url_for("dashboard.requester_dashboard"))
-
-
-@dashboard_bp.route("/requests/<int:request_id>")
-@login_required
-def view_request_detail(request_id: int):
-    """View details of a specific delivery request.
-
-    Enforces Insecure Direct Object Reference (IDOR) protection:
-    Requesters can ONLY view their own delivery requests.
-    Admins and Operators can view any request.
-    """
-    user = AuthService.get_current_user()
-    req = db.session.get(DeliveryRequest, request_id)
-
-    if not req:
-        abort(404, description=f"Delivery request #{request_id} not found.")
-
-    # IDOR Protection: If user is REQUESTER, prevent access to another user's request
-    if user.role == UserRole.REQUESTER.value and req.requester_id != user.id:
-        abort(403, description="Access Denied: You do not have permission to view another user's delivery request.")
-
-    return render_template(
-        "dashboard/request_detail.html",
-        current_user=user,
-        req=req,
-    )
 
 
 # ==============================================================================

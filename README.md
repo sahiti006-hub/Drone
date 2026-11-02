@@ -1,6 +1,7 @@
 # Smart Multipurpose Emergency Drone Delivery and Route Optimization System
 
-[![Automated Tests](https://img.shields.io/badge/pytest-95%20passed-success)](tests/)
+[![Automated Tests](https://img.shields.io/badge/pytest-99%20passed-success)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-80%25-brightgreen)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-Flask%203.1-informational)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/database-MySQL%20%2F%20SQLAlchemy%202.1-orange)](https://www.sqlalchemy.org/)
@@ -34,7 +35,7 @@ An academic research prototype, simulation cockpit, and route optimization platf
 
 Rapid transit of critical healthcare supplies—such as emergency blood units, snakebite antivenoms, and automated external defibrillators (AEDs)—is frequently hindered by urban road gridlock, mountainous terrain, and disaster-induced infrastructure collapse. This project introduces the **Smart Multipurpose Emergency Drone Delivery and Route Optimization System**, a modular, full-stack platform designed to automate dispatch operations, enforce physical and meteorological safety constraints, and optimize 3D flight paths across urban and rural corridors. 
 
-The system incorporates a **Deterministic Multi-Objective Route Optimizer** that balances flight distance, estimated duration, payload-induced energy consumption, and structural maneuver penalties using min-max normalized scalarization against a shortest-feasible baseline. Built on Python Flask, SQLAlchemy 2.0, Leaflet.js, and Pandas, the platform includes role-based access control (RBAC), an interactive discrete-time simulation cockpit, real-time telemetry checkpointing, operational monitoring dashboards, priority-based multi-drone batch allocation, dynamic in-flight rerouting, an advisory ML flight duration/energy regression module, and a reproducible empirical evaluation suite verified by 95 automated tests.
+The system incorporates a **Deterministic Multi-Objective Route Optimizer** that balances flight distance, estimated duration, payload-induced energy consumption, and structural maneuver penalties using min-max normalized scalarization against a shortest-feasible baseline. Built on Python Flask, SQLAlchemy 2.0, Leaflet.js, and Pandas, the platform includes role-based access control (RBAC), an interactive discrete-time simulation cockpit, real-time telemetry checkpointing, operational monitoring dashboards, priority-based multi-drone batch allocation, dynamic in-flight rerouting, an advisory ML flight duration/energy regression module, and a reproducible empirical evaluation suite verified by 99 automated tests.
 
 ---
 
@@ -117,7 +118,7 @@ Traditional ground emergency logistics suffer from severe systemic vulnerabiliti
 | `app/services/` | `RouteOptimizer`, `DroneAllocationService`, `AssignmentService`, `SimulationService`, `AnalyticsService`, `FlightPredictionService` | Core domain engine: corridor generation, feasibility evaluation, multi-objective scoring, bipartite batch matching, dynamic in-flight rerouting, ML duration/energy prediction, discrete-time kinematics, and Pandas analytics. |
 | `app/templates/` | `base.html`, `auth/`, `dashboard/`, `drones/`, `delivery/`, `simulation/`, `analytics/` | Clean Jinja2 emergency-dispatch UI with role-aware navigation and responsive layout. |
 | `scripts/` | `init_db.py`, `seed_db.py`, `create_admin.py`, `run_optimizer_experiments.py`, `analyze_evaluation_results.py`, `demonstrate_full_workflow.py` | Maintenance, database migration, automated benchmark evaluation, and live demonstration runners. |
-| `tests/` | 14 dedicated test modules (95 automated tests) | Comprehensive unit, integration, RBAC, boundary validation, multi-drone allocation, dynamic rerouting, ML prediction, and security regression suite. |
+| `tests/` | 14 dedicated test modules (99 automated tests) | Comprehensive unit, integration, RBAC, boundary validation, multi-drone allocation, dynamic rerouting, ML prediction, and security regression suite. |
 
 ---
 
@@ -231,31 +232,31 @@ Open **`http://127.0.0.1:5000`** in any modern web browser.
 
 ## 11. Testing & Quality Assurance
 
-The test suite contains **95 automated tests** across 14 test modules executed using Pytest:
+The test suite contains **99 automated tests** across 14 test modules executed using Pytest with 80% statement coverage:
 
 ```powershell
-pytest -v
+pytest -v --cov=app --cov-report=term-missing
 ```
 
 ```text
 tests\test_analytics_and_monitoring.py ......                            [  6%]
 tests\test_auth_and_dashboards.py ........                               [ 14%]
-tests\test_delivery_and_drone_management.py ........                     [ 23%]
-tests\test_delivery_request_and_routes.py ...                            [ 26%]
-tests\test_drone_assignment_service.py ....                              [ 30%]
-tests\test_drone_model.py ...                                            [ 33%]
-tests\test_dynamic_simulation_rerouting.py .....                         [ 38%]
-tests\test_evaluation_framework.py ....                                  [ 43%]
-tests\test_health.py ..                                                  [ 45%]
-tests\test_multi_drone_allocation.py .....                               [ 50%]
-tests\test_prediction_module.py ......                                   [ 56%]
-tests\test_route_optimization_and_allocation.py ..............           [ 71%]
+tests\test_delivery_and_drone_management.py ........                     [ 22%]
+tests\test_delivery_request_and_routes.py ......                         [ 28%]
+tests\test_drone_assignment_service.py ....                              [ 32%]
+tests\test_drone_model.py ...                                            [ 35%]
+tests\test_dynamic_simulation_rerouting.py ......                        [ 41%]
+tests\test_evaluation_framework.py ....                                  [ 45%]
+tests\test_health.py ..                                                  [ 47%]
+tests\test_multi_drone_allocation.py .....                               [ 52%]
+tests\test_prediction_module.py ......                                   [ 58%]
+tests\test_route_optimization_and_allocation.py ..............           [ 72%]
 tests\test_security_and_audit.py ..........                              [ 82%]
 tests\test_simulation_and_analysis_logs.py ..                            [ 84%]
 tests\test_simulation_engine_and_api.py .........                        [ 93%]
 tests\test_user_model.py ......                                          [100%]
 
-============================= 95 passed in 15.77s =============================
+============================= 99 passed in 38.90s =============================
 ```
 
 ### Specialized Enhancement Workflows

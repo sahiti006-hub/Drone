@@ -109,7 +109,7 @@
           <tbody>
             {% for req in recent_requests %}
             <tr>
-              <td><a href="{{ url_for('dashboard.view_request_detail', request_id=req.id) }}" style="color: var(--color-primary); font-weight: 700;">#{{ req.id }}</a></td>
+              <td><a href="{{ url_for('delivery.view_detail', request_id=req.id) }}" style="color: var(--color-primary); font-weight: 700;">#{{ req.id }}</a></td>
               <td>{{ req.emergency_type.replace('_', ' ') }}</td>
               <td>
                 <span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span>

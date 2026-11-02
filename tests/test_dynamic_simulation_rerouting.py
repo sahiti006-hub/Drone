@@ -297,3 +297,37 @@ def test_reroute_rest_api_endpoint(client, setup_reroute_entities):
     assert data["success"] is True
     assert data["reroute"]["switched"] is True
     assert data["reroute"]["new_route_id"] is not None
+
+
+def test_step_simulation_advances_smoothly_after_dynamic_reroute(setup_reroute_entities):
+    """Regression test: verify kinematics advance smoothly after dynamic reroute without teleportation."""
+    sim = setup_reroute_entities["simulation"]
+    dist_before = sim.distance_covered_km
+    battery_before = sim.current_battery_wh
+
+    weather = WeatherData(
+        wind_speed_mps=7.0,
+        precipitation_mmh=2.5,
+        visibility_km=5.0,
+        weather_summary="In-flight gusty shower",
+    )
+
+    reroute_res = SimulationService.evaluate_and_reroute(
+        simulation_id=sim.id,
+        updated_weather=weather,
+        policy_name="SAFETY_MANDATED",
+        reason="Avoiding convective cell",
+    )
+    assert reroute_res.switched is True
+
+    # Advance simulation by 5 seconds at 1.0x speed
+    drone = setup_reroute_entities["drone"]
+    cruise_speed = float(drone.cruise_speed_kmh)  # 60 km/h = 1 km/min = 0.01667 km/s
+    expected_step_dist = (cruise_speed / 3600.0) * 5.0  # ~0.0833 km
+
+    step_res = SimulationService.step_simulation(sim.id, delta_sim_seconds=5.0, speed_multiplier=1.0)
+    assert step_res["is_completed"] is False
+    assert abs(step_res["distance_covered_km"] - (dist_before + expected_step_dist)) < 0.005
+    assert step_res["current_battery_wh"] < battery_before
+    assert step_res["progress_percent"] < 99.0
+

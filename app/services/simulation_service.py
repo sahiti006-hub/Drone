@@ -928,13 +928,55 @@ class SimulationService:
                 explanation=policy_explanation,
             )
 
-        # PRESERVE ORIGINAL ROUTE & PERSIST REPLACEMENT ROUTE
+        # PRESERVE ORIGINAL ROUTE & PERSIST FULL REVISED REPLACEMENT ROUTE
+        # Collect prior waypoints traversed from start up to current position
+        orig_wps = (
+            RouteWaypoint.query.filter_by(route_id=orig_route.id)
+            .order_by(RouteWaypoint.sequence_number.asc())
+            .all()
+        )
+        orig_wp_dicts = [wp.to_dict() for wp in orig_wps]
+        cum_dists, _ = get_route_segment_metrics(orig_wp_dicts)
+
+        prior_distance = float(sim.distance_covered_km)
+        prior_waypoints: List[Tuple[float, float, float]] = []
+        for idx, wp in enumerate(orig_wps):
+            if cum_dists[idx] < (prior_distance - 0.05):
+                prior_waypoints.append((float(wp.latitude), float(wp.longitude), float(wp.altitude_m)))
+
+        if not prior_waypoints and orig_wps:
+            prior_waypoints.append((float(orig_wps[0].latitude), float(orig_wps[0].longitude), float(orig_wps[0].altitude_m)))
+
+        # Add current position
+        curr_alt = float(sim.current_altitude_m) if sim.current_altitude_m is not None else 50.0
+        prior_waypoints.append((curr_lat, curr_lon, curr_alt))
+
+        # Add forward candidate waypoints (excluding index 0 which is curr_lat, curr_lon)
+        forward_waypoints = [
+            (float(wp.latitude), float(wp.longitude), float(wp.altitude_m))
+            for wp in best_cand.waypoints[1:]
+        ]
+        all_revised_waypoints = prior_waypoints + forward_waypoints
+
+        # Recalculate total revised distance
+        full_wps_dicts = [{"latitude": lat, "longitude": lon} for lat, lon, _ in all_revised_waypoints]
+        _, full_revised_distance = get_route_segment_metrics(full_wps_dicts)
+
+        prior_elapsed_min = float(sim.elapsed_sim_seconds) / 60.0
+        total_revised_duration = prior_elapsed_min + float(best_cand.duration_minutes)
+
+        # Estimate prior energy spent based on ratio of distance covered
+        orig_energy = float(orig_route.estimated_energy_wh)
+        ratio = (prior_distance / float(orig_route.estimated_distance_km)) if float(orig_route.estimated_distance_km) > 0 else 0.0
+        prior_energy = ratio * orig_energy
+        total_revised_energy = prior_energy + float(best_cand.energy_wh)
+
         replacement_route = Route(
             delivery_request_id=req.id,
             algorithm_name=f"REROUTE:{best_cand.candidate_id}",
-            estimated_distance_km=best_cand.distance_km,
-            estimated_duration_minutes=best_cand.duration_minutes,
-            estimated_energy_wh=best_cand.energy_wh,
+            estimated_distance_km=round(full_revised_distance, 3),
+            estimated_duration_minutes=round(total_revised_duration, 2),
+            estimated_energy_wh=round(total_revised_energy, 2),
             route_score=best_cand.objective_score,
             feasibility_status=FeasibilityStatus.FEASIBLE.value,
             rejection_reason=f"Dynamic reroute from Route #{orig_route.id}. Reason: {reason}",
@@ -942,15 +984,15 @@ class SimulationService:
         db.session.add(replacement_route)
         db.session.flush()
 
-        # Persist replacement waypoints starting from current drone position
-        for idx, wp in enumerate(best_cand.waypoints):
+        # Persist full revised sequence of waypoints starting from pickup through reroute to destination
+        for idx, (lat, lon, alt) in enumerate(all_revised_waypoints):
             db.session.add(
                 RouteWaypoint(
                     route_id=replacement_route.id,
                     sequence_number=idx,
-                    latitude=wp.latitude,
-                    longitude=wp.longitude,
-                    altitude_m=wp.altitude_m,
+                    latitude=lat,
+                    longitude=lon,
+                    altitude_m=alt,
                 )
             )
 

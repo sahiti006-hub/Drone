@@ -70,6 +70,11 @@ class AuthService:
         _LOGIN_FAILURES.pop(identifier, None)
 
     @classmethod
+    def clear_all_failures(cls) -> None:
+        """Clear all in-memory rate-limiting records (useful for test isolation and cache flush)."""
+        _LOGIN_FAILURES.clear()
+
+    @classmethod
     def login_user(cls, user: User, remember: bool = False) -> None:
         """Establish a secure user session with session regeneration."""
         session.clear()  # Prevent session fixation

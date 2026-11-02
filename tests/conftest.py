@@ -1,6 +1,7 @@
 import pytest
 from app import create_app
 from app.extensions import db
+from app.services.auth_service import AuthService
 
 
 @pytest.fixture(scope="session")
@@ -14,11 +15,15 @@ def app():
 @pytest.fixture(scope="function", autouse=True)
 def clean_db(app):
     """Ensure each test runs with a clean, isolated database and fresh session."""
+    AuthService.clear_all_failures()
+    app.config["WTF_CSRF_ENABLED"] = False
     with app.app_context():
         db.create_all()
         yield
         db.session.remove()
         db.drop_all()
+    AuthService.clear_all_failures()
+    app.config["WTF_CSRF_ENABLED"] = False
 
 
 @pytest.fixture(scope="function")

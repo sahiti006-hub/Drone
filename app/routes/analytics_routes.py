@@ -15,6 +15,7 @@ from flask import (
 
 from app.models.delivery_request import EmergencyType, RequestPriority, RequestStatus
 from app.models.user import UserRole
+from app.extensions import csrf
 from app.services.analytics_service import AnalyticsService
 from app.services.auth_service import AuthService, login_required, role_required
 
@@ -132,6 +133,7 @@ def api_ml_evaluation():
 
 
 @analytics_bp.route("/api/ml-model/predict", methods=["POST"])
+@csrf.exempt
 @login_required
 def api_ml_predict():
     """JSON API generating advisory flight duration and energy predictions alongside baseline physics."""
