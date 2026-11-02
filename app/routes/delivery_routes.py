@@ -225,3 +225,37 @@ def cancel_request(request_id: int):
         flash(f"Cancellation error: {err}", "danger")
 
     return redirect(url_for("delivery.view_detail", request_id=request_id))
+
+
+@delivery_bp.route("/<int:request_id>/optimize", methods=["POST"])
+@login_required
+@role_required(UserRole.ADMIN, UserRole.OPERATOR)
+def optimize_routes(request_id: int):
+    """Generate and evaluate candidate routes for a delivery request."""
+    from app.services.drone_allocation_service import DroneAllocationService, AllocationServiceError
+
+    algorithm = request.form.get("algorithm", "WEIGHTED_MULTI_OBJECTIVE")
+    include_return = request.form.get("include_return_trip") == "1"
+
+    try:
+        opt_result, selected_route = DroneAllocationService.generate_and_persist_routes(
+            delivery_request_id=request_id,
+            algorithm_name=algorithm,
+            include_return_trip=include_return,
+        )
+        if opt_result.is_feasible and selected_route:
+            flash(
+                f"Generated {opt_result.candidate_count} flight corridors ({opt_result.feasible_count} feasible). "
+                f"Optimal corridor selected: Route #{selected_route.id} ({selected_route.estimated_distance_km} km, "
+                f"{selected_route.estimated_energy_wh} Wh).",
+                "success",
+            )
+        else:
+            flash(
+                f"Evaluation completed: {opt_result.summary_message}",
+                "warning",
+            )
+    except Exception as exc:
+        flash(f"Route optimization failed: {exc}", "danger")
+
+    return redirect(url_for("delivery.view_detail", request_id=request_id))

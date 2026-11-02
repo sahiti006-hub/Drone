@@ -98,9 +98,19 @@
 
 <!-- Available Routes & Waypoints -->
 <div class="dashboard-card">
-  <div class="card-header">
-    <h2 class="card-title">Calculated Flight Routes</h2>
-    <span class="badge badge-optimal">{{ req.routes.count() }} Calculated</span>
+  <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 class="card-title">Calculated Flight Routes & Corridors</h2>
+      <span class="badge badge-optimal">{{ req.routes.count() }} Evaluated</span>
+    </div>
+    {% if current_user.role in ['ADMIN', 'OPERATOR'] and req.status in ['PENDING', 'ROUTE_CALCULATED'] %}
+      <form action="{{ url_for('delivery.optimize_routes', request_id=req.id) }}" method="POST" style="margin: 0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary btn-sm">
+          ⚡ Run Route Optimization
+        </button>
+      </form>
+    {% endif %}
   </div>
   <div class="card-body" style="padding: 0;">
     <div class="table-responsive">
@@ -126,7 +136,12 @@
             <td>{{ r.estimated_duration_minutes }} min</td>
             <td>{{ r.estimated_energy_wh }} Wh</td>
             <td>{{ r.route_score or '-' }}</td>
-            <td><span class="badge badge-{{ r.feasibility_status.lower() }}">{{ r.feasibility_status }}</span></td>
+            <td>
+              <span class="badge badge-{{ r.feasibility_status.lower() }}">{{ r.feasibility_status }}</span>
+              {% if r.rejection_reason %}
+                <div style="font-size: 0.72rem; color: #dc2626; margin-top: 4px; max-width: 200px;">{{ r.rejection_reason }}</div>
+              {% endif %}
+            </td>
             <td>{{ r.waypoints|length }} waypoints</td>
           </tr>
           {% else %}
