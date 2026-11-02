@@ -117,3 +117,54 @@ def api_summary():
         "metrics": metrics,
         "route_analytics": route_analytics,
     }), 200
+
+
+@analytics_bp.route("/api/ml-model/evaluation", methods=["GET"])
+@login_required
+def api_ml_evaluation():
+    """JSON API returning model validation metrics (MAE, RMSE, R2) vs analytical baseline."""
+    from app.services.prediction_service import FlightPredictionService
+    report = FlightPredictionService.get_evaluation_report()
+    return jsonify({
+        "success": True,
+        "evaluation_report": report,
+    }), 200
+
+
+@analytics_bp.route("/api/ml-model/predict", methods=["POST"])
+@login_required
+def api_ml_predict():
+    """JSON API generating advisory flight duration and energy predictions alongside baseline physics."""
+    from app.services.prediction_service import FlightPredictionService
+    data = request.get_json(silent=True) or {}
+
+    try:
+        distance_km = float(data.get("distance_km", 10.0))
+        payload_weight_kg = float(data.get("payload_weight_kg", 2.0))
+        wind_speed_mps = float(data.get("wind_speed_mps", 4.0))
+        cruise_speed_kmh = float(data.get("cruise_speed_kmh", 60.0))
+
+        if distance_km <= 0:
+            return jsonify({"success": False, "error": "distance_km must be positive"}), 400
+        if payload_weight_kg < 0:
+            return jsonify({"success": False, "error": "payload_weight_kg cannot be negative"}), 400
+        if wind_speed_mps < 0:
+            return jsonify({"success": False, "error": "wind_speed_mps cannot be negative"}), 400
+        if cruise_speed_kmh <= 0:
+            return jsonify({"success": False, "error": "cruise_speed_kmh must be positive"}), 400
+
+        prediction = FlightPredictionService.predict_flight(
+            distance_km=distance_km,
+            payload_weight_kg=payload_weight_kg,
+            wind_speed_mps=wind_speed_mps,
+            cruise_speed_kmh=cruise_speed_kmh,
+        )
+
+        return jsonify({
+            "success": True,
+            "prediction": prediction.to_dict(),
+        }), 200
+
+    except (ValueError, TypeError) as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
