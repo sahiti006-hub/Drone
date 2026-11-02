@@ -227,3 +227,42 @@ def test_simulation_authorization_and_checkpoint_validation(client):
     bad_data = bad_resp.get_json()
     assert bad_data["success"] is False
     assert "Must be between -90 and +90" in bad_data["error"]
+
+
+def test_production_environment_validation_rejects_insecure_secret_key(monkeypatch):
+    """Verify that ProductionConfig strictly rejects default or weak SECRET_KEY at startup."""
+    from app.config import ProductionConfig
+
+    # Simulate default insecure secret key
+    monkeypatch.setenv("SECRET_KEY", "dev-secret-key-change-in-production")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+
+    with pytest.raises(ValueError) as excinfo:
+        ProductionConfig()
+    assert "SECRET_KEY is missing or set to an insecure placeholder" in str(excinfo.value)
+
+
+def test_production_environment_validation_rejects_missing_database(monkeypatch):
+    """Verify that ProductionConfig strictly rejects missing database configuration at startup."""
+    from app.config import ProductionConfig
+
+    monkeypatch.setenv("SECRET_KEY", "a-very-secure-random-production-secret-key-123456789")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("DB_PASSWORD", raising=False)
+    monkeypatch.setenv("ALLOW_SQLITE_IN_PRODUCTION", "0")
+
+    with pytest.raises(ValueError) as excinfo:
+        ProductionConfig()
+    assert "Database configuration incomplete" in str(excinfo.value)
+
+
+def test_production_environment_validation_accepts_valid_configuration(monkeypatch):
+    """Verify that ProductionConfig initializes successfully when valid settings are provided."""
+    from app.config import ProductionConfig
+
+    monkeypatch.setenv("SECRET_KEY", "valid-high-entropy-production-key-987654321012345")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///instance/prod_demo.db")
+
+    prod_cfg = ProductionConfig()
+    assert prod_cfg.DEBUG is False
+    assert prod_cfg.TESTING is False

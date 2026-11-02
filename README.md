@@ -1,6 +1,6 @@
 # Smart Multipurpose Emergency Drone Delivery and Route Optimization System
 
-[![Automated Tests](https://img.shields.io/badge/pytest-119%20passed-success)](tests/)
+[![Automated Tests](https://img.shields.io/badge/pytest-122%20passed-success)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-Flask%203.1-informational)](https://flask.palletsprojects.com/)
@@ -372,13 +372,14 @@ Comprehensive academic and engineering documentation prepared for project evalua
 - **Final Presentation & Live Demo Script:** [`docs/final_presentation_demo.md`](docs/final_presentation_demo.md) — Step-by-step 10-phase demonstration script with pre-configured accounts, coordinates, controls, and expected observations.
 - **Academic Demonstration Guide:** [`docs/academic_demonstration_guide.md`](docs/academic_demonstration_guide.md) — Step-by-step presentation scripts and evaluator checkpoints.
 - **Viva Voce Technical Q&A:** [`docs/viva_technical_qa.md`](docs/viva_technical_qa.md) — Quick reference technical defense questions and answers.
+- **Production & Academic Release Checklist:** [`docs/release_checklist.md`](docs/release_checklist.md) — Comprehensive operations guide covering prerequisites, environment configuration, MySQL setup, WSGI/Docker startup, smoke tests, backups, and rollback procedures.
 - **Architectural & Security Audit Report:** [`docs/final_audit_report.md`](docs/final_audit_report.md) — Complete system audit of entry points, routes, models, services, concurrency, and security.
 - **Independent ML Evaluation Report:** [`docs/ml_evaluation_report.md`](docs/ml_evaluation_report.md) — Rigorous audit of the advisory ML module, training data trace, leakage verification, and out-of-distribution analysis.
 - **End-to-End Quality Assurance Report:** [`docs/end_to_end_test_report.md`](docs/end_to_end_test_report.md) — Verification of the 16-test E2E lifecycle and database integrity suite.
 
 ### Automated Verification Commands
 ```powershell
-# 1. Run all 119 automated tests with statement coverage (83% across 2,821 lines):
+# 1. Run all 122 automated tests with statement coverage (83% across 2,846 lines):
 pytest -v --cov=app --cov-report=term-missing
 
 # 2. Run independent ML module evaluation:

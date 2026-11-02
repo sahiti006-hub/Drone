@@ -31,6 +31,17 @@ def create_app(config_name=None):
     flask_app.config.from_object(config_class)
     flask_app.config["ENV"] = config_name
 
+    # Apply ProxyFix when running behind a reverse proxy (e.g., Nginx, Traefik, AWS ALB)
+    if flask_app.config.get("USE_PROXY_FIX"):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        flask_app.wsgi_app = ProxyFix(
+            flask_app.wsgi_app,
+            x_for=flask_app.config.get("PROXY_FIX_FOR", 1),
+            x_proto=flask_app.config.get("PROXY_FIX_PROTO", 1),
+            x_host=flask_app.config.get("PROXY_FIX_HOST", 1),
+            x_prefix=flask_app.config.get("PROXY_FIX_PREFIX", 1),
+        )
+
     # Initialize extensions
     db.init_app(flask_app)
     migrate.init_app(flask_app, db)

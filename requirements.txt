@@ -18,3 +18,7 @@ numpy>=1.26.0
 # Testing
 pytest>=8.0.0
 pytest-cov>=5.0.0
+
+# Production WSGI Servers
+waitress>=3.0.0; platform_system == "Windows"
+gunicorn>=21.2.0; platform_system != "Windows"

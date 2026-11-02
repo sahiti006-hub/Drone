@@ -44,6 +44,14 @@ def seed_database():
     app = create_app()
 
     with app.app_context():
+        # Production Safety Guard
+        if app.config.get("ENV") == "production" and os.getenv("ALLOW_PRODUCTION_SEEDING") != "1" and "--force" not in sys.argv:
+            print("[!] SAFETY WARNING: Application is running in PRODUCTION mode.")
+            print("    Demonstration seed data must not be loaded into production databases.")
+            print("    To force demonstration seeding in production, rerun with: python scripts/seed_db.py --force")
+            print("    or set environment variable ALLOW_PRODUCTION_SEEDING=1.")
+            return False
+
         print("[*] Starting database demonstration dataset seeding...")
 
         # 1. Seed Demonstration Users

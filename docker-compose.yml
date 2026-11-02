@@ -1,0 +1,83 @@
+# ==============================================================================
+# Smart Emergency Drone Delivery System - Docker Compose Deployment
+# ==============================================================================
+# Reproducible academic evaluation and production-grade container orchestration.
+#
+# Startup Command:
+#   docker compose up --build -d
+#
+# View Logs:
+#   docker compose logs -f app
+#
+# Teardown:
+#   docker compose down (or 'docker compose down -v' to clear data volumes)
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: emergency_drone_db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-RootSecurePassword123!}
+      MYSQL_DATABASE: ${DB_NAME:-smart_emergency_drone_db}
+      MYSQL_USER: ${DB_USER:-drone_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-drone_pass_secure_123}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-RootSecurePassword123!}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - drone_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: emergency_drone_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: 0
+      SECRET_KEY: ${SECRET_KEY:-c927f8d168ab4d63b2f5670e17c093a47d2a8b9e128456f932e4d01b8a7c293e}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-drone_user}
+      DB_PASSWORD: ${DB_PASSWORD:-drone_pass_secure_123}
+      DB_NAME: ${DB_NAME:-smart_emergency_drone_db}
+      USE_PROXY_FIX: 1
+      SESSION_COOKIE_SECURE: 0  # Set to 1 if fronted by TLS/HTTPS proxy
+      ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@emergencydrone.org}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AdminSecurePass123!}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    networks:
+      - drone_network
+
+volumes:
+  mysql_data:
+    name: emergency_drone_mysql_data
+
+networks:
+  drone_network:
+    name: emergency_drone_network
+    driver: bridge

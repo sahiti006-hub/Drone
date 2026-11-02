@@ -51,6 +51,13 @@ class Config:
         "pool_pre_ping": True,
     }
 
+    # Reverse Proxy Settings
+    USE_PROXY_FIX = os.getenv("USE_PROXY_FIX", "0") == "1"
+    PROXY_FIX_FOR = int(os.getenv("PROXY_FIX_FOR", "1"))
+    PROXY_FIX_PROTO = int(os.getenv("PROXY_FIX_PROTO", "1"))
+    PROXY_FIX_HOST = int(os.getenv("PROXY_FIX_HOST", "1"))
+    PROXY_FIX_PREFIX = int(os.getenv("PROXY_FIX_PREFIX", "1"))
+
     # Simulation Defaults
     SIMULATION_SPEED_MULTIPLIER = float(os.getenv("SIMULATION_SPEED_MULTIPLIER", "1.0"))
     MAX_DRONE_PAYLOAD_KG = float(os.getenv("MAX_DRONE_PAYLOAD_KG", "5.0"))
@@ -72,6 +79,55 @@ class TestingConfig(Config):
     SQLALCHEMY_ENGINE_OPTIONS = {}
 
 
+def validate_production_environment(config):
+    """Validate that required production environment variables are properly configured.
+    
+    Raises:
+        ValueError: If mandatory production settings (SECRET_KEY, database credentials)
+            are missing, empty, or using default insecure placeholders.
+    """
+    errors = []
+
+    # 1. SECRET_KEY validation
+    secret_key = os.getenv("SECRET_KEY", "")
+    insecure_defaults = [
+        "",
+        "dev-secret-key-change-in-production",
+        "replace-with-a-secure-random-secret-key-in-production",
+        "change-me",
+        "secret",
+        "password",
+    ]
+    if not secret_key or secret_key.strip().lower() in insecure_defaults:
+        errors.append(
+            "SECRET_KEY is missing or set to an insecure placeholder. "
+            "Generate a random key using: python -c 'import secrets; print(secrets.token_hex(32))'"
+        )
+    elif len(secret_key) < 16:
+        errors.append("SECRET_KEY is too short (must be at least 16 characters for production).")
+
+    # 2. Database validation
+    raw_db_url = os.getenv("DATABASE_URL")
+    if not raw_db_url:
+        db_user = os.getenv("DB_USER", "")
+        db_password = os.getenv("DB_PASSWORD", "")
+        db_name = os.getenv("DB_NAME", "")
+        if not db_user or not db_password or not db_name:
+            if os.getenv("ALLOW_SQLITE_IN_PRODUCTION") != "1":
+                errors.append(
+                    "Database configuration incomplete. In production, provide either DATABASE_URL or set "
+                    "DB_USER, DB_PASSWORD, and DB_NAME for MySQL. "
+                    "(To permit SQLite in production for standalone demonstrations, set ALLOW_SQLITE_IN_PRODUCTION=1)."
+                )
+
+    if errors:
+        error_msg = "\n".join(f"  [X] {err}" for err in errors)
+        raise ValueError(
+            f"\n\n{'='*70}\nFATAL CONFIGURATION ERROR - PRODUCTION STARTUP HALTED\n{'='*70}\n"
+            f"{error_msg}\n{'='*70}\n"
+        )
+
+
 class ProductionConfig(Config):
     """Configuration for production deployment."""
     DEBUG = False
@@ -80,14 +136,7 @@ class ProductionConfig(Config):
 
     def __init__(self):
         super().__init__()
-        # In production, verify that a secure SECRET_KEY is provisioned
-        if os.getenv("SECRET_KEY") == "dev-secret-key-change-in-production" or not os.getenv("SECRET_KEY"):
-            import warnings
-            warnings.warn(
-                "SECURITY WARNING: ProductionConfig loaded without a dedicated production SECRET_KEY. "
-                "Please set SECRET_KEY in environment variables.",
-                RuntimeWarning,
-            )
+        validate_production_environment(self)
 
 
 config_by_name = {
