@@ -30,8 +30,14 @@
         <a href="{{ url_for('drone.list_drones') }}" class="nav-link {% if request.endpoint and 'drone' in request.endpoint %}active{% endif %}">
           <span>🛡️ Drone Inventory</span>
         </a>
-        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
+          <span>📋 Delivery Monitor</span>
+        </a>
+        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery.list_requests' in request.endpoint %}active{% endif %}">
           <span>📦 All Requests</span>
+        </a>
+        <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and 'analytics.index' in request.endpoint %}active{% endif %}">
+          <span>📈 Route Analytics</span>
         </a>
         <a href="{{ url_for('delivery.new_request') }}" class="nav-link">
           <span>➕ New Request</span>
@@ -44,11 +50,17 @@
         <a href="{{ url_for('dashboard.operator_dashboard') }}" class="nav-link {% if request.endpoint and 'operator_dashboard' in request.endpoint %}active{% endif %}">
           <span>🎮 Dispatch Console</span>
         </a>
+        <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
+          <span>📋 Delivery Monitor</span>
+        </a>
         <a href="{{ url_for('drone.list_drones') }}" class="nav-link {% if request.endpoint and 'drone' in request.endpoint %}active{% endif %}">
           <span>🛡️ Drone Inventory</span>
         </a>
-        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery.list_requests' in request.endpoint %}active{% endif %}">
           <span>📦 Delivery Requests</span>
+        </a>
+        <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and 'analytics.index' in request.endpoint %}active{% endif %}">
+          <span>📈 Route Analytics</span>
         </a>
         <a href="{{ url_for('delivery.new_request') }}" class="nav-link">
           <span>➕ New Request</span>
@@ -58,8 +70,11 @@
         <a href="{{ url_for('dashboard.requester_dashboard') }}" class="nav-link {% if request.endpoint and 'requester_dashboard' in request.endpoint %}active{% endif %}">
           <span>📦 My Dashboard</span>
         </a>
+        <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
+          <span>📋 Track Deliveries</span>
+        </a>
         <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery.list_requests' in request.endpoint %}active{% endif %}">
-          <span>📋 My Requests</span>
+          <span>📋 All Requests</span>
         </a>
         <a href="{{ url_for('delivery.new_request') }}" class="nav-link {% if request.endpoint and 'delivery.new_request' in request.endpoint %}active{% endif %}">
           <span>➕ Submit Request</span>

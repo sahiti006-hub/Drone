@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Live Emergency Delivery Monitoring Console{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div>
+    <h1 class="page-title">Emergency Delivery Monitoring Console</h1>
+    <p class="page-subtitle">Real-time tracking of emergency dispatches, hardware assignments, and simulation progress</p>
+  </div>
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <a href="{{ url_for('analytics.export_deliveries_csv', status=filters.status, priority=filters.priority, emergency_type=filters.emergency_type, search=filters.search, sort_by=filters.sort_by) }}" class="btn btn-secondary">
+      📥 Export Filtered CSV
+    </a>
+    {% if current_user and current_user.role != 'REQUESTER' %}
+    <a href="{{ url_for('analytics.index') }}" class="btn btn-primary">
+      📈 Route Analytics
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Operational Metric Badges -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+  <div class="stat-card">
+    <div class="stat-icon" style="background-color: #eff6ff; color: #2563eb;">📦</div>
+    <div>
+      <div class="stat-value">{{ metrics.total_requests }}</div>
+      <div class="stat-label">Total Requests</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background-color: #fef3c7; color: #d97706;">⏳</div>
+    <div>
+      <div class="stat-value">{{ metrics.pending_requests }}</div>
+      <div class="stat-label">Pending Triage</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background-color: #f3e8ff; color: #7c3aed;">🚁</div>
+    <div>
+      <div class="stat-value">{{ metrics.in_transit_drones }}</div>
+      <div class="stat-label">Drones In Transit</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background-color: #ecfdf5; color: #059669;">✅</div>
+    <div>
+      <div class="stat-value">{{ metrics.completed_deliveries }}</div>
+      <div class="stat-label">Completed Deliveries</div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter & Search Toolbar -->
+<div class="dashboard-card" style="margin-bottom: 24px;">
+  <div class="card-body" style="padding: 16px 20px;">
+    <form method="GET" action="{{ url_for('analytics.delivery_monitor') }}" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+      <!-- Search Input -->
+      <div style="flex: 1; min-width: 180px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">
+          Search Keywords
+        </label>
+        <input type="text" name="search" value="{{ filters.search }}" placeholder="Search ID, Type, Hospital..." class="form-control" style="font-size: 0.85rem; padding: 7px 12px;">
+      </div>
+
+      <!-- Status Filter -->
+      <div style="min-width: 140px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">
+          Delivery Status
+        </label>
+        <select name="status" class="form-control" style="font-size: 0.85rem; padding: 7px 12px;">
+          <option value="ALL" {% if filters.status == 'ALL' %}selected{% endif %}>All Statuses</option>
+          {% for st in statuses %}
+          <option value="{{ st }}" {% if filters.status == st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Priority Filter -->
+      <div style="min-width: 130px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">
+          Priority
+        </label>
+        <select name="priority" class="form-control" style="font-size: 0.85rem; padding: 7px 12px;">
+          <option value="ALL" {% if filters.priority == 'ALL' %}selected{% endif %}>All Priorities</option>
+          {% for p in priorities %}
+          <option value="{{ p }}" {% if filters.priority == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Emergency Category Filter -->
+      <div style="min-width: 160px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">
+          Emergency Category
+        </label>
+        <select name="emergency_type" class="form-control" style="font-size: 0.85rem; padding: 7px 12px;">
+          <option value="ALL" {% if filters.emergency_type == 'ALL' %}selected{% endif %}>All Types</option>
+          {% for et in emergency_types %}
+          <option value="{{ et }}" {% if filters.emergency_type == et %}selected{% endif %}>{{ et }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Sorting -->
+      <div style="min-width: 150px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase;">
+          Sort By
+        </label>
+        <select name="sort_by" class="form-control" style="font-size: 0.85rem; padding: 7px 12px;">
+          <option value="created_desc" {% if filters.sort_by == 'created_desc' %}selected{% endif %}>Newest First</option>
+          <option value="created_asc" {% if filters.sort_by == 'created_asc' %}selected{% endif %}>Oldest First</option>
+          <option value="priority_desc" {% if filters.sort_by == 'priority_desc' %}selected{% endif %}>Priority (Critical ➔ Low)</option>
+          <option value="payload_desc" {% if filters.sort_by == 'payload_desc' %}selected{% endif %}>Payload Mass (Heavy ➔ Light)</option>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display: flex; gap: 8px;">
+        <button type="submit" class="btn btn-primary" style="padding: 7px 16px;">
+          Filter
+        </button>
+        <a href="{{ url_for('analytics.delivery_monitor') }}" class="btn btn-secondary" style="padding: 7px 14px;">
+          Reset
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Live Deliveries Table -->
+<div class="dashboard-card">
+  <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h2 class="card-title">Monitored Deliveries ({{ deliveries|length }} records)</h2>
+    <span style="font-size: 0.8rem; color: #64748b;">
+      Authoritative Database Snapshot
+    </span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Emergency Manifest</th>
+            <th>Requester / Hospital</th>
+            <th>Dispatched Drone</th>
+            <th>Est. Route Metrics</th>
+            <th>Mission Progress</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in deliveries %}
+          <tr>
+            <td>
+              <a href="{{ url_for('delivery.view_detail', request_id=d.id) }}" style="font-weight: 800; color: var(--color-primary);">
+                #{{ d.id }}
+              </a>
+            </td>
+
+            <td>
+              <div style="font-weight: 700; color: #0f172a;">{{ d.emergency_type }}</div>
+              <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                <span class="badge badge-{{ d.priority.lower() }}" style="font-size: 0.68rem;">{{ d.priority }}</span>
+                <span style="font-size: 0.72rem; color: #64748b;">{{ d.payload_weight_kg }} kg</span>
+              </div>
+            </td>
+
+            <td>
+              <div style="font-weight: 600; color: #334155;">{{ d.requester_name }}</div>
+              <div style="font-size: 0.72rem; color: #94a3b8;">{{ d.created_at }}</div>
+            </td>
+
+            <td>
+              {% if d.drone_code %}
+                <span style="font-family: monospace, monospace; font-weight: 700; color: #0369a1;">
+                  🚁 {{ d.drone_code }}
+                </span>
+                <div style="font-size: 0.72rem; color: #64748b;">{{ d.drone_model or '' }}</div>
+              {% else %}
+                <span style="font-size: 0.78rem; color: #94a3b8; font-style: italic;">
+                  Unassigned
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if d.estimated_distance_km %}
+                <div style="font-size: 0.82rem; font-weight: 600; color: #0f172a;">
+                  {{ d.estimated_distance_km }} km | {{ d.estimated_duration_min }} min
+                </div>
+                <div style="font-size: 0.72rem; color: #64748b;">
+                  Energy: {{ d.estimated_energy_wh }} Wh
+                </div>
+              {% else %}
+                <span style="font-size: 0.78rem; color: #94a3b8;">Pending Route</span>
+              {% endif %}
+            </td>
+
+            <td style="min-width: 140px;">
+              {% if d.simulation_id %}
+                <div style="display: flex; justify-content: space-between; font-size: 0.72rem; margin-bottom: 2px;">
+                  <span style="font-weight: 600; color: #475569;">{{ d.simulation_status }}</span>
+                  <span style="font-weight: 700; color: var(--color-primary);">{{ "%.0f"|format(d.progress_percent) }}%</span>
+                </div>
+                <div style="width: 100%; height: 6px; background-color: #e2e8f0; border-radius: 9999px; overflow: hidden;">
+                  <div style="height: 100%; width: {{ d.progress_percent }}%; background: linear-gradient(90deg, #2563eb, #06b6d4); border-radius: 9999px;"></div>
+                </div>
+              {% else %}
+                <span style="font-size: 0.75rem; color: #94a3b8;">No Active Simulation</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="badge badge-{{ d.status.lower() }}">
+                {{ d.status }}
+              </span>
+            </td>
+
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <a href="{{ url_for('delivery.view_detail', request_id=d.id) }}" class="btn btn-sm btn-secondary" title="View Request Details">
+                  👁️ Details
+                </a>
+                {% if d.assignment_id %}
+                <a href="{{ url_for('simulation.view_by_assignment', assignment_id=d.assignment_id) }}" class="btn btn-sm btn-primary" title="Launch Interactive Simulation Cockpit">
+                  🎮 Cockpit
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <div class="empty-state-title">No Delivery Requests Match Current Filters</div>
+                <div class="empty-state-desc">Try resetting filter options or adjust search parameters to inspect delivery orders.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

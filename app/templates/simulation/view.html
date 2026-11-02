@@ -13,7 +13,7 @@
     <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">
       <a href="{{ url_for('delivery.list_requests') }}" style="color: var(--color-primary); text-decoration: none;">Delivery Requests</a>
       &nbsp;/&nbsp;
-      <a href="{{ url_for('delivery.request_detail', request_id=full_state.delivery_request.id) }}" style="color: var(--color-primary); text-decoration: none;">Request #{{ full_state.delivery_request.id }}</a>
+      <a href="{{ url_for('delivery.view_detail', request_id=full_state.delivery_request.id) }}" style="color: var(--color-primary); text-decoration: none;">Request #{{ full_state.delivery_request.id }}</a>
       &nbsp;/&nbsp;
       <span>Simulation Cockpit</span>
     </div>
@@ -21,7 +21,7 @@
     <p class="page-subtitle">Discrete-time flight kinematics and trajectory evaluation console</p>
   </div>
   <div style="display: flex; gap: 12px; align-items: center;">
-    <a href="{{ url_for('delivery.request_detail', request_id=full_state.delivery_request.id) }}" class="btn btn-secondary">
+    <a href="{{ url_for('delivery.view_detail', request_id=full_state.delivery_request.id) }}" class="btn btn-secondary">
       ← Back to Request
     </a>
   </div>

@@ -46,6 +46,7 @@ def create_app(config_name=None):
     from app.routes.delivery_routes import delivery_bp
     from app.routes.drone_routes import drone_bp
     from app.routes.simulation_routes import simulation_bp
+    from app.routes.analytics_routes import analytics_bp
 
     # Exempt health API from CSRF since it's a read-only telemetry API
     csrf.exempt(health_bp)
@@ -56,6 +57,7 @@ def create_app(config_name=None):
     flask_app.register_blueprint(delivery_bp)
     flask_app.register_blueprint(drone_bp)
     flask_app.register_blueprint(simulation_bp)
+    flask_app.register_blueprint(analytics_bp)
 
     # Root route: if browser request direct to dashboard/login, else API JSON metadata
     @flask_app.route("/", methods=["GET"])

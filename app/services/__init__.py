@@ -53,6 +53,7 @@ from app.services.simulation_service import (
     compute_bearing,
     get_route_segment_metrics,
 )
+from app.services.analytics_service import AnalyticsService
 
 __all__ = [
     "DroneService",

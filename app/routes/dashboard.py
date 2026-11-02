@@ -21,6 +21,7 @@ from app.models.drone_assignment import DroneAssignment, AssignmentStatus
 from app.models.simulation_run import SimulationRun
 from app.models.analysis_log import AnalysisLog
 from app.services.auth_service import AuthService, login_required, role_required
+from app.services.analytics_service import AnalyticsService
 from app.services.assignment_service import (
     AssignmentService,
     ConflictingAssignmentError,
@@ -53,20 +54,8 @@ def index():
 def admin_dashboard():
     """System-wide administration, telemetry, fleet oversight, and health audit."""
     user = AuthService.get_current_user()
+    metrics = AnalyticsService.get_dashboard_metrics(user)
 
-    total_drones = Drone.query.count()
-    available_drones = Drone.query.filter_by(status=DroneStatus.AVAILABLE.value, is_decommissioned=False).count()
-    in_transit_drones = Drone.query.filter_by(status=DroneStatus.IN_TRANSIT.value).count()
-    charging_drones = Drone.query.filter_by(status=DroneStatus.CHARGING.value).count()
-    maintenance_drones = Drone.query.filter_by(status=DroneStatus.MAINTENANCE.value).count()
-
-    total_requests = DeliveryRequest.query.count()
-    pending_requests = DeliveryRequest.query.filter(
-        DeliveryRequest.status.in_([RequestStatus.PENDING.value, RequestStatus.ROUTE_CALCULATED.value])
-    ).count()
-    delivered_requests = DeliveryRequest.query.filter_by(status=RequestStatus.DELIVERED.value).count()
-
-    active_assignments = DroneAssignment.query.filter_by(status=AssignmentStatus.ACTIVE.value).count()
     total_users = User.query.count()
 
     recent_drones = Drone.query.order_by(Drone.created_at.desc()).limit(6).all()
@@ -78,16 +67,17 @@ def admin_dashboard():
     return render_template(
         "dashboard/admin_dashboard.html",
         current_user=user,
+        metrics=metrics,
         stats={
-            "total_drones": total_drones,
-            "available_drones": available_drones,
-            "in_transit_drones": in_transit_drones,
-            "charging_drones": charging_drones,
-            "maintenance_drones": maintenance_drones,
-            "total_requests": total_requests,
-            "pending_requests": pending_requests,
-            "delivered_requests": delivered_requests,
-            "active_assignments": active_assignments,
+            "total_drones": metrics["total_active_drones"],
+            "available_drones": metrics["available_drones"],
+            "in_transit_drones": metrics["in_transit_drones"],
+            "charging_drones": metrics["charging_drones"],
+            "maintenance_drones": metrics["maintenance_drones"],
+            "total_requests": metrics["total_requests"],
+            "pending_requests": metrics["pending_requests"],
+            "delivered_requests": metrics["completed_deliveries"],
+            "active_assignments": metrics["assigned_deliveries"],
             "total_users": total_users,
         },
         recent_drones=recent_drones,
@@ -107,6 +97,7 @@ def admin_dashboard():
 def operator_dashboard():
     """Operational console: dispatch eligible drones, monitor missions, and simulate."""
     user = AuthService.get_current_user()
+    metrics = AnalyticsService.get_dashboard_metrics(user)
 
     # Requests that need assignment
     pending_requests = (
@@ -139,6 +130,7 @@ def operator_dashboard():
     return render_template(
         "dashboard/operator_dashboard.html",
         current_user=user,
+        metrics=metrics,
         pending_requests=pending_requests,
         available_drones=available_drones,
         active_assignments=active_assignments,
@@ -156,6 +148,7 @@ def operator_dashboard():
 def requester_dashboard():
     """Requester portal: submit emergency orders and track personal dispatch history."""
     user = AuthService.get_current_user()
+    metrics = AnalyticsService.get_dashboard_metrics(user)
 
     # Query only the authenticated requester's requests
     my_requests = (
@@ -164,13 +157,14 @@ def requester_dashboard():
         .all()
     )
 
-    total_count = len(my_requests)
+    total_count = metrics["total_requests"]
     in_transit_count = sum(1 for r in my_requests if r.status in {RequestStatus.ASSIGNED.value, RequestStatus.IN_TRANSIT.value})
-    delivered_count = sum(1 for r in my_requests if r.status == RequestStatus.DELIVERED.value)
+    delivered_count = metrics["completed_deliveries"]
 
     return render_template(
         "dashboard/requester_dashboard.html",
         current_user=user,
+        metrics=metrics,
         my_requests=my_requests,
         total_count=total_count,
         in_transit_count=in_transit_count,
