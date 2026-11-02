@@ -231,28 +231,60 @@ Open **`http://127.0.0.1:5000`** in any modern web browser.
 
 ## 11. Testing & Quality Assurance
 
-The test suite contains **79 automated tests** executed using Pytest:
+The test suite contains **95 automated tests** across 14 test modules executed using Pytest:
 
 ```powershell
 pytest -v
 ```
 
 ```text
-tests\test_analytics_and_monitoring.py ......                            [  7%]
-tests\test_auth_and_dashboards.py ........                               [ 17%]
-tests\test_delivery_and_drone_management.py ........                     [ 27%]
-tests\test_delivery_request_and_routes.py ...                            [ 31%]
-tests\test_drone_assignment_service.py ....                              [ 36%]
-tests\test_drone_model.py ...                                            [ 40%]
-tests\test_evaluation_framework.py ....                                  [ 45%]
-tests\test_health.py ..                                                  [ 48%]
-tests\test_route_optimization_and_allocation.py ..............           [ 65%]
-tests\test_security_and_audit.py ..........                              [ 78%]
-tests\test_simulation_and_analysis_logs.py ..                            [ 81%]
-tests\test_simulation_engine_and_api.py .........                        [ 92%]
+tests\test_analytics_and_monitoring.py ......                            [  6%]
+tests\test_auth_and_dashboards.py ........                               [ 14%]
+tests\test_delivery_and_drone_management.py ........                     [ 23%]
+tests\test_delivery_request_and_routes.py ...                            [ 26%]
+tests\test_drone_assignment_service.py ....                              [ 30%]
+tests\test_drone_model.py ...                                            [ 33%]
+tests\test_dynamic_simulation_rerouting.py .....                         [ 38%]
+tests\test_evaluation_framework.py ....                                  [ 43%]
+tests\test_health.py ..                                                  [ 45%]
+tests\test_multi_drone_allocation.py .....                               [ 50%]
+tests\test_prediction_module.py ......                                   [ 56%]
+tests\test_route_optimization_and_allocation.py ..............           [ 71%]
+tests\test_security_and_audit.py ..........                              [ 82%]
+tests\test_simulation_and_analysis_logs.py ..                            [ 84%]
+tests\test_simulation_engine_and_api.py .........                        [ 93%]
 tests\test_user_model.py ......                                          [100%]
 
-============================= 79 passed in 13.82s =============================
+============================= 95 passed in 15.77s =============================
+```
+
+### Specialized Enhancement Workflows
+
+#### A. Multi-Drone Batch Allocation Console
+1. Log in as Operator (`operator@dispatch.org` / `OperatorSecurePassword123!`).
+2. Navigate to `http://127.0.0.1:5000/operator/multi-allocation`.
+3. Review the side-by-side comparison of **Priority Best-Fit Matching** vs **FCFS Greedy Baseline**.
+4. Click **Dispatch Priority Best-Fit Batch** to atomically dispatch all matched pairs.
+
+#### B. Dynamic Simulation Rerouting
+During an active mission simulation, send an in-flight weather update via HTTP POST:
+```bash
+curl -X POST http://127.0.0.1:5000/simulation/api/<simulation_id>/reroute \
+  -H "Content-Type: application/json" \
+  -d '{"wind_speed_mps": 7.0, "precipitation_mmh": 3.0, "visibility_km": 5.0, "policy": "SAFETY_MANDATED", "reason": "Approaching convective storm"}'
+```
+The system will generate alternative corridors from the drone's current $(lat, lon)$ coordinate, preserve the original route in the database, and link the assignment to the replacement route.
+
+#### C. Machine Learning Advisory Prediction Module
+To query model validation metrics comparing the regularized Ridge OLS model against analytical physics baseline:
+```bash
+curl http://127.0.0.1:5000/analytics/api/ml-model/evaluation
+```
+To generate advisory duration and energy estimates for planned missions:
+```bash
+curl -X POST http://127.0.0.1:5000/analytics/api/ml-model/predict \
+  -H "Content-Type: application/json" \
+  -d '{"distance_km": 15.0, "payload_weight_kg": 2.5, "wind_speed_mps": 4.5, "cruise_speed_kmh": 60.0}'
 ```
 
 ---
