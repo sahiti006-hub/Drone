@@ -74,6 +74,8 @@ class Drone(db.Model):
             raise ValueError("Maximum payload must be greater than zero.")
         if float(battery_capacity_wh) <= 0:
             raise ValueError("Battery capacity must be greater than zero.")
+        if float(cruise_speed_kmh) <= 0:
+            raise ValueError("Cruise speed must be greater than zero.")
 
         initial_battery = float(current_battery_wh) if current_battery_wh is not None else float(battery_capacity_wh)
         if initial_battery < 0 or initial_battery > float(battery_capacity_wh):

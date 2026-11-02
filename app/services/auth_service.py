@@ -90,12 +90,13 @@ class AuthService:
     @staticmethod
     def get_current_user() -> User | None:
         """Retrieve the active user from session or database context."""
-        if hasattr(g, "current_user") and g.current_user:
-            return g.current_user
-
         user_id = session.get("user_id")
         if not user_id:
+            g.current_user = None
             return None
+
+        if hasattr(g, "current_user") and g.current_user and getattr(g.current_user, "id", None) == user_id:
+            return g.current_user
 
         user = db.session.get(User, user_id)
         if not user or not user.is_active:

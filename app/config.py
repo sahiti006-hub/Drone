@@ -76,6 +76,18 @@ class ProductionConfig(Config):
     """Configuration for production deployment."""
     DEBUG = False
     TESTING = False
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "1") == "1"
+
+    def __init__(self):
+        super().__init__()
+        # In production, verify that a secure SECRET_KEY is provisioned
+        if os.getenv("SECRET_KEY") == "dev-secret-key-change-in-production" or not os.getenv("SECRET_KEY"):
+            import warnings
+            warnings.warn(
+                "SECURITY WARNING: ProductionConfig loaded without a dedicated production SECRET_KEY. "
+                "Please set SECRET_KEY in environment variables.",
+                RuntimeWarning,
+            )
 
 
 config_by_name = {

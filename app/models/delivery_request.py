@@ -109,8 +109,16 @@ class DeliveryRequest(db.Model):
         self.validate_coordinates(pickup_latitude, pickup_longitude, "Pickup")
         self.validate_coordinates(destination_latitude, destination_longitude, "Destination")
 
-        if float(payload_weight_kg) <= 0:
+        lat1, lon1 = float(pickup_latitude), float(pickup_longitude)
+        lat2, lon2 = float(destination_latitude), float(destination_longitude)
+        if abs(lat1 - lat2) < 1e-6 and abs(lon1 - lon2) < 1e-6:
+            raise ValueError("Pickup and destination cannot be identical locations.")
+
+        payload_f = float(payload_weight_kg)
+        if payload_f <= 0:
             raise ValueError("Payload weight must be strictly positive.")
+        if payload_f > 100.0:
+            raise ValueError("Payload weight exceeds maximum supported emergency drone payload (100.0 kg).")
 
         self.requester_id = requester_id
         self.emergency_type = emergency_type.value if isinstance(emergency_type, EmergencyType) else str(emergency_type)

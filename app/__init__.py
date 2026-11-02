@@ -79,20 +79,68 @@ def create_app(config_name=None):
             "database_configured": bool(flask_app.config.get("SQLALCHEMY_DATABASE_URI")),
         }, 200
 
-    # Custom Error Handlers
+    # Security Headers Hook
+    @flask_app.after_request
+    def set_security_headers(response):
+        """Inject strict defensive HTTP security headers into every response."""
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https://tile.openstreetmap.org; "
+            "connect-src 'self'; "
+            "font-src 'self';"
+        )
+        return response
+
+    # Custom Error Handlers with JSON/HTML negotiation
+    @flask_app.errorhandler(400)
+    def bad_request_error(error):
+        from flask import render_template, request, jsonify
+        if request.path.startswith("/api") or "/api" in request.path or request.is_json:
+            return jsonify({
+                "success": False,
+                "error": getattr(error, "description", "Bad Request"),
+                "status": 400,
+            }), 400
+        return render_template("errors/400.html" if os.path.exists(flask_app.template_folder + "/errors/400.html") else "errors/404.html", error=error), 400
+
     @flask_app.errorhandler(403)
     def forbidden_error(error):
-        from flask import render_template
+        from flask import render_template, request, jsonify
+        if request.path.startswith("/api") or "/api" in request.path or request.is_json:
+            return jsonify({
+                "success": False,
+                "error": getattr(error, "description", "Forbidden: Access Denied"),
+                "status": 403,
+            }), 403
         return render_template("errors/403.html", error=error), 403
 
     @flask_app.errorhandler(404)
     def not_found_error(error):
-        from flask import render_template
+        from flask import render_template, request, jsonify
+        if request.path.startswith("/api") or "/api" in request.path or request.is_json:
+            return jsonify({
+                "success": False,
+                "error": getattr(error, "description", "Resource Not Found"),
+                "status": 404,
+            }), 404
         return render_template("errors/404.html", error=error), 404
 
     @flask_app.errorhandler(500)
     def internal_error(error):
-        from flask import render_template
+        from flask import render_template, request, jsonify
+        db.session.rollback()
+        if request.path.startswith("/api") or "/api" in request.path or request.is_json:
+            return jsonify({
+                "success": False,
+                "error": "Internal Server Error: Unexpected failure occurred.",
+                "status": 500,
+            }), 500
         return render_template("errors/500.html", error=error), 500
 
     return flask_app

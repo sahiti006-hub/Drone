@@ -580,16 +580,46 @@ class SimulationService:
         if sim.status in (SimulationStatus.COMPLETED.value, SimulationStatus.CANCELLED.value):
             return sim.to_dict()
 
+        # Validate kinematic & boundary constraints
+        lat_f = float(latitude)
+        lon_f = float(longitude)
+        alt_f = float(altitude_m)
+        prog_f = float(progress_percent)
+        elapsed_f = float(elapsed_seconds)
+        dist_cov_f = float(distance_covered_km)
+        dist_rem_f = float(remaining_distance_km)
+        batt_f = float(current_battery_wh)
+        speed_mult_f = float(speed_multiplier)
+
+        if not (-90.0 <= lat_f <= 90.0):
+            raise ValueError(f"Checkpoint latitude out of range: {lat_f}. Must be between -90 and +90.")
+        if not (-180.0 <= lon_f <= 180.0):
+            raise ValueError(f"Checkpoint longitude out of range: {lon_f}. Must be between -180 and +180.")
+        if alt_f < 0:
+            raise ValueError(f"Checkpoint altitude cannot be negative: {alt_f}m.")
+        if not (0.0 <= prog_f <= 100.0):
+            raise ValueError(f"Checkpoint progress percent must be between 0 and 100: {prog_f}")
+        if elapsed_f < 0:
+            raise ValueError("Elapsed simulation seconds cannot be negative.")
+        if dist_cov_f < 0:
+            raise ValueError("Distance covered cannot be negative.")
+        if dist_rem_f < 0:
+            raise ValueError("Remaining distance cannot be negative.")
+        if batt_f < 0:
+            raise ValueError("Current battery cannot be negative.")
+        if not (0.1 <= speed_mult_f <= 50.0):
+            raise ValueError(f"Speed multiplier must be between 0.1 and 50.0: {speed_mult_f}")
+
         sim.update_checkpoint(
-            progress_percent=progress_percent,
-            latitude=latitude,
-            longitude=longitude,
-            altitude_m=altitude_m,
-            elapsed_seconds=elapsed_seconds,
-            distance_covered_km=distance_covered_km,
-            remaining_distance_km=remaining_distance_km,
-            current_battery_wh=current_battery_wh,
-            speed_multiplier=speed_multiplier,
+            progress_percent=prog_f,
+            latitude=lat_f,
+            longitude=lon_f,
+            altitude_m=alt_f,
+            elapsed_seconds=elapsed_f,
+            distance_covered_km=dist_cov_f,
+            remaining_distance_km=dist_rem_f,
+            current_battery_wh=batt_f,
+            speed_multiplier=speed_mult_f,
             extra_data=extra_data,
         )
         db.session.commit()
