@@ -77,13 +77,26 @@ def create_administrator():
         # Check if user already exists
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            print(f"[*] User '{email}' already exists. Elevating to ADMIN and updating password...")
+            reset_requested = "--reset-password" in sys.argv
+            if not reset_requested:
+                print(f"[!] User '{email}' already exists.")
+                print("    Preserving existing credentials (administrator password will not be silently reset).")
+                print("    To force a password update, rerun with: python scripts/create_admin.py --reset-password")
+                # Ensure account has administrator role and is active
+                if existing_user.role != UserRole.ADMIN.value or not existing_user.is_active:
+                    existing_user.role = UserRole.ADMIN.value
+                    existing_user.is_active = True
+                    db.session.commit()
+                    print(f"[+] User '{email}' role confirmed as ADMIN.")
+                return True
+
+            print(f"[*] Resetting password for existing user '{email}' as requested via --reset-password...")
             existing_user.full_name = name
             existing_user.role = UserRole.ADMIN.value
             existing_user.is_active = True
             existing_user.set_password(password)
             db.session.commit()
-            print(f"[+] User '{email}' successfully updated to Administrator.")
+            print(f"[+] User '{email}' password successfully updated.")
             return True
 
         admin_user = User(

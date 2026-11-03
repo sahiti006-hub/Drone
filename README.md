@@ -373,6 +373,7 @@ Comprehensive academic and engineering documentation prepared for project evalua
 - **Academic Demonstration Guide:** [`docs/academic_demonstration_guide.md`](docs/academic_demonstration_guide.md) — Step-by-step presentation scripts and evaluator checkpoints.
 - **Viva Voce Technical Q&A:** [`docs/viva_technical_qa.md`](docs/viva_technical_qa.md) — Quick reference technical defense questions and answers.
 - **Production & Academic Release Checklist:** [`docs/release_checklist.md`](docs/release_checklist.md) — Comprehensive operations guide covering prerequisites, environment configuration, MySQL setup, WSGI/Docker startup, smoke tests, backups, and rollback procedures.
+- **Production Release Verification Report:** [`docs/production_release_verification.md`](docs/production_release_verification.md) — Independent release audit, security review, test results, Docker environment analysis, and classification verdict.
 - **Architectural & Security Audit Report:** [`docs/final_audit_report.md`](docs/final_audit_report.md) — Complete system audit of entry points, routes, models, services, concurrency, and security.
 - **Independent ML Evaluation Report:** [`docs/ml_evaluation_report.md`](docs/ml_evaluation_report.md) — Rigorous audit of the advisory ML module, training data trace, leakage verification, and out-of-distribution analysis.
 - **End-to-End Quality Assurance Report:** [`docs/end_to_end_test_report.md`](docs/end_to_end_test_report.md) — Verification of the 16-test E2E lifecycle and database integrity suite.

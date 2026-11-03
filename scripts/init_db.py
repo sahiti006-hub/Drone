@@ -78,6 +78,15 @@ def init_database():
             print("[+] All tables created successfully:")
             for table_name in db.metadata.tables.keys():
                 print(f"    - {table_name}")
+
+            # Synchronize Alembic migration state so subsequent migrations remain aligned
+            try:
+                from flask_migrate import stamp
+                stamp(revision="head")
+                print("[+] Synchronized Alembic migration state to 'head' revision.")
+            except Exception as stamp_err:
+                print(f"[-] Note: Alembic migration stamp skipped ({stamp_err})")
+
             return True
         except Exception as exc:
             print(f"[X] Database initialization error: {exc}")
