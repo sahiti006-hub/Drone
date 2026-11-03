@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Dynamic Pricing Configuration{% endblock %}
+{% block page_title %}⚙️ Fleet Dynamic Pricing Engine{% endblock %}
+
+{% block extra_head %}
+<style>
+  .pricing-config-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 900px) {
+    .pricing-config-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .config-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    margin-bottom: 24px;
+  }
+
+  .config-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .form-row-2, .form-row-4 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #0f172a;
+    box-sizing: border-box;
+  }
+
+  .form-input:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  }
+
+  .formula-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 0.85rem;
+    color: #334155;
+    line-height: 1.6;
+  }
+
+  .formula-code {
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.82rem;
+    margin-top: 10px;
+    overflow-x: auto;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pricing-config-grid">
+  <!-- Left Column: Form -->
+  <div>
+    <div class="config-card">
+      <div class="config-card-title">
+        <span>💰 Active Fare Structure & Tariff Rules</span>
+      </div>
+
+      <form action="{{ url_for('api_ext.manage_pricing') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Base, Distance & Weight -->
+        <div class="form-row-2">
+          <div>
+            <label class="form-label">Base Dispatch Fare (₹)</label>
+            <input type="number" step="0.01" min="0" name="base_fare" class="form-input" value="{{ config.base_fare }}" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Fixed flight initiation fee</span>
+          </div>
+          <div>
+            <label class="form-label">Price per Kilometer (₹/km)</label>
+            <input type="number" step="0.01" min="0" name="price_per_km" class="form-input" value="{{ config.price_per_km }}" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Applied to geodesic flight corridor</span>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div>
+            <label class="form-label">Price per Kilogram (₹/kg)</label>
+            <input type="number" step="0.01" min="0" name="price_per_kg" class="form-input" value="{{ config.price_per_kg }}" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Payload weight surcharge</span>
+          </div>
+          <div>
+            <label class="form-label">Safety & Platform Fee (₹)</label>
+            <input type="number" step="0.01" min="0" name="service_fee" class="form-input" value="{{ config.service_fee }}" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Fixed platform telemetry fee</span>
+          </div>
+        </div>
+
+        <!-- Priority Charges -->
+        <div style="margin-top: 10px; margin-bottom: 6px;">
+          <label class="form-label" style="color: #0284c7;">Priority Tier Surcharges (₹)</label>
+        </div>
+        <div class="form-row-4">
+          <div>
+            <label class="form-label">CRITICAL</label>
+            <input type="number" step="0.01" min="0" name="priority_charge_critical" class="form-input" value="{{ config.priority_charge_critical }}" required>
+          </div>
+          <div>
+            <label class="form-label">HIGH</label>
+            <input type="number" step="0.01" min="0" name="priority_charge_high" class="form-input" value="{{ config.priority_charge_high }}" required>
+          </div>
+          <div>
+            <label class="form-label">MEDIUM</label>
+            <input type="number" step="0.01" min="0" name="priority_charge_medium" class="form-input" value="{{ config.priority_charge_medium }}" required>
+          </div>
+          <div>
+            <label class="form-label">LOW</label>
+            <input type="number" step="0.01" min="0" name="priority_charge_low" class="form-input" value="{{ config.priority_charge_low }}" required>
+          </div>
+        </div>
+
+        <!-- Clamping, Tax & Policy -->
+        <div class="form-row-2">
+          <div>
+            <label class="form-label">Minimum Fare Floor (₹)</label>
+            <input type="number" step="0.01" min="0" name="minimum_fare" class="form-input" value="{{ config.minimum_fare }}" required>
+          </div>
+          <div>
+            <label class="form-label">Maximum Fare Ceiling (₹)</label>
+            <input type="number" step="0.01" min="0" name="maximum_fare" class="form-input" value="{{ config.maximum_fare }}" required>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div>
+            <label class="form-label">GST / Tax Rate (%)</label>
+            <input type="number" step="0.1" min="0" max="100" name="tax_rate_percent" class="form-input" value="{{ config.tax_rate_percent }}" required>
+          </div>
+          <div>
+            <label class="form-label">Quote TTL Validity (Minutes)</label>
+            <input type="number" min="1" max="120" name="quote_ttl_minutes" class="form-input" value="{{ config.quote_ttl_minutes }}" required>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div>
+            <label class="form-label">Cancellation Fixed Fee (₹)</label>
+            <input type="number" step="0.01" min="0" name="cancellation_fee_fixed" class="form-input" value="{{ config.cancellation_fee_fixed }}" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Deducted if cancelled prior to dispatch</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button type="submit" class="btn btn-primary" style="padding: 12px 24px; font-weight: 700;">
+            💾 Save Pricing Rules & Broadcast
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Column: Explanatory & Audit -->
+  <div>
+    <div class="config-card">
+      <div class="config-card-title">
+        <span>📐 Mathematical Pricing Model</span>
+      </div>
+      <div class="formula-box">
+        <p><strong>Deterministic Pricing Pipeline:</strong></p>
+        <p>Quotes are calculated transparently with Decimal precision to prevent floating-point discrepancies:</p>
+        <div class="formula-code">
+Subtotal = BaseFare 
+         + (Distance_km × PricePerKm)
+         + (Payload_kg × PricePerKg)
+         + PriorityFee
+         + ServiceFee
+
+Clamped = Clamp(Subtotal, MinFare, MaxFare)
+Tax = Clamped × (TaxRatePercent / 100)
+TotalPrice = Clamped + Tax
+        </div>
+        <p style="margin-top: 12px; font-size: 0.78rem; color: #64748b;">
+          <strong>Snapshot Immutability:</strong> Once a user selects a drone, a <code>DroneQuote</code> snapshot is saved in the database with a {{ config.quote_ttl_minutes }}-minute TTL. Even if pricing rules are updated, existing unexpired quotes remain honored.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

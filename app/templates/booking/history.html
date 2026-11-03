@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}My Drone Bookings{% endblock %}
+{% block page_title %}📋 My Drone Booking History{% endblock %}
+
+{% block extra_head %}
+<style>
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .table-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  .custom-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .custom-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    vertical-align: middle;
+  }
+
+  .custom-table tr:hover {
+    background: #f8fafc;
+  }
+
+  .status-pill {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+
+  .pill-confirmed { background: #fef3c7; color: #92400e; }
+  .pill-paid { background: #dcfce7; color: #166534; }
+  .pill-dispatched { background: #e0f2fe; color: #075985; }
+  .pill-in_flight { background: #dbeafe; color: #1e40af; }
+  .pill-weather_caution { background: #fef08a; color: #854d0e; }
+  .pill-rerouted { background: #fed7aa; color: #9a3412; }
+  .pill-diverted { background: #fecdd3; color: #9f1239; }
+  .pill-delivered { background: #bbf7d0; color: #14532d; }
+  .pill-cancelled { background: #f1f5f9; color: #64748b; }
+  .pill-emergency_review { background: #fee2e2; color: #991b1b; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+  }
+
+  .empty-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+
+  .empty-sub {
+    font-size: 0.88rem;
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-header">
+  <div>
+    <h2 style="font-size: 1.3rem; font-weight: 700; color: #0f172a; margin: 0;">On-Demand Flight Bookings</h2>
+    <p style="font-size: 0.82rem; color: #64748b; margin: 4px 0 0 0;">View your simulated autonomous emergency drone dispatch missions and billing receipts.</p>
+  </div>
+  <a href="{{ url_for('booking.new_booking') }}" class="btn btn-primary">
+    🚁 Book Emergency Drone
+  </a>
+</div>
+
+<div class="table-card">
+  {% if bookings %}
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>Reference</th>
+        <th>Date & Time</th>
+        <th>Cargo & Priority</th>
+        <th>Assigned Drone</th>
+        <th>Distance</th>
+        <th>Fare</th>
+        <th>Status</th>
+        <th style="text-align: right;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in bookings %}
+      <tr>
+        <td>
+          <a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" style="font-weight: 700; color: #0284c7; text-decoration: none;">
+            {{ b.booking_reference }}
+          </a>
+        </td>
+        <td>
+          <span style="font-size: 0.82rem; color: #475569;">
+            {{ b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else 'N/A' }}
+          </span>
+        </td>
+        <td>
+          <div style="font-weight: 600;">{{ b.cargo_category.replace('_', ' ') }}</div>
+          <div style="font-size: 0.75rem; color: #64748b;">
+            {{ b.cargo_weight_kg }} kg &bull; <span style="font-weight: 700; color: #0284c7;">{{ b.priority }}</span>
+          </div>
+        </td>
+        <td>
+          {% if b.drone %}
+            <span style="font-weight: 600;">{{ b.drone.drone_id_code }}</span><br>
+            <span style="font-size: 0.72rem; color: #64748b;">{{ b.drone.model_name }}</span>
+          {% else %}
+            <span style="color: #94a3b8;">Unassigned</span>
+          {% endif %}
+        </td>
+        <td>
+          <span style="font-weight: 600;">{{ "%.2f"|format(b.flight_distance_km) }} km</span>
+        </td>
+        <td>
+          {% if b.quote %}
+            <span style="font-weight: 700; color: #0f172a;">₹{{ "%.2f"|format(b.quote.total_price) }}</span>
+          {% else %}
+            <span style="color: #94a3b8;">--</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="status-pill pill-{{ b.status.lower() }}">
+            {{ b.status.replace('_', ' ') }}
+          </span>
+        </td>
+        <td style="text-align: right;">
+          <div style="display: flex; gap: 6px; justify-content: flex-end;">
+            <a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">
+              Cockpit
+            </a>
+            {% if b.status in ['PAID', 'DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'DIVERTED', 'WEATHER_CAUTION', 'REROUTED'] %}
+            <a href="{{ url_for('booking.view_invoice', booking_id=b.id) }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 4px 8px;" target="_blank">
+              Invoice
+            </a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🚁</div>
+    <div class="empty-title">No Drone Bookings Found</div>
+    <div class="empty-sub">You have not scheduled any emergency drone delivery missions yet.</div>
+    <a href="{{ url_for('booking.new_booking') }}" class="btn btn-primary">
+      Book Your First Drone
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -518,3 +518,122 @@ class AnalyticsService:
             })
 
         return output.getvalue()
+
+    @classmethod
+    def get_smart_booking_and_financial_analytics(cls) -> Dict[str, Any]:
+        """Calculates comprehensive financial, weather resilience, and booking metrics (Module 13).
+        
+        Explicitly distinguishes between estimated potential quote revenue vs.
+        actual completed cashless simulated transactions in the ledger.
+        """
+        from app.models.drone_booking import DroneBooking, BookingStatus
+        from app.models.payment_transaction import PaymentTransaction, PaymentStatus, RefundTransaction
+        from app.models.drone_quote import DroneQuote
+
+        bookings = DroneBooking.query.all()
+        quotes = DroneQuote.query.all()
+        payments = PaymentTransaction.query.all()
+        refunds = RefundTransaction.query.all()
+
+        total_bookings_count = len(bookings)
+        completed_bookings = [b for b in bookings if b.status == BookingStatus.DELIVERED.value]
+        weather_cancellations = [b for b in bookings if b.status == BookingStatus.WEATHER_BLOCKED.value]
+        weather_reroutes = [b for b in bookings if b.status in (BookingStatus.REROUTED.value, BookingStatus.DIVERTED.value)]
+
+        # 1. Booking count by day
+        booking_days: Dict[str, int] = {}
+        for b in bookings:
+            if b.created_at:
+                day_str = b.created_at.strftime("%Y-%m-%d")
+                booking_days[day_str] = booking_days.get(day_str, 0) + 1
+        bookings_by_day = [{"date": k, "count": v} for k, v in sorted(booking_days.items())]
+
+        # 2. Drone Utilization
+        active_drones = Drone.query.filter_by(is_decommissioned=False).all()
+        total_drones_count = len(active_drones)
+        in_transit_count = sum(1 for d in active_drones if d.status == DroneStatus.IN_TRANSIT.value)
+        drone_utilization_pct = round((in_transit_count / total_drones_count * 100.0), 1) if total_drones_count > 0 else 0.0
+
+        # 3. Successful delivery percentage
+        closed_bookings = [b for b in bookings if b.status in (BookingStatus.DELIVERED.value, BookingStatus.CANCELLED.value, BookingStatus.WEATHER_BLOCKED.value, BookingStatus.DIVERTED.value)]
+        success_delivery_pct = round((len(completed_bookings) / len(closed_bookings) * 100.0), 1) if closed_bookings else 100.0
+
+        # 4 & 5. Weather stats
+        weather_cancel_count = len(weather_cancellations)
+        weather_reroute_count = len(weather_reroutes)
+
+        # 6. Actual Revenue vs Estimated Potential Revenue by Month
+        paid_txns = [p for p in payments if p.payment_status == PaymentStatus.PAID.value]
+        revenue_monthly: Dict[str, Decimal] = {}
+        for p in paid_txns:
+            if p.paid_at:
+                m_str = p.paid_at.strftime("%Y-%m")
+                revenue_monthly[m_str] = revenue_monthly.get(m_str, Decimal("0.00")) + p.final_amount
+            elif p.created_at:
+                m_str = p.created_at.strftime("%Y-%m")
+                revenue_monthly[m_str] = revenue_monthly.get(m_str, Decimal("0.00")) + p.final_amount
+
+        # Estimated revenue from all quotes generated
+        estimated_monthly: Dict[str, Decimal] = {}
+        for q in quotes:
+            if q.created_at:
+                m_str = q.created_at.strftime("%Y-%m")
+                estimated_monthly[m_str] = estimated_monthly.get(m_str, Decimal("0.00")) + q.total_price
+
+        all_months = sorted(set(list(revenue_monthly.keys()) + list(estimated_monthly.keys())))
+        revenue_by_month = [
+            {
+                "month": m,
+                "actual_revenue": float(revenue_monthly.get(m, Decimal("0.00"))),
+                "estimated_revenue": float(estimated_monthly.get(m, Decimal("0.00"))),
+            }
+            for m in all_months
+        ]
+
+        # 7. Refund amount by month
+        refund_monthly: Dict[str, Decimal] = {}
+        for r in refunds:
+            if r.created_at:
+                m_str = r.created_at.strftime("%Y-%m")
+                refund_monthly[m_str] = refund_monthly.get(m_str, Decimal("0.00")) + r.amount
+        refund_by_month = [
+            {"month": m, "refund_amount": float(v)} for m, v in sorted(refund_monthly.items())
+        ]
+
+        # 8. Payment Success vs Failure ratio
+        paid_count = len(paid_txns)
+        failed_count = sum(1 for p in payments if p.payment_status == PaymentStatus.FAILED.value)
+        pending_count = sum(1 for p in payments if p.payment_status == PaymentStatus.PENDING.value)
+        total_attempts = paid_count + failed_count
+        payment_success_rate = round((paid_count / total_attempts * 100.0), 1) if total_attempts > 0 else 100.0
+
+        # 9. Average delivery price
+        total_actual_revenue = sum((float(p.final_amount) for p in paid_txns), 0.0)
+        avg_delivery_price = round(total_actual_revenue / paid_count, 2) if paid_count > 0 else 0.0
+
+        # 10. Average delivery duration (minutes)
+        durations = [float(q.estimated_delivery_duration_min) for q in quotes if q.estimated_delivery_duration_min]
+        avg_delivery_duration_min = round(sum(durations) / len(durations), 1) if durations else 0.0
+
+        return {
+            "total_bookings_count": total_bookings_count,
+            "bookings_by_day": bookings_by_day,
+            "drone_utilization_pct": drone_utilization_pct,
+            "successful_delivery_pct": success_delivery_pct,
+            "weather_cancellations_count": weather_cancel_count,
+            "weather_reroutes_count": weather_reroute_count,
+            "revenue_by_month": revenue_by_month,
+            "refund_by_month": refund_by_month,
+            "payment_metrics": {
+                "paid_count": paid_count,
+                "failed_count": failed_count,
+                "pending_count": pending_count,
+                "success_rate_pct": payment_success_rate,
+            },
+            "financial_summary": {
+                "total_actual_revenue": round(total_actual_revenue, 2),
+                "total_refunds": round(sum((float(r.amount) for r in refunds), 0.0), 2),
+                "average_delivery_price": avg_delivery_price,
+            },
+            "average_delivery_duration_min": avg_delivery_duration_min,
+        }

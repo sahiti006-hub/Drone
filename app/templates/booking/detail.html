@@ -1,0 +1,607 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Cockpit - {{ booking.booking_reference }}{% endblock %}
+{% block page_title %}🚁 Mission Cockpit: {{ booking.booking_reference }}{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet Map CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  .cockpit-layout {
+    display: grid;
+    grid-template-columns: 460px 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  @media (max-width: 1024px) {
+    .cockpit-layout {
+      grid-template-columns: 1fr;
+    }
+    #flightTrackingMap {
+      height: 420px !important;
+    }
+  }
+
+  .cockpit-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .cockpit-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .cockpit-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-badge-lg {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+  }
+
+  .badge-confirmed { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .badge-paid { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .badge-dispatched { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+  .badge-in_flight { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+  .badge-weather_caution { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
+  .badge-rerouted { background: #fed7aa; color: #9a3412; border: 1px solid #fdba74; }
+  .badge-diverted { background: #fecdd3; color: #9f1239; border: 1px solid #fda4af; }
+  .badge-delivered { background: #bbf7d0; color: #14532d; border: 1px solid #86efac; }
+  .badge-cancelled { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  .badge-emergency_review { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 0.85rem;
+  }
+
+  .meta-item {
+    background: #f8fafc;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #f1f5f9;
+  }
+
+  .meta-label {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .meta-value {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .weather-banner {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .weather-green {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
+  .weather-yellow {
+    background: #fefce8;
+    border: 1px solid #fde047;
+    color: #854d0e;
+  }
+
+  .weather-red {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+
+  .weather-icon-box {
+    font-size: 1.8rem;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 20px;
+    border-left: 2px solid #e2e8f0;
+    margin-top: 15px;
+  }
+
+  .timeline-item {
+    margin-bottom: 15px;
+    position: relative;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #0284c7;
+    border: 2px solid #ffffff;
+  }
+
+  .timeline-time {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+
+  .timeline-msg {
+    font-size: 0.82rem;
+    color: #334155;
+    font-weight: 500;
+  }
+
+  #flightTrackingMap {
+    width: 100%;
+    height: 600px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+
+  .pricing-table td {
+    padding: 6px 0;
+    color: #475569;
+  }
+
+  .pricing-table td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .pricing-table tr.total-row td {
+    border-top: 2px solid #e2e8f0;
+    padding-top: 10px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .btn-pay {
+    width: 100%;
+    background: #059669;
+    color: white;
+    font-weight: 700;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 14px;
+  }
+
+  .btn-pay:hover {
+    background: #047857;
+  }
+
+  .btn-cancel {
+    width: 100%;
+    background: #ffffff;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    font-weight: 600;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.15s;
+  }
+
+  .btn-cancel:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+  }
+
+  .notice-box {
+    background: #f8fafc;
+    border-left: 4px solid #64748b;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 12px;
+    border-radius: 0 6px 6px 0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+  <div>
+    <a href="{{ url_for('booking.booking_history') }}" style="color: #0284c7; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+      &larr; Back to Booking History
+    </a>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    {% if booking.status in ['PAID', 'DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'DIVERTED', 'WEATHER_CAUTION', 'REROUTED'] %}
+    <a href="{{ url_for('booking.view_invoice', booking_id=booking.id) }}" class="btn btn-secondary btn-sm" target="_blank">
+      🧾 View Tax Invoice
+    </a>
+    {% endif %}
+    {% if booking.delivery_request and booking.delivery_request.assignments.first() and current_user.role in ['ADMIN', 'OPERATOR'] %}
+    <a href="{{ url_for('simulation.run_simulation', assignment_id=booking.delivery_request.assignments.first().id) }}" class="btn btn-primary btn-sm">
+      🎮 Open Dispatch Simulation
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="cockpit-layout">
+  <!-- Left Column: Mission Controls & Status -->
+  <div class="cockpit-sidebar">
+    <!-- Status & Overview -->
+    <div class="cockpit-card">
+      <div class="cockpit-card-header">
+        <div>
+          <span class="cockpit-card-title">Mission Overview</span>
+          <span style="font-size: 0.75rem; color: #64748b;">Ref: {{ booking.booking_reference }}</span>
+        </div>
+        <span class="status-badge-lg badge-{{ booking.status.lower() }}">
+          {{ booking.status.replace('_', ' ') }}
+        </span>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Cargo Type</div>
+          <div class="meta-value">{{ booking.cargo_category.replace('_', ' ') }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Payload Weight</div>
+          <div class="meta-value">{{ booking.cargo_weight_kg }} kg</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Priority Tier</div>
+          <div class="meta-value">{{ booking.priority }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Distance (Geodesic)</div>
+          <div class="meta-value">{{ "%.2f"|format(booking.flight_distance_km) }} km</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; font-size: 0.82rem; color: #475569;">
+        <div style="margin-bottom: 6px;">
+          📍 <strong>Pickup:</strong> {{ "%.5f"|format(booking.pickup_latitude) }}, {{ "%.5f"|format(booking.pickup_longitude) }}
+        </div>
+        <div>
+          🎯 <strong>Destination:</strong> {{ "%.5f"|format(booking.destination_latitude) }}, {{ "%.5f"|format(booking.destination_longitude) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Assigned Drone Details -->
+    {% if booking.drone %}
+    <div class="cockpit-card">
+      <div class="cockpit-card-header">
+        <span class="cockpit-card-title">🛸 Assigned Fleet Unit</span>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #0284c7;">{{ booking.drone.drone_id_code }}</span>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Model</div>
+          <div class="meta-value">{{ booking.drone.model_name }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Battery Level</div>
+          <div class="meta-value" style="color: {% if booking.drone.battery_level < 30 %}#dc2626{% else %}#16a34a{% endif %};">
+            ⚡ {{ "%.1f"|format(booking.drone.battery_level) }}%
+          </div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Max Payload</div>
+          <div class="meta-value">{{ booking.drone.max_payload_kg }} kg</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Fleet Status</div>
+          <div class="meta-value">{{ booking.drone.status }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Atmospheric Safety & Weather Intelligence -->
+    <div class="cockpit-card">
+      <div class="cockpit-card-header">
+        <span class="cockpit-card-title">🌦️ Atmospheric Intelligence</span>
+        <span style="font-size: 0.75rem; color: #64748b;">Live Corridor Sensor</span>
+      </div>
+
+      {% set w_class = booking.weather_classification or 'GREEN' %}
+      <div class="weather-banner weather-{{ w_class.lower() }}">
+        <div class="weather-icon-box">
+          {% if w_class == 'GREEN' %}☀️{% elif w_class == 'YELLOW' %}⚠️{% else %}⛈️{% endif %}
+        </div>
+        <div>
+          <div style="font-weight: 800; font-size: 0.95rem; text-transform: uppercase;">
+            Status: {{ w_class }}
+          </div>
+          <div style="font-size: 0.8rem;">
+            {% if w_class == 'GREEN' %}
+              Atmospheric conditions within nominal safety envelopes.
+            {% elif w_class == 'YELLOW' %}
+              Moderate wind or light precipitation. Increased battery monitoring active.
+            {% else %}
+              Severe hazard condition! Automatic safety reroute or helipad diversion triggered.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather Alert Timeline -->
+      <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-top: 10px;">
+        Corridor Safety Log ({{ alerts|length }} events)
+      </div>
+      <div class="timeline">
+        {% for a in alerts %}
+        <div class="timeline-item">
+          <div class="timeline-time">{{ a.created_at.strftime('%H:%M:%S') if a.created_at else 'Just now' }}</div>
+          <div class="timeline-msg">
+            <strong>[{{ a.severity }}]</strong> {{ a.alert_type }}: {{ a.message }}
+          </div>
+        </div>
+        {% else %}
+        <div style="font-size: 0.78rem; color: #94a3b8; padding-top: 4px;">No atmospheric alerts recorded on this mission.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Cashless Payment & Invoice Card -->
+    <div class="cockpit-card">
+      <div class="cockpit-card-header">
+        <span class="cockpit-card-title">💳 Simulated Payment & Billing</span>
+        {% if payment and payment.payment_status == 'PAID' %}
+        <span class="status-badge-lg badge-paid">PAID</span>
+        {% else %}
+        <span class="status-badge-lg badge-confirmed">PAYMENT PENDING</span>
+        {% endif %}
+      </div>
+
+      {% if quote %}
+      <table class="pricing-table">
+        <tr>
+          <td>Base Dispatch Fare</td>
+          <td>₹{{ "%.2f"|format(quote.base_fare) }}</td>
+        </tr>
+        <tr>
+          <td>Distance Charge ({{ "%.2f"|format(quote.distance_km) }} km)</td>
+          <td>₹{{ "%.2f"|format(quote.distance_charge) }}</td>
+        </tr>
+        <tr>
+          <td>Payload Charge ({{ quote.weight_kg }} kg)</td>
+          <td>₹{{ "%.2f"|format(quote.weight_charge) }}</td>
+        </tr>
+        <tr>
+          <td>Priority Fee ({{ quote.priority }})</td>
+          <td>₹{{ "%.2f"|format(quote.priority_fee) }}</td>
+        </tr>
+        <tr>
+          <td>Service Fee</td>
+          <td>₹{{ "%.2f"|format(quote.service_fee) }}</td>
+        </tr>
+        <tr>
+          <td>GST / Regulatory Tax ({{ "%.1f"|format(quote.tax_rate_percent) }}%)</td>
+          <td>₹{{ "%.2f"|format(quote.tax_amount) }}</td>
+        </tr>
+        <tr class="total-row">
+          <td>Total Fare</td>
+          <td>₹{{ "%.2f"|format(quote.total_price) }}</td>
+        </tr>
+      </table>
+      {% endif %}
+
+      {% if booking.status == 'CONFIRMED' or (payment and payment.payment_status in ['PENDING', 'FAILED']) %}
+      <!-- Cashless Payment Form -->
+      <form action="{{ url_for('booking.process_payment', booking_id=booking.id) }}" method="POST" style="margin-top: 15px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div style="margin-bottom: 10px;">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">
+            Payment Gateway Method
+          </label>
+          <select name="payment_method" class="form-control-compact" style="width: 100%;">
+            <option value="SIMULATED_UPI">Simulated UPI (GooglePay / PhonePe)</option>
+            <option value="SIMULATED_WALLET">Simulated Emergency Fleet Wallet</option>
+            <option value="CREDIT_CARD">Credit / Corporate Card</option>
+            <option value="EMERGENCY_GOV_SUBSIDY">Emergency Disaster Relief Fund</option>
+          </select>
+        </div>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.78rem; color: #92400e;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+            <input type="checkbox" name="simulate_failure" value="true">
+            <span><strong>Test Mode:</strong> Simulate Payment Gateway Failure</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-pay">
+          ⚡ Pay ₹{{ "%.2f"|format(quote.total_price if quote else 0) }} (Simulated)
+        </button>
+      </form>
+      {% elif payment and payment.payment_status == 'PAID' %}
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; margin-top: 12px; font-size: 0.8rem; color: #166534;">
+        <div style="font-weight: 700;">✅ Transaction Settled</div>
+        <div style="color: #475569; font-size: 0.75rem; margin-top: 2px;">
+          Ref: {{ payment.transaction_reference }} &bull; {{ payment.payment_method }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Cancellation Policy & Action -->
+      {% if booking.status in ['CONFIRMED', 'PAID', 'DISPATCHED', 'WEATHER_CAUTION', 'DIVERTED', 'EMERGENCY_REVIEW'] %}
+      <form action="{{ url_for('booking.cancel_booking', booking_id=booking.id) }}" method="POST" onsubmit="return confirm('Cancel this drone delivery mission? Refund policy will be automatically applied.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="reason" value="Cancelled from Mission Cockpit by user.">
+        <button type="submit" class="btn-cancel">
+          🛑 Cancel Mission & Process Refund
+        </button>
+      </form>
+      {% endif %}
+
+      <!-- Refund History -->
+      {% if refunds %}
+      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: #0f172a;">Refund Settlements:</span>
+        {% for r in refunds %}
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 0.75rem; margin-top: 6px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 700; color: #dc2626;">
+            <span>Ref: {{ r.refund_reference }}</span>
+            <span>+₹{{ "%.2f"|format(r.refund_amount) }}</span>
+          </div>
+          <div style="color: #64748b; font-size: 0.7rem;">{{ r.reason }} ({{ r.refund_status }})</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="notice-box">
+        <strong>Academic Demonstration Notice:</strong> Financial transactions, UPI transfers, and weather events are safely simulated in software. No actual monetary debits occur.
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Interactive Flight Tracking Map -->
+  <div class="cockpit-main">
+    <div class="cockpit-card" style="padding: 12px; margin-bottom: 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px;">
+        <div>
+          <span style="font-weight: 700; font-size: 1rem; color: #0f172a;">3D Flight Path & Corridor Telemetry</span>
+          <span style="font-size: 0.75rem; color: #64748b; margin-left: 8px;">Active Geodesic Corridor</span>
+        </div>
+        <div style="font-size: 0.75rem; color: #475569; display: flex; gap: 12px;">
+          <span>🟢 Active Path</span>
+          <span>🟡 Alt Corridor</span>
+          <span>🚁 Helipad Diversion</span>
+        </div>
+      </div>
+      <div id="flightTrackingMap"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const pickupLat = {{ booking.pickup_latitude }};
+    const pickupLng = {{ booking.pickup_longitude }};
+    const destLat = {{ booking.destination_latitude }};
+    const destLng = {{ booking.destination_longitude }};
+
+    // Initialize Map
+    const map = L.map('flightTrackingMap').setView([pickupLat, pickupLng], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors | Smart Drone Simulation'
+    }).addTo(map);
+
+    // Pickup Marker
+    const pickupMarker = L.marker([pickupLat, pickupLng], {
+      icon: L.divIcon({
+        className: 'custom-pin-pickup',
+        html: '<div style="background:#0284c7;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 5px rgba(0,0,0,0.3);border:2px solid white;">📦</div>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      })
+    }).addTo(map).bindPopup("<strong>Pickup Location</strong><br>Lat: " + pickupLat.toFixed(5) + ", Lng: " + pickupLng.toFixed(5));
+
+    // Destination Marker
+    const destMarker = L.marker([destLat, destLng], {
+      icon: L.divIcon({
+        className: 'custom-pin-dest',
+        html: '<div style="background:#dc2626;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 5px rgba(0,0,0,0.3);border:2px solid white;">🎯</div>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      })
+    }).addTo(map).bindPopup("<strong>Destination Location</strong><br>Lat: " + destLat.toFixed(5) + ", Lng: " + destLng.toFixed(5));
+
+    // Direct / Active Flight Path
+    const activeFlightPath = L.polyline([
+      [pickupLat, pickupLng],
+      [destLat, destLng]
+    ], {
+      color: '#0284c7',
+      weight: 4,
+      opacity: 0.85,
+      dashArray: '8, 8'
+    }).addTo(map);
+
+    // Fit bounds to flight path
+    const bounds = L.latLngBounds([[pickupLat, pickupLng], [destLat, destLng]]);
+    map.fitBounds(bounds, { padding: [50, 50] });
+
+    // Fetch and render safe diversion helipads
+    fetch('/api/diversions')
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success' && data.locations) {
+          data.locations.forEach(loc => {
+            const helipadMarker = L.marker([loc.latitude, loc.longitude], {
+              icon: L.divIcon({
+                className: 'helipad-pin',
+                html: '<div style="background:#475569;color:#f8fafc;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2);">H</div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+              })
+            }).addTo(map);
+
+            helipadMarker.bindPopup(`
+              <div style="font-size: 12px;">
+                <strong>${loc.name}</strong><br>
+                Type: ${loc.location_type}<br>
+                Landing Radius: ${loc.safe_landing_radius_m}m<br>
+                Elevation: ${loc.elevation_m}m MSL
+              </div>
+            `);
+          });
+        }
+      })
+      .catch(err => console.error("Could not fetch diversion helipads:", err));
+  });
+</script>
+{% endblock %}

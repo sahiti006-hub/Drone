@@ -75,7 +75,7 @@ class AssignmentService:
                     f"Drone {drone.drone_code} is already assigned to active mission (#{active_drone_assignment.id})."
                 )
 
-            if drone.status != DroneStatus.AVAILABLE.value:
+            if drone.status not in (DroneStatus.AVAILABLE.value, DroneStatus.RESERVED.value):
                 raise AssignmentServiceError(
                     f"Drone {drone.drone_code} is not available (current status: {drone.status})."
                 )

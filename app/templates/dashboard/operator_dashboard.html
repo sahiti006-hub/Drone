@@ -182,4 +182,97 @@
     </div>
   </div>
 </div>
+
+<!-- Smart Drone Bookings & Live Weather Intelligence (Uber/Rapido style) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-top: 24px;">
+  <!-- Pending Bookings Card -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Pending Smart Drone Bookings</h2>
+      <span class="badge badge-warning">{{ pending_bookings|length }} Awaiting Launch</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>Drone</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Cockpit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in pending_bookings %}
+            <tr>
+              <td><strong>{{ b.booking_reference }}</strong></td>
+              <td>{{ b.drone.drone_id_code if b.drone else 'Unassigned' }}</td>
+              <td><span class="badge badge-{{ b.status.lower() }}">{{ b.status }}</span></td>
+              <td>
+                {% if b.latest_payment and b.latest_payment.payment_status == 'PAID' %}
+                <span class="badge badge-healthy">PAID</span>
+                {% else %}
+                <span class="badge badge-warning">PENDING</span>
+                {% endif %}
+              </td>
+              <td><a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" class="btn btn-sm btn-outline">Cockpit</a></td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-state-title">No Pending Bookings</div>
+                  <div class="empty-state-desc">All on-demand smart bookings have been processed.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Weather Alerts Card -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Live Weather Radar & Diversions</h2>
+      <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="btn btn-sm" style="color: var(--color-primary);">Scenario Console &rarr;</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Alert</th>
+              <th>Message</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in weather_alerts %}
+            <tr>
+              <td><span class="badge badge-{{ a.severity.lower() }}">{{ a.severity }}</span></td>
+              <td><strong>{{ a.alert_type }}</strong></td>
+              <td style="font-size: 0.8rem; color: #475569;">{{ a.message }}</td>
+              <td style="font-size: 0.75rem; color: #94a3b8;">{{ a.created_at.strftime('%H:%M:%S') if a.created_at else '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <div class="empty-state-title">Clear Radar</div>
+                  <div class="empty-state-desc">Atmospheric sensor feeds are nominal across all sectors.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

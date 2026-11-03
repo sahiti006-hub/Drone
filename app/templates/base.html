@@ -27,6 +27,9 @@
 
         {% if current_user and current_user.role == 'ADMIN' %}
         <div class="nav-section-title">Fleet & Logistics</div>
+        <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
+          <span>🚁 Book Drone</span>
+        </a>
         <a href="{{ url_for('drone.list_drones') }}" class="nav-link {% if request.endpoint and 'drone' in request.endpoint %}active{% endif %}">
           <span>🛡️ Drone Inventory</span>
         </a>
@@ -39,6 +42,12 @@
         <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and 'analytics.index' in request.endpoint %}active{% endif %}">
           <span>📈 Route Analytics</span>
         </a>
+        <a href="{{ url_for('api_ext.manage_pricing') }}" class="nav-link {% if request.endpoint and 'manage_pricing' in request.endpoint %}active{% endif %}">
+          <span>💰 Pricing Config</span>
+        </a>
+        <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="nav-link {% if request.endpoint and 'manage_weather_scenario' in request.endpoint %}active{% endif %}">
+          <span>🌦️ Weather Console</span>
+        </a>
         <a href="{{ url_for('delivery.new_request') }}" class="nav-link">
           <span>➕ New Request</span>
         </a>
@@ -47,6 +56,9 @@
         </a>
         {% elif current_user and current_user.role == 'OPERATOR' %}
         <div class="nav-section-title">Operations</div>
+        <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
+          <span>🚁 Book Drone</span>
+        </a>
         <a href="{{ url_for('dashboard.operator_dashboard') }}" class="nav-link {% if request.endpoint and 'operator_dashboard' in request.endpoint %}active{% endif %}">
           <span>🎮 Dispatch Console</span>
         </a>
@@ -62,11 +74,20 @@
         <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and 'analytics.index' in request.endpoint %}active{% endif %}">
           <span>📈 Route Analytics</span>
         </a>
+        <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="nav-link {% if request.endpoint and 'manage_weather_scenario' in request.endpoint %}active{% endif %}">
+          <span>🌦️ Weather Console</span>
+        </a>
         <a href="{{ url_for('delivery.new_request') }}" class="nav-link">
           <span>➕ New Request</span>
         </a>
         {% elif current_user and current_user.role == 'REQUESTER' %}
         <div class="nav-section-title">My Orders</div>
+        <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
+          <span>🚁 Book Drone</span>
+        </a>
+        <a href="{{ url_for('booking.booking_history') }}" class="nav-link {% if request.endpoint and 'booking_history' in request.endpoint %}active{% endif %}">
+          <span>📋 My Bookings</span>
+        </a>
         <a href="{{ url_for('dashboard.requester_dashboard') }}" class="nav-link {% if request.endpoint and 'requester_dashboard' in request.endpoint %}active{% endif %}">
           <span>📦 My Dashboard</span>
         </a>
@@ -89,8 +110,25 @@
       <header class="topbar">
         <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
         
-        <div class="user-profile-menu">
+        <div class="user-profile-menu" style="display: flex; align-items: center; gap: 14px;">
           {% if current_user %}
+          <!-- In-App Notification Bell -->
+          <div class="notification-wrapper" style="position: relative;">
+            <button id="notifBellBtn" class="btn btn-outline btn-sm" style="position: relative; padding: 6px 10px; font-size: 1rem; border-radius: 50%;" aria-label="Notifications">
+              🔔
+              <span id="notifBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #dc2626; color: white; border-radius: 50%; font-size: 0.65rem; font-weight: 800; padding: 2px 5px; min-width: 14px; text-align: center;">0</span>
+            </button>
+            <div id="notifDropdown" style="display: none; position: absolute; right: 0; top: 40px; width: 320px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 1000; max-height: 400px; overflow-y: auto;">
+              <div style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">Notifications</span>
+                <button id="markAllReadBtn" style="background: none; border: none; font-size: 0.72rem; color: #0284c7; cursor: pointer; font-weight: 600;">Mark all read</button>
+              </div>
+              <div id="notifList" style="padding: 6px 0;">
+                <div style="padding: 14px; text-align: center; color: #94a3b8; font-size: 0.8rem;">No notifications</div>
+              </div>
+            </div>
+          </div>
+
           <div class="user-badge">
             <div class="user-avatar">{{ current_user.full_name[0] }}</div>
             <div class="user-info">
@@ -130,6 +168,82 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% if current_user %}
+  <script>
+    (function() {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const bellBtn = document.getElementById('notifBellBtn');
+      const dropdown = document.getElementById('notifDropdown');
+      const badge = document.getElementById('notifBadge');
+      const notifList = document.getElementById('notifList');
+      const markAllReadBtn = document.getElementById('markAllReadBtn');
+
+      if (!bellBtn || !dropdown) return;
+
+      function loadNotifications() {
+        fetch('/api/notifications?limit=10')
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              if (data.unread_count > 0) {
+                badge.textContent = data.unread_count;
+                badge.style.display = 'inline-block';
+              } else {
+                badge.style.display = 'none';
+              }
+
+              if (data.notifications && data.notifications.length > 0) {
+                notifList.innerHTML = data.notifications.map(n => `
+                  <div style="padding: 10px 14px; border-bottom: 1px solid #f8fafc; background: ${n.is_read ? '#ffffff' : '#f0fdf4'}; font-size: 0.8rem; cursor: pointer;" onclick="markSingleRead(${n.id}, '${n.action_url || ''}')">
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
+                      <span>${n.title}</span>
+                      <span style="font-size: 0.7rem; color: #94a3b8;">${n.created_at ? n.created_at.substring(11, 16) : ''}</span>
+                    </div>
+                    <div style="color: #475569; font-size: 0.75rem;">${n.message}</div>
+                  </div>
+                `).join('');
+              } else {
+                notifList.innerHTML = '<div style="padding: 14px; text-align: center; color: #94a3b8; font-size: 0.8rem;">No notifications</div>';
+              }
+            }
+          })
+          .catch(e => console.debug("Notifications fetch suppressed:", e));
+      }
+
+      window.markSingleRead = function(id, actionUrl) {
+        fetch(`/api/notifications/${id}/read`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' }
+        }).then(() => {
+          loadNotifications();
+          if (actionUrl) { window.location.href = actionUrl; }
+        });
+      };
+
+      if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function() {
+          fetch('/api/notifications/read-all', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' }
+          }).then(() => loadNotifications());
+        });
+      }
+
+      bellBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== bellBtn) {
+          dropdown.style.display = 'none';
+        }
+      });
+
+      loadNotifications();
+    })();
+  </script>
+  {% endif %}
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

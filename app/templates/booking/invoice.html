@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice #{{ invoice.invoice_reference }}{% endblock %}
+{% block page_title %}🧾 Delivery Tax Invoice{% endblock %}
+
+{% block extra_head %}
+<style>
+  .invoice-card {
+    background: #ffffff;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 40px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+  }
+
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+  }
+
+  .brand-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.025em;
+  }
+
+  .brand-sub {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  .invoice-badge-box {
+    text-align: right;
+  }
+
+  .invoice-ref {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0284c7;
+  }
+
+  .invoice-date {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  .billing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+    font-size: 0.88rem;
+  }
+
+  .bill-col h4 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 4px;
+  }
+
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+  }
+
+  .items-table th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .items-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+    color: #1e293b;
+  }
+
+  .items-table td.amount {
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .items-table th.amount {
+    text-align: right;
+  }
+
+  .summary-table {
+    width: 320px;
+    margin-left: auto;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  .summary-table td {
+    padding: 8px 12px;
+    color: #475569;
+  }
+
+  .summary-table td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .summary-table tr.total-row td {
+    border-top: 2px solid #0f172a;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+    padding-top: 12px;
+  }
+
+  .payment-stamp {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stamp-paid {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  .stamp-refunded {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  .academic-disclaimer {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 20px;
+  }
+
+  @media print {
+    .sidebar, .topbar, .no-print, .btn-print {
+      display: none !important;
+    }
+    .main-wrapper {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .invoice-card {
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      max-width: 100% !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="no-print" style="max-width: 800px; margin: 0 auto 16px auto; display: flex; justify-content: space-between; align-items: center;">
+  <a href="{{ url_for('booking.view_booking', booking_id=booking.id) }}" style="color: #0284c7; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+    &larr; Back to Mission Cockpit
+  </a>
+  <button onclick="window.print()" class="btn btn-primary btn-sm btn-print">
+    🖨️ Print / Save as PDF
+  </button>
+</div>
+
+<div class="invoice-card">
+  <!-- Header -->
+  <div class="invoice-header">
+    <div>
+      <div class="brand-title">🚁 Smart Drone Logistics System</div>
+      <div class="brand-sub">Autonomous Emergency Air Transportation & Route Optimization</div>
+      <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;">GSTIN / Reg: 36AAACS0000A1Z5 &bull; Central Flight Dispatch Hub</div>
+    </div>
+    <div class="invoice-badge-box">
+      <div class="invoice-ref">INVOICE: {{ invoice.invoice_reference }}</div>
+      <div class="invoice-date">Date: {{ invoice.created_at }}</div>
+      <div style="margin-top: 8px;">
+        {% if invoice.payment_status == 'PAID' %}
+        <span class="payment-stamp stamp-paid">PAID & SETTLED</span>
+        {% elif invoice.payment_status == 'REFUNDED' %}
+        <span class="payment-stamp stamp-refunded">FULLY REFUNDED</span>
+        {% else %}
+        <span class="payment-stamp" style="background:#fef3c7; color:#92400e;">{{ invoice.payment_status }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Billing Details -->
+  <div class="billing-grid">
+    <div class="bill-col">
+      <h4>Billed To (Requester)</h4>
+      <div style="font-weight: 700; color: #0f172a;">{{ invoice.requester.name }}</div>
+      <div style="color: #475569;">{{ invoice.requester.email }}</div>
+      <div style="color: #64748b; font-size: 0.8rem;">Role: {{ invoice.requester.role }}</div>
+    </div>
+    <div class="bill-col">
+      <h4>Mission Telemetry & Fleet</h4>
+      <div><strong>Booking Ref:</strong> {{ invoice.booking_reference }}</div>
+      <div><strong>Assigned Drone:</strong> {{ invoice.drone.drone_id_code }} ({{ invoice.drone.model }})</div>
+      <div><strong>Distance:</strong> {{ "%.2f"|format(invoice.mission.flight_distance_km) }} km</div>
+      <div><strong>Cargo:</strong> {{ invoice.mission.cargo_category.replace('_', ' ') }} ({{ invoice.mission.cargo_weight_kg }} kg)</div>
+    </div>
+  </div>
+
+  <!-- Line Items Table -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Basis</th>
+        <th class="amount">Amount (INR)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <strong>Base Dispatch & Telemetry Access Fare</strong><br>
+          <span style="font-size: 0.75rem; color: #64748b;">Includes 3D corridor allocation, weather checks, and operator supervision</span>
+        </td>
+        <td>Fixed</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.items.base_fare) }}</td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Flight Corridor Distance Charge</strong><br>
+          <span style="font-size: 0.75rem; color: #64748b;">{{ "%.2f"|format(invoice.mission.flight_distance_km) }} km traversed</span>
+        </td>
+        <td>Per km</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.items.distance_charge) }}</td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Payload Weight Charge</strong><br>
+          <span style="font-size: 0.75rem; color: #64748b;">{{ invoice.mission.cargo_weight_kg }} kg cargo carried</span>
+        </td>
+        <td>Per kg</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.items.weight_charge) }}</td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Priority Dispatch Surcharge</strong><br>
+          <span style="font-size: 0.75rem; color: #64748b;">Priority Tier: {{ invoice.mission.priority }}</span>
+        </td>
+        <td>Tier rate</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.items.priority_fee) }}</td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Platform & Weather Monitoring Service Fee</strong><br>
+          <span style="font-size: 0.75rem; color: #64748b;">Real-time radar sampling and automated safe reroute capability</span>
+        </td>
+        <td>Service fee</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.items.service_fee) }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Summary Table -->
+  <table class="summary-table">
+    <tr>
+      <td>Subtotal:</td>
+      <td>₹{{ "%.2f"|format(invoice.items.subtotal) }}</td>
+    </tr>
+    <tr>
+      <td>GST ({{ "%.1f"|format(invoice.items.tax_rate_percent) }}%):</td>
+      <td>₹{{ "%.2f"|format(invoice.items.tax_amount) }}</td>
+    </tr>
+    <tr class="total-row">
+      <td>Total Amount:</td>
+      <td>₹{{ "%.2f"|format(invoice.items.total_amount) }}</td>
+    </tr>
+    {% if invoice.refunds and invoice.refunds.total_refunded > 0 %}
+    <tr style="color: #dc2626; font-weight: 700;">
+      <td>Refunds Applied:</td>
+      <td>-₹{{ "%.2f"|format(invoice.refunds.total_refunded) }}</td>
+    </tr>
+    <tr style="border-top: 1px dashed #cbd5e1; font-weight: 800; color: #0f172a;">
+      <td>Net Settlement:</td>
+      <td>₹{{ "%.2f"|format(invoice.items.total_amount - invoice.refunds.total_refunded) }}</td>
+    </tr>
+    {% endif %}
+  </table>
+
+  <!-- Payment Details -->
+  {% if invoice.payment %}
+  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; font-size: 0.85rem; color: #334155; margin-bottom: 20px;">
+    <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">Payment Audit Trail</div>
+    <div>Method: <strong>{{ invoice.payment.payment_method }}</strong></div>
+    <div>Transaction Reference: <code>{{ invoice.payment.transaction_reference }}</code></div>
+    <div>Idempotency Key: <code>{{ invoice.payment.idempotency_key }}</code></div>
+    <div>Settlement Timestamp: {{ invoice.payment.settled_at or invoice.payment.created_at }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Academic Disclaimer -->
+  <div class="academic-disclaimer">
+    <strong>Academic Demonstration Record:</strong> This simulated tax invoice is generated for evaluation purposes of the Smart Multipurpose Emergency Drone Delivery and Route Optimization System. No actual monetary exchange took place.
+  </div>
+</div>
+{% endblock %}

@@ -54,6 +54,25 @@ from app.services.simulation_service import (
     get_route_segment_metrics,
 )
 from app.services.analytics_service import AnalyticsService
+from app.services.pricing_service import PricingService, PricingServiceError, QuoteExpiredError
+from app.services.weather_intelligence_service import (
+    WeatherIntelligenceService,
+    WeatherIntelligenceError,
+    WeatherConditionSummary,
+)
+from app.services.drone_availability_service import (
+    DroneAvailabilityService,
+    DroneAvailabilityError,
+    ConcurrencyLockError,
+    InfeasibleBookingError,
+)
+from app.services.payment_service import (
+    PaymentService,
+    PaymentServiceError,
+    DuplicateTransactionError,
+    InvalidPaymentStateError,
+)
+from app.services.notification_service import NotificationService
 
 __all__ = [
     "DroneService",
@@ -90,4 +109,19 @@ __all__ = [
     "estimate_energy_consumption",
     "DroneAllocationService",
     "AllocationServiceError",
+    "PricingService",
+    "PricingServiceError",
+    "QuoteExpiredError",
+    "WeatherIntelligenceService",
+    "WeatherIntelligenceError",
+    "WeatherConditionSummary",
+    "DroneAvailabilityService",
+    "DroneAvailabilityError",
+    "ConcurrencyLockError",
+    "InfeasibleBookingError",
+    "PaymentService",
+    "PaymentServiceError",
+    "DuplicateTransactionError",
+    "InvalidPaymentStateError",
+    "NotificationService",
 ]

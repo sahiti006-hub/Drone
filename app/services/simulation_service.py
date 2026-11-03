@@ -518,6 +518,25 @@ class SimulationService:
             assignment.mark_completed()
             if assignment.delivery_request:
                 assignment.delivery_request.status = RequestStatus.DELIVERED.value
+                try:
+                    from app.models.drone_booking import DroneBooking, BookingStatus
+                    from app.services.notification_service import NotificationService
+                    booking = DroneBooking.query.filter_by(
+                        delivery_request_id=assignment.delivery_request_id
+                    ).first()
+                    if booking and booking.status != BookingStatus.CANCELLED.value:
+                        booking.status = BookingStatus.DELIVERED.value
+                        NotificationService.create_notification(
+                            user_id=booking.requester_id,
+                            booking_id=booking.id,
+                            delivery_request_id=assignment.delivery_request_id,
+                            notification_type="DELIVERY_COMPLETED",
+                            title="Emergency Delivery Completed",
+                            message=f"Mission {booking.booking_reference} delivered successfully. Thank you for using Smart Drone Dispatch.",
+                            severity="SUCCESS",
+                        )
+                except Exception:
+                    pass
 
             if drone:
                 drone.current_battery_wh = round(current_battery, 2)
@@ -550,7 +569,8 @@ class SimulationService:
             )
             db.session.add(analysis_log)
 
-        else:
+        weather_safety = None
+        if not is_completed:
             sim.update_checkpoint(
                 progress_percent=progress_pct,
                 latitude=pos["latitude"],
@@ -566,6 +586,17 @@ class SimulationService:
                     "segment_index": pos["segment_index"],
                 },
             )
+
+            # In-flight weather monitoring & dynamic safety management
+            try:
+                weather_safety = SimulationService.evaluate_in_flight_weather_and_safety(
+                    sim=sim,
+                    assignment=assignment,
+                    pos=pos,
+                    current_battery=current_battery,
+                )
+            except Exception:
+                weather_safety = None
 
         db.session.commit()
 
@@ -584,6 +615,7 @@ class SimulationService:
             "current_battery_wh": sim.current_battery_wh,
             "battery_percent": round((sim.current_battery_wh / float(drone.battery_capacity_wh) * 100.0), 1) if drone and drone.battery_capacity_wh else 100.0,
             "is_completed": is_completed,
+            "weather_safety": weather_safety,
         }
 
     @staticmethod
@@ -1036,3 +1068,195 @@ class SimulationService:
             policy_name=policy_name,
             explanation=policy_explanation,
         )
+
+    @classmethod
+    def evaluate_in_flight_weather_and_safety(
+        cls,
+        sim: SimulationRun,
+        assignment: DroneAssignment,
+        pos: Dict[str, Any],
+        current_battery: float,
+    ) -> Dict[str, Any]:
+        """Monitors real-time weather during simulation step and triggers rerouting or emergency diversion."""
+        from app.models.drone_booking import DroneBooking, BookingStatus
+        from app.models.weather_intelligence import WeatherClassification, WeatherAlert
+        from app.services.weather_service import WeatherData
+        from app.services.weather_intelligence_service import WeatherIntelligenceService
+        from app.services.payment_service import PaymentService
+        from app.services.notification_service import NotificationService
+
+        curr_lat = pos["latitude"]
+        curr_lon = pos["longitude"]
+        curr_alt = pos.get("altitude_m", 50.0)
+
+        # 1. Sample real-time weather at current simulated drone position
+        obs = WeatherIntelligenceService.sample_weather_at_coordinate(curr_lat, curr_lon, curr_alt)
+        classification = WeatherClassification(obs.classification)
+
+        # 2. Check linked DroneBooking (if initiated via smart booking)
+        booking = DroneBooking.query.filter_by(
+            delivery_request_id=assignment.delivery_request_id
+        ).first()
+
+        safety_report = {
+            "classification": classification.value,
+            "wind_speed_mps": float(obs.wind_speed_mps),
+            "precipitation_mmh": float(obs.precipitation_mmh),
+            "visibility_km": float(obs.visibility_km),
+            "weather_summary": obs.weather_summary,
+            "action_taken": "NOMINAL_FLIGHT_CONTINUED",
+        }
+
+        # Case A: GREEN - Nominal flight
+        if classification == WeatherClassification.GREEN:
+            if booking and booking.status == BookingStatus.WEATHER_CAUTION.value:
+                booking.status = BookingStatus.IN_FLIGHT.value
+            return safety_report
+
+        # Case B: YELLOW - Caution range
+        if classification == WeatherClassification.YELLOW:
+            safety_report["action_taken"] = "WEATHER_CAUTION_ALERT"
+            if booking and booking.status not in (BookingStatus.DIVERTED.value, BookingStatus.REROUTED.value):
+                booking.status = BookingStatus.WEATHER_CAUTION.value
+
+            # Record WeatherAlert
+            alert = WeatherAlert(
+                booking_id=booking.id if booking else None,
+                simulation_run_id=sim.id,
+                alert_level="CAUTION",
+                weather_classification="YELLOW",
+                affected_segment=f"Waypoint Sector ({curr_lat:.4f}, {curr_lon:.4f})",
+                warning_description=f"Approaching weather tolerance: wind {obs.wind_speed_mps} m/s.",
+                recommended_action="Increase telemetry monitoring frequency.",
+            )
+            db.session.add(alert)
+            return safety_report
+
+        # Case C & D & E: RED - Severe atmospheric hazard!
+        safety_report["action_taken"] = "SEVERE_WEATHER_HAZARD"
+        weather_data = WeatherData(
+            wind_speed_mps=float(obs.wind_speed_mps),
+            precipitation_mmh=float(obs.precipitation_mmh),
+            visibility_km=float(obs.visibility_km),
+            weather_summary=obs.weather_summary,
+            is_simulated=True,
+            captured_at=obs.captured_at,
+        )
+
+        # Attempt dynamic rerouting via existing SAFETY_MANDATED policy
+        try:
+            reroute_res = cls.evaluate_and_reroute(
+                simulation_id=sim.id,
+                updated_weather=weather_data,
+                policy_name="SAFETY_MANDATED",
+                reason="In-flight severe atmospheric hazard (RED classification)",
+            )
+        except Exception:
+            reroute_res = None
+
+        if reroute_res and reroute_res.switched:
+            # Case C: Safely rerouted!
+            safety_report["action_taken"] = "DYNAMIC_REROUTE_EXECUTED"
+            safety_report["new_corridor"] = reroute_res.new_corridor
+            if booking:
+                booking.status = BookingStatus.REROUTED.value
+
+            alert = WeatherAlert(
+                booking_id=booking.id if booking else None,
+                simulation_run_id=sim.id,
+                alert_level="HAZARD",
+                weather_classification="RED",
+                affected_segment=f"Corridor {reroute_res.previous_corridor}",
+                warning_description=f"Hazardous wind {obs.wind_speed_mps} m/s exceeded 12.0 m/s limit.",
+                recommended_action=f"Switched dynamically to replacement corridor '{reroute_res.new_corridor}'.",
+            )
+            db.session.add(alert)
+
+            NotificationService.create_notification(
+                user_id=booking.requester_id if booking else None,
+                target_role="OPERATOR",
+                booking_id=booking.id if booking else None,
+                delivery_request_id=assignment.delivery_request_id,
+                notification_type="DYNAMIC_REROUTING",
+                title="Dynamic In-Flight Rerouting Triggered",
+                message=f"Mission safely rerouted to '{reroute_res.new_corridor}' to avoid weather hazard.",
+                severity="WARNING",
+            )
+            return safety_report
+
+        # Case D: No feasible alternative corridor exists -> Initiate Emergency Diversion
+        diversion = WeatherIntelligenceService.find_nearest_safe_diversion(
+            current_lat=curr_lat,
+            current_lng=curr_lon,
+            remaining_battery_wh=current_battery,
+        )
+
+        if diversion and diversion["is_reachable"]:
+            safety_report["action_taken"] = "EMERGENCY_DIVERSION_INITIATED"
+            safety_report["diversion_location"] = diversion["name"]
+
+            # Pause regular mission flight simulation
+            sim.pause()
+
+            if booking:
+                booking.status = BookingStatus.DIVERTED.value
+                try:
+                    PaymentService.process_refund(
+                        booking_id=booking.id,
+                        refund_type="DIVERSION_COMPENSATION",
+                        reason=f"Mission diverted to {diversion['name']} due to severe weather.",
+                    )
+                except Exception:
+                    pass
+
+            alert = WeatherAlert(
+                booking_id=booking.id if booking else None,
+                simulation_run_id=sim.id,
+                alert_level="CRITICAL",
+                weather_classification="RED",
+                affected_segment="Full Destination Airspace Closed",
+                warning_description=f"All forward corridors blocked. Emergency diversion to {diversion['name']}.",
+                recommended_action=f"Execute safe landing at {diversion['code']}.",
+            )
+            db.session.add(alert)
+
+            NotificationService.create_notification(
+                user_id=booking.requester_id if booking else None,
+                target_role="OPERATOR",
+                booking_id=booking.id if booking else None,
+                delivery_request_id=assignment.delivery_request_id,
+                notification_type="EMERGENCY_DIVERSION",
+                title="Emergency Mission Diversion",
+                message=f"Severe weather blocked all corridors. Drone diverted to {diversion['name']} ({diversion['distance_km']} km away).",
+                severity="DANGER",
+            )
+            return safety_report
+
+        # Case E: No safe diversion location reachable -> Emergency State
+        safety_report["action_taken"] = "CRITICAL_EMERGENCY_STATE"
+        sim.pause()
+        if booking:
+            booking.status = BookingStatus.EMERGENCY_REVIEW.value
+
+        alert = WeatherAlert(
+            booking_id=booking.id if booking else None,
+            simulation_run_id=sim.id,
+            alert_level="CRITICAL",
+            weather_classification="RED",
+            affected_segment="Airspace & Diversion Exhaustion",
+            warning_description="No feasible alternative flight corridors or reachable emergency diversion sites.",
+            recommended_action="Emergency operator manual review and immediate recovery protocol.",
+        )
+        db.session.add(alert)
+
+        NotificationService.create_notification(
+            user_id=booking.requester_id if booking else None,
+            target_role="OPERATOR",
+            booking_id=booking.id if booking else None,
+            delivery_request_id=assignment.delivery_request_id,
+            notification_type="EMERGENCY_DIVERSION",
+            title="CRITICAL EMERGENCY STATE",
+            message="No feasible route or safe diversion site reachable. Manual incident review initiated.",
+            severity="DANGER",
+        )
+        return safety_report

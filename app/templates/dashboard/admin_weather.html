@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Weather Scenario Injection{% endblock %}
+{% block page_title %}🌦️ Atmospheric Hazard & Weather Injection Console{% endblock %}
+
+{% block extra_head %}
+<style>
+  .weather-grid {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 900px) {
+    .weather-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .weather-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    margin-bottom: 24px;
+  }
+
+  .weather-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .active-scenario-banner {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .banner-active {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+
+  .banner-nominal {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
+  .preset-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+
+  .preset-btn:hover {
+    background: #e2e8f0;
+  }
+
+  .form-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .form-row-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #0f172a;
+    box-sizing: border-box;
+  }
+
+  .helipad-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .helipad-table th {
+    text-align: left;
+    padding: 8px 10px;
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .helipad-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Active Override Status -->
+{% if active_scenario %}
+<div class="active-scenario-banner banner-active">
+  <div>
+    <div style="font-weight: 800; font-size: 1.05rem;">⚠️ Active Weather Demonstration Override</div>
+    <div style="font-size: 0.85rem; margin-top: 4px;">
+      Wind: <strong>{{ active_scenario.wind_speed_mps }} m/s</strong> &bull;
+      Precipitation: <strong>{{ active_scenario.precipitation_mmh }} mm/h</strong> &bull;
+      Visibility: <strong>{{ active_scenario.visibility_km }} km</strong> &bull;
+      Sector: <strong>{{ active_scenario.affected_segment }}</strong>
+    </div>
+    <div style="font-size: 0.78rem; opacity: 0.85; margin-top: 2px;">{{ active_scenario.summary }}</div>
+  </div>
+  <form action="{{ url_for('api_ext.manage_weather_scenario') }}" method="POST" style="margin: 0;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="reset">
+    <button type="submit" class="btn btn-secondary btn-sm" style="background: white; border: 1px solid #fca5a5; color: #991b1b; font-weight: 700;">
+      Reset to Normal
+    </button>
+  </form>
+</div>
+{% else %}
+<div class="active-scenario-banner banner-nominal">
+  <div>
+    <div style="font-weight: 800; font-size: 1.05rem;">✅ Nominal Weather Mode (Deterministic Simulation)</div>
+    <div style="font-size: 0.85rem; margin-top: 2px;">
+      No synthetic weather anomalies injected. Corridor conditions follow default atmospheric parameters.
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="weather-grid">
+  <!-- Left Column: Scenario Injection -->
+  <div>
+    <div class="weather-card">
+      <div class="weather-card-title">
+        <span>⚡ Inject Atmospheric Hazard Scenario</span>
+      </div>
+
+      <!-- Quick Preset Buttons -->
+      <div style="margin-bottom: 20px;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px;">
+          Quick Demonstration Presets:
+        </span>
+        <button type="button" class="preset-btn" onclick="applyPreset(3.0, 0.0, 10.0, 'Nominal Fair Weather', 'Full Corridor')">
+          ☀️ Fair Weather (GREEN)
+        </button>
+        <button type="button" class="preset-btn" onclick="applyPreset(9.5, 3.5, 6.0, 'Moderate Rain & Gusts', 'Mid-Corridor Sector')">
+          ⚠️ Caution Advisory (YELLOW)
+        </button>
+        <button type="button" class="preset-btn" onclick="applyPreset(16.5, 14.0, 1.2, 'Severe Squall Line', 'Approach Corridor')">
+          ⛈️ Severe Storm Reroute (RED)
+        </button>
+        <button type="button" class="preset-btn" onclick="applyPreset(22.0, 30.0, 0.5, 'Emergency Helipad Diversion Gale', 'Critical Path')">
+          🚨 Emergency Diversion (RED Hazard)
+        </button>
+      </div>
+
+      <form action="{{ url_for('api_ext.manage_weather_scenario') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="inject">
+
+        <div class="form-row-3">
+          <div>
+            <label class="form-label">Wind Speed (m/s)</label>
+            <input type="number" step="0.1" min="0" max="40" id="wind_speed" name="wind_speed_mps" class="form-input" value="16.0" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Yellow: &ge;8, Red: &ge;14 m/s</span>
+          </div>
+          <div>
+            <label class="form-label">Precipitation (mm/h)</label>
+            <input type="number" step="0.1" min="0" max="60" id="precipitation" name="precipitation_mmh" class="form-input" value="12.0" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Yellow: &ge;2, Red: &ge;10 mm/h</span>
+          </div>
+          <div>
+            <label class="form-label">Visibility (km)</label>
+            <input type="number" step="0.1" min="0" max="50" id="visibility" name="visibility_km" class="form-input" value="1.5" required>
+            <span style="font-size: 0.72rem; color: #64748b;">Yellow: &le;6, Red: &le;2 km</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label class="form-label">Affected Corridor Segment</label>
+          <input type="text" id="segment" name="affected_segment" class="form-input" value="Waypoints WP-02 through WP-05" required>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label class="form-label">Scenario Summary / Log Note</label>
+          <input type="text" id="summary" name="summary" class="form-input" value="Injected academic demonstration squall front." required>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+          <button type="submit" class="btn btn-primary" style="padding: 10px 20px; font-weight: 700;">
+            ⚡ Inject Atmospheric Hazard
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Column: Safe Diversion Helipads -->
+  <div>
+    <div class="weather-card">
+      <div class="weather-card-title">
+        <span>🚁 Safe Diversion Helipads</span>
+      </div>
+      <p style="font-size: 0.8rem; color: #64748b; margin-top: 0;">
+        Designated emergency landing clearings used when RED weather prevents flight along all alternate corridors.
+      </p>
+
+      <table class="helipad-table">
+        <thead>
+          <tr>
+            <th>Helipad / Site</th>
+            <th>Radius</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for loc in diversion_locations %}
+          <tr>
+            <td>
+              <strong>{{ loc.name }}</strong><br>
+              <span style="font-size: 0.7rem; color: #64748b;">{{ "%.4f"|format(loc.latitude) }}, {{ "%.4f"|format(loc.longitude) }}</span>
+            </td>
+            <td>{{ loc.safe_landing_radius_m }}m</td>
+            <td><span style="font-size: 0.72rem; background: #e0f2fe; color: #0284c7; padding: 2px 6px; border-radius: 4px;">{{ loc.location_type }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function applyPreset(wind, rain, vis, summary, segment) {
+    document.getElementById('wind_speed').value = wind;
+    document.getElementById('precipitation').value = rain;
+    document.getElementById('visibility').value = vis;
+    document.getElementById('summary').value = summary;
+    document.getElementById('segment').value = segment;
+  }
+</script>
+{% endblock %}

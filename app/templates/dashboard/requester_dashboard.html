@@ -4,6 +4,23 @@
 {% block page_title %}Medical & Emergency Requester Portal{% endblock %}
 
 {% block content %}
+<!-- Active Mission Alert Banner (if any) -->
+{% if active_booking %}
+<div style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 8px; padding: 14px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <span style="font-weight: 800; color: #0369a1; font-size: 1rem;">🚁 Live Flight Mission in Progress</span>
+    <div style="font-size: 0.85rem; color: #0c4a6e; margin-top: 2px;">
+      Ref: <strong>{{ active_booking.booking_reference }}</strong> &bull;
+      Status: <strong>{{ active_booking.status.replace('_', ' ') }}</strong> &bull;
+      Cargo: {{ active_booking.cargo_category.replace('_', ' ') }} ({{ active_booking.cargo_weight_kg }}kg)
+    </div>
+  </div>
+  <a href="{{ url_for('booking.view_booking', booking_id=active_booking.id) }}" class="btn btn-primary btn-sm" style="font-weight: 700;">
+    Open Mission Cockpit &rarr;
+  </a>
+</div>
+{% endif %}
+
 <!-- Requester Overview Stats -->
 <div class="stats-grid">
   <div class="stat-card">
@@ -149,6 +166,58 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- My On-Demand Smart Drone Bookings -->
+<div class="dashboard-card" style="margin-top: 24px;">
+  <div class="card-header">
+    <h2 class="card-title">My On-Demand Smart Drone Bookings</h2>
+    <a href="{{ url_for('booking.new_booking') }}" class="btn btn-primary btn-sm">+ Book Drone</a>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Drone</th>
+            <th>Distance</th>
+            <th>Fare</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in my_bookings %}
+          <tr>
+            <td><strong>{{ b.booking_reference }}</strong></td>
+            <td>{{ b.drone.drone_id_code if b.drone else 'Unassigned' }}</td>
+            <td>{{ "%.2f"|format(b.flight_distance_km) }} km</td>
+            <td>₹{{ "%.2f"|format(b.quote.total_price if b.quote else 0) }}</td>
+            <td><span class="badge badge-{{ b.status.lower() }}">{{ b.status }}</span></td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" class="btn btn-sm btn-outline">Cockpit</a>
+                {% if b.status in ['PAID', 'DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'DIVERTED', 'WEATHER_CAUTION', 'REROUTED'] %}
+                <a href="{{ url_for('booking.view_invoice', booking_id=b.id) }}" class="btn btn-sm btn-secondary" target="_blank">Invoice</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-state-title">No Drone Bookings</div>
+                <div class="empty-state-desc">You have not booked any on-demand drone flights yet.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

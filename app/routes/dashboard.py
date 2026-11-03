@@ -20,8 +20,13 @@ from app.models.route import Route
 from app.models.drone_assignment import DroneAssignment, AssignmentStatus
 from app.models.simulation_run import SimulationRun
 from app.models.analysis_log import AnalysisLog
+from app.models.drone_booking import DroneBooking, BookingStatus
+from app.models.payment_transaction import PaymentTransaction, PaymentStatus, RefundTransaction
+from app.models.weather_intelligence import WeatherAlert
 from app.services.auth_service import AuthService, login_required, role_required
 from app.services.analytics_service import AnalyticsService
+from app.services.notification_service import NotificationService
+from app.services.pricing_service import PricingService
 from app.services.delivery_service import DeliveryService, DeliveryServiceError
 from app.services.assignment_service import (
     AssignmentService,
@@ -59,11 +64,27 @@ def admin_dashboard():
 
     total_users = User.query.count()
 
+    # Financial metrics calculated strictly from actual recorded simulated transactions
+    paid_txns = PaymentTransaction.query.filter_by(payment_status=PaymentStatus.PAID.value).all()
+    actual_revenue = sum((float(t.final_amount) for t in paid_txns), 0.0)
+    pending_payments_count = PaymentTransaction.query.filter_by(payment_status=PaymentStatus.PENDING.value).count()
+    failed_payments_count = PaymentTransaction.query.filter_by(payment_status=PaymentStatus.FAILED.value).count()
+
+    refund_txns = RefundTransaction.query.all()
+    total_refunds = sum((float(r.amount) for r in refund_txns), 0.0)
+
+    total_bookings = DroneBooking.query.count()
+    weather_blocked_count = DroneBooking.query.filter_by(status=BookingStatus.WEATHER_BLOCKED.value).count()
+    cancelled_bookings_count = DroneBooking.query.filter_by(status=BookingStatus.CANCELLED.value).count()
+    rerouted_count = DroneBooking.query.filter_by(status=BookingStatus.REROUTED.value).count()
+
     recent_drones = Drone.query.order_by(Drone.created_at.desc()).limit(6).all()
     recent_requests = DeliveryRequest.query.order_by(DeliveryRequest.created_at.desc()).limit(6).all()
     recent_assignments = DroneAssignment.query.order_by(DroneAssignment.assigned_at.desc()).limit(6).all()
     recent_simulations = SimulationRun.query.order_by(SimulationRun.created_at.desc()).limit(5).all()
     recent_analysis = AnalysisLog.query.order_by(AnalysisLog.created_at.desc()).limit(5).all()
+    recent_bookings = DroneBooking.query.order_by(DroneBooking.created_at.desc()).limit(6).all()
+    recent_weather_alerts = WeatherAlert.query.order_by(WeatherAlert.created_at.desc()).limit(6).all()
 
     return render_template(
         "dashboard/admin_dashboard.html",
@@ -80,12 +101,23 @@ def admin_dashboard():
             "delivered_requests": metrics["completed_deliveries"],
             "active_assignments": metrics["assigned_deliveries"],
             "total_users": total_users,
+            # Uber-Style Booking & Financial Metrics
+            "total_bookings": total_bookings,
+            "actual_revenue": round(actual_revenue, 2),
+            "pending_payments_count": pending_payments_count,
+            "failed_payments_count": failed_payments_count,
+            "total_refunds": round(total_refunds, 2),
+            "weather_blocked_count": weather_blocked_count,
+            "cancelled_bookings_count": cancelled_bookings_count,
+            "rerouted_count": rerouted_count,
         },
         recent_drones=recent_drones,
         recent_requests=recent_requests,
         recent_assignments=recent_assignments,
         recent_simulations=recent_simulations,
         recent_analysis=recent_analysis,
+        recent_bookings=recent_bookings,
+        recent_weather_alerts=recent_weather_alerts,
     )
 
 
@@ -128,6 +160,14 @@ def operator_dashboard():
     # Simulation runs
     recent_simulations = SimulationRun.query.order_by(SimulationRun.created_at.desc()).limit(5).all()
 
+    # Uber-style Booking & Weather additions
+    pending_bookings = DroneBooking.query.filter(
+        DroneBooking.status.in_([BookingStatus.CONFIRMED.value, BookingStatus.PAID.value])
+    ).order_by(DroneBooking.created_at.asc()).all()
+
+    operator_weather_alerts = WeatherAlert.query.order_by(WeatherAlert.created_at.desc()).limit(6).all()
+    diverted_missions = DroneBooking.query.filter_by(status=BookingStatus.DIVERTED.value).limit(5).all()
+
     return render_template(
         "dashboard/operator_dashboard.html",
         current_user=user,
@@ -137,6 +177,9 @@ def operator_dashboard():
         active_assignments=active_assignments,
         available_routes=all_routes,
         recent_simulations=recent_simulations,
+        pending_bookings=pending_bookings,
+        weather_alerts=operator_weather_alerts,
+        diverted_missions=diverted_missions,
     )
 
 
@@ -203,6 +246,28 @@ def requester_dashboard():
         .all()
     )
 
+    # Query requester's smart bookings
+    my_bookings = (
+        DroneBooking.query.filter_by(requester_id=user.id)
+        .order_by(DroneBooking.created_at.desc())
+        .all()
+    )
+
+    active_booking = DroneBooking.query.filter(
+        DroneBooking.requester_id == user.id,
+        DroneBooking.status.in_([
+            BookingStatus.CONFIRMED.value,
+            BookingStatus.PAID.value,
+            BookingStatus.DISPATCHED.value,
+            BookingStatus.IN_FLIGHT.value,
+            BookingStatus.WEATHER_CAUTION.value,
+            BookingStatus.REROUTED.value,
+        ]),
+    ).order_by(DroneBooking.created_at.desc()).first()
+
+    my_payments = PaymentTransaction.query.filter_by(requester_id=user.id).order_by(PaymentTransaction.created_at.desc()).limit(5).all()
+    my_notifications = NotificationService.get_notifications_for_user(user.id, user.role, limit=5)
+
     total_count = metrics["total_requests"]
     in_transit_count = sum(1 for r in my_requests if r.status in {RequestStatus.ASSIGNED.value, RequestStatus.IN_TRANSIT.value})
     delivered_count = metrics["completed_deliveries"]
@@ -212,6 +277,10 @@ def requester_dashboard():
         current_user=user,
         metrics=metrics,
         my_requests=my_requests,
+        my_bookings=my_bookings,
+        active_booking=active_booking,
+        my_payments=my_payments,
+        my_notifications=my_notifications,
         total_count=total_count,
         in_transit_count=in_transit_count,
         delivered_count=delivered_count,

@@ -33,6 +33,7 @@ def index():
     route_analytics = AnalyticsService.get_route_analytics_comparison()
     from app.services.prediction_service import FlightPredictionService
     ml_report = FlightPredictionService.get_evaluation_report()
+    booking_analytics = AnalyticsService.get_smart_booking_and_financial_analytics()
 
     return render_template(
         "analytics/overview.html",
@@ -40,7 +41,16 @@ def index():
         metrics=metrics,
         analytics=route_analytics,
         ml_report=ml_report,
+        booking_analytics=booking_analytics,
     )
+
+
+@analytics_bp.route("/financial-data")
+@login_required
+def financial_data_api():
+    """API endpoint providing chart data for booking counts, drone utilization, and monthly revenue."""
+    data = AnalyticsService.get_smart_booking_and_financial_analytics()
+    return jsonify({"status": "success", "analytics": data}), 200
 
 
 @analytics_bp.route("/deliveries")

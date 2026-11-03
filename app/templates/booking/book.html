@@ -1,0 +1,745 @@
+{% extends "base.html" %}
+
+{% block title %}Book Emergency Drone{% endblock %}
+{% block page_title %}🚁 Smart Emergency Drone Booking{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet Map CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  .booking-container {
+    display: grid;
+    grid-template-columns: 480px 1fr;
+    gap: 20px;
+    height: calc(100vh - 120px);
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    .booking-container {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    #bookingMap {
+      height: 400px !important;
+    }
+  }
+
+  .booking-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .map-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  }
+
+  #bookingMap {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+  }
+
+  .form-group-compact {
+    margin-bottom: 12px;
+  }
+
+  .form-group-compact label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .form-control-compact {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #0f172a;
+    transition: border-color 0.15s;
+  }
+
+  .form-control-compact:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  }
+
+  .preset-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0284c7;
+    background-color: #e0f2fe;
+    border: 1px solid #bae6fd;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 4px;
+    margin-bottom: 6px;
+  }
+
+  .preset-badge:hover {
+    background-color: #0284c7;
+    color: #ffffff;
+  }
+
+  /* Drone Selection Cards */
+  .drone-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .drone-card:hover {
+    border-color: #0284c7;
+    background: #ffffff;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08);
+  }
+
+  .drone-card.selected {
+    border: 2px solid #0284c7;
+    background: #f0f9ff;
+  }
+
+  .drone-card.unavailable {
+    opacity: 0.65;
+    background: #f1f5f9;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+  }
+
+  .drone-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .drone-model-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .drone-price-badge {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f2b48;
+  }
+
+  .drone-specs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .spec-item {
+    background: #ffffff;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+  }
+
+  .spec-item strong {
+    display: block;
+    color: #0f172a;
+    font-size: 0.85rem;
+  }
+
+  .status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .status-available { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .status-limited { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+  .status-unavailable { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+  .weather-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .weather-chip.GREEN { background: #dcfce7; color: #166534; }
+  .weather-chip.YELLOW { background: #fef3c7; color: #92400e; }
+  .weather-chip.RED { background: #fee2e2; color: #991b1b; }
+
+  .price-breakdown-card {
+    background: #ffffff;
+    border: 1.5px solid #0284c7;
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    color: #475569;
+  }
+
+  .price-row.total {
+    border-top: 1px dashed #cbd5e1;
+    margin-top: 8px;
+    padding-top: 8px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f2b48;
+  }
+
+  .weather-advisory-box {
+    background-color: #fffbeb;
+    border: 1.5px solid #f59e0b;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    color: #92400e;
+    margin-top: 10px;
+  }
+
+  .btn-book-now {
+    width: 100%;
+    padding: 12px;
+    background-color: #0284c7;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-book-now:hover {
+    background-color: #0369a1;
+  }
+
+  .btn-book-now:disabled {
+    background-color: #94a3b8;
+    cursor: not-allowed;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-container">
+  <!-- Left Side: Request Intake & Available Drone Cards -->
+  <div class="booking-panel">
+    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+      <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f2b48;">Instant Emergency Drone Booking</h2>
+      <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
+        Real-time flight corridor generation, aerodynamic feasibility, and instant transparent pricing.
+      </p>
+    </div>
+
+    <!-- Quick Demonstration Presets -->
+    <div>
+      <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Quick Presets:</span>
+      <div style="margin-top: 4px;">
+        <span class="preset-badge" onclick="loadPreset(12.9716, 77.5946, 12.9850, 77.6050, 'Victoria Hospital ➔ Bowring Hospital', 2.0, 'BLOOD_SUPPLY', 'CRITICAL')">
+          🏥 Victoria ➔ Bowring (2.1 km)
+        </span>
+        <span class="preset-badge" onclick="loadPreset(12.9390, 77.5900, 12.9980, 77.5700, 'NIMHANS ➔ KC General', 3.5, 'ANTIVENOM', 'HIGH')">
+          💉 NIMHANS ➔ KC General (7.4 km)
+        </span>
+        <span class="preset-badge" onclick="loadPreset(12.9550, 77.6400, 12.9340, 77.6180, 'Manipal ➔ St. John\'s', 1.5, 'DEFIBRILLATOR', 'CRITICAL')">
+          ⚡ Manipal ➔ St. John's (3.6 km)
+        </span>
+      </div>
+    </div>
+
+    <!-- Search Form -->
+    <form id="bookingSearchForm" onsubmit="event.preventDefault(); searchDrones();">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="form-group-compact">
+          <label>Pickup Latitude</label>
+          <input type="number" step="any" id="pickup_lat" class="form-control-compact" value="12.9716" required>
+        </div>
+        <div class="form-group-compact">
+          <label>Pickup Longitude</label>
+          <input type="number" step="any" id="pickup_lng" class="form-control-compact" value="77.5946" required>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="form-group-compact">
+          <label>Destination Latitude</label>
+          <input type="number" step="any" id="dest_lat" class="form-control-compact" value="12.9850" required>
+        </div>
+        <div class="form-group-compact">
+          <label>Destination Longitude</label>
+          <input type="number" step="any" id="dest_lng" class="form-control-compact" value="77.6050" required>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="form-group-compact">
+          <label>Cargo Category</label>
+          <select id="cargo_category" class="form-control-compact">
+            {% for et in emergency_types %}
+            <option value="{{ et }}" {% if et == 'EMERGENCY_MEDICINE' %}selected{% endif %}>{{ et.replace('_', ' ') }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group-compact">
+          <label>Weight (kg)</label>
+          <input type="number" step="0.1" min="0.1" max="15.0" id="cargo_weight_kg" class="form-control-compact" value="2.5" required>
+        </div>
+      </div>
+
+      <div class="form-group-compact">
+        <label>Clinical Emergency Priority</label>
+        <select id="priority" class="form-control-compact">
+          {% for p in priorities %}
+          <option value="{{ p }}" {% if p == 'HIGH' %}selected{% endif %}>{{ p }} PRIORITY</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" id="btnSearch" class="btn-book-now" style="background-color: #0f2b48;">
+        🔍 Search Available Drones
+      </button>
+    </form>
+
+    <!-- Search Feedback & Status -->
+    <div id="searchLoading" style="display: none; text-align: center; padding: 20px; color: #0284c7;">
+      <div style="font-weight: 700; font-size: 0.95rem;">🛰️ Analyzing 3D Air Corridors & Micro-Weather...</div>
+      <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Evaluating battery reserves, ferry distances, and payload feasibility.</div>
+    </div>
+
+    <!-- Weather Intelligence Strip -->
+    <div id="weatherStrip" style="display: none; padding: 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span id="weatherBadge" class="weather-chip GREEN">GREEN OK</span>
+        <span id="weatherMetricsText" style="font-size: 0.75rem; color: #475569;">Wind: 3.5 m/s | Visibility: 10 km</span>
+      </div>
+      <div id="weatherDescText" style="font-size: 0.75rem; color: #334155; margin-top: 4px;">Nominal conditions along corridor.</div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsContainer" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+        <h3 style="font-size: 0.9rem; font-weight: 700; color: #0f2b48; text-transform: uppercase;">Suitable Fleet Drones</h3>
+        <span id="resultsCount" style="font-size: 0.75rem; color: #64748b;"></span>
+      </div>
+
+      <div id="droneCardsList"></div>
+
+      <!-- Price Breakdown Card -->
+      <div id="selectedPriceCard" class="price-breakdown-card" style="display: none;">
+        <div style="font-weight: 700; color: #0f2b48; margin-bottom: 6px; display: flex; justify-content: space-between;">
+          <span>Transparent Price Breakdown</span>
+          <span id="selectedDroneName" style="color: #0284c7;"></span>
+        </div>
+        <div class="price-row"><span>Base Fare:</span><span id="pbBase">₹100.00</span></div>
+        <div class="price-row"><span>Distance Charge (<span id="pbDistKm">0</span> km):</span><span id="pbDist">₹0.00</span></div>
+        <div class="price-row"><span>Cargo Weight (<span id="pbWeightKg">0</span> kg):</span><span id="pbWeight">₹0.00</span></div>
+        <div class="price-row"><span>Priority Charge (<span id="pbPriority">HIGH</span>):</span><span id="pbPrio">₹0.00</span></div>
+        <div class="price-row"><span>Service & Infrastructure Fee:</span><span id="pbService">₹30.00</span></div>
+        <div class="price-row"><span>Tax (GST 5%):</span><span id="pbTax">₹0.00</span></div>
+        <div class="price-row total">
+          <span>Total Fare:</span>
+          <span id="pbTotal" style="color: #0f2b48; font-size: 1.15rem;">₹0.00</span>
+        </div>
+
+        <div id="weatherAdvisoryBox" class="weather-advisory-box" style="display: none;">
+          <strong>⚠️ Weather Advisory:</strong>
+          <span id="advisoryMsg">Wind approaching operational limits.</span>
+          <div style="margin-top: 6px;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="checkbox" id="weatherAckCheckbox">
+              <span>I acknowledge the weather caution and understand delivery ETA may adjust.</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="button" id="btnConfirmBooking" class="btn-book-now" style="margin-top: 14px;" onclick="confirmBooking()">
+          Confirm & Reserve Drone
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Interactive Leaflet Geospatial View -->
+  <div class="map-panel">
+    <div id="bookingMap"></div>
+  </div>
+</div>
+
+<script>
+  let map, pickupMarker, destMarker, corridorPolyline, droneMarkers = [], diversionMarkers = [];
+  let currentSearchResults = null;
+  let selectedQuoteId = null;
+
+  // Initialize Map
+  document.addEventListener("DOMContentLoaded", function() {
+    map = L.map("bookingMap").setView([12.9716, 77.5946], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors | Smart Drone Simulation",
+      maxZoom: 18,
+    }).addTo(map);
+
+    // Initial markers
+    updateMapMarkers();
+
+    // Plot safe diversion helipads
+    loadDiversionHelipads();
+
+    // Map click handler to adjust points
+    map.on("click", function(e) {
+      if (!pickupMarker) {
+        document.getElementById("pickup_lat").value = e.latlng.lat.toFixed(6);
+        document.getElementById("pickup_lng").value = e.latlng.lng.toFixed(6);
+      } else {
+        document.getElementById("dest_lat").value = e.latlng.lat.toFixed(6);
+        document.getElementById("dest_lng").value = e.latlng.lng.toFixed(6);
+      }
+      updateMapMarkers();
+    });
+  });
+
+  function updateMapMarkers() {
+    const pLat = parseFloat(document.getElementById("pickup_lat").value);
+    const pLng = parseFloat(document.getElementById("pickup_lng").value);
+    const dLat = parseFloat(document.getElementById("dest_lat").value);
+    const dLng = parseFloat(document.getElementById("dest_lng").value);
+
+    if (pickupMarker) map.removeLayer(pickupMarker);
+    if (destMarker) map.removeLayer(destMarker);
+
+    if (!isNaN(pLat) && !isNaN(pLng)) {
+      pickupMarker = L.marker([pLat, pLng], {
+        title: "Pickup Location",
+        draggable: true
+      }).addTo(map).bindPopup("<b>Pickup Location</b>").openPopup();
+
+      pickupMarker.on("dragend", function(e) {
+        const pt = e.target.getLatLng();
+        document.getElementById("pickup_lat").value = pt.lat.toFixed(6);
+        document.getElementById("pickup_lng").value = pt.lng.toFixed(6);
+      });
+    }
+
+    if (!isNaN(dLat) && !isNaN(dLng)) {
+      destMarker = L.marker([dLat, dLng], {
+        title: "Destination Hospital",
+        draggable: true
+      }).addTo(map).bindPopup("<b>Destination Location</b>");
+
+      destMarker.on("dragend", function(e) {
+        const pt = e.target.getLatLng();
+        document.getElementById("dest_lat").value = pt.lat.toFixed(6);
+        document.getElementById("dest_lng").value = pt.lng.toFixed(6);
+      });
+    }
+  }
+
+  function loadDiversionHelipads() {
+    fetch("/api/diversions")
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success" && data.locations) {
+          data.locations.forEach(loc => {
+            const m = L.circleMarker([loc.latitude, loc.longitude], {
+              radius: 6,
+              color: "#2563eb",
+              fillColor: "#60a5fa",
+              fillOpacity: 0.8,
+              weight: 2
+            }).addTo(map).bindPopup(`<b>Emergency Helipad: ${loc.name}</b><br>Code: ${loc.code}<br>${loc.description}`);
+            diversionMarkers.push(m);
+          });
+        }
+      })
+      .catch(err => console.error("Could not load diversion locations", err));
+  }
+
+  function loadPreset(pLat, pLng, dLat, dLng, label, weight, category, priority) {
+    document.getElementById("pickup_lat").value = pLat;
+    document.getElementById("pickup_lng").value = pLng;
+    document.getElementById("dest_lat").value = dLat;
+    document.getElementById("dest_lng").value = dLng;
+    document.getElementById("cargo_weight_kg").value = weight;
+    document.getElementById("cargo_category").value = category;
+    document.getElementById("priority").value = priority;
+
+    updateMapMarkers();
+    searchDrones();
+  }
+
+  function searchDrones() {
+    const pLat = parseFloat(document.getElementById("pickup_lat").value);
+    const pLng = parseFloat(document.getElementById("pickup_lng").value);
+    const dLat = parseFloat(document.getElementById("dest_lat").value);
+    const dLng = parseFloat(document.getElementById("dest_lng").value);
+    const weight = parseFloat(document.getElementById("cargo_weight_kg").value);
+    const category = document.getElementById("cargo_category").value;
+    const priority = document.getElementById("priority").value;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    document.getElementById("searchLoading").style.display = "block";
+    document.getElementById("resultsContainer").style.display = "none";
+    document.getElementById("weatherStrip").style.display = "none";
+    document.getElementById("selectedPriceCard").style.display = "none";
+
+    fetch("/booking/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify({
+        pickup_latitude: pLat,
+        pickup_longitude: pLng,
+        destination_latitude: dLat,
+        destination_longitude: dLng,
+        cargo_weight_kg: weight,
+        cargo_category: category,
+        priority: priority
+      })
+    })
+    .then(res => res.json())
+    .then(payload => {
+      document.getElementById("searchLoading").style.display = "none";
+
+      if (payload.status !== "success") {
+        alert("Search failed: " + payload.message);
+        return;
+      }
+
+      currentSearchResults = payload.data;
+      renderSearchResults(payload.data);
+    })
+    .catch(err => {
+      document.getElementById("searchLoading").style.display = "none";
+      alert("Error searching drones: " + err);
+    });
+  }
+
+  function renderSearchResults(data) {
+    document.getElementById("resultsContainer").style.display = "block";
+    const cardsList = document.getElementById("droneCardsList");
+    cardsList.innerHTML = "";
+
+    // Render weather strip
+    const w = data.weather;
+    const wStrip = document.getElementById("weatherStrip");
+    wStrip.style.display = "block";
+    const wBadge = document.getElementById("weatherBadge");
+    wBadge.className = "weather-chip " + w.classification;
+    wBadge.innerText = w.classification + (w.classification === "GREEN" ? " (SAFE)" : w.classification === "YELLOW" ? " (CAUTION)" : " (HAZARD)");
+
+    document.getElementById("weatherMetricsText").innerText = `Wind: ${w.max_wind_speed_mps} m/s | Rain: ${w.max_precipitation_mmh} mm/h | Vis: ${w.min_visibility_km} km`;
+    document.getElementById("weatherDescText").innerText = w.warning_description;
+
+    // Draw candidate flight corridor on map
+    if (corridorPolyline) map.removeLayer(corridorPolyline);
+    if (data.corridors && data.corridors.length > 0) {
+      const wps = data.corridors[0].waypoints.map(pt => [pt.lat, pt.lng]);
+      const corridorColor = w.classification === "RED" ? "#ef4444" : (w.classification === "YELLOW" ? "#f59e0b" : "#0284c7");
+      corridorPolyline = L.polyline(wps, {
+        color: corridorColor,
+        weight: 4,
+        dashArray: "6, 6"
+      }).addTo(map);
+      map.fitBounds(corridorPolyline.getBounds(), { padding: [40, 40] });
+    }
+
+    // Combine cards
+    const allCards = [
+      ...data.available_drones,
+      ...data.limited_drones,
+      ...data.unavailable_drones
+    ];
+
+    document.getElementById("resultsCount").innerText = `${data.summary.available_count} Available, ${data.summary.limited_count} Limited, ${data.summary.unavailable_count} Infeasible`;
+
+    allCards.forEach((card, idx) => {
+      const isSelectable = card.is_bookable;
+      const statusClass = card.availability_status === "AVAILABLE" ? "status-available" : (card.availability_status === "LIMITED" ? "status-limited" : "status-unavailable");
+
+      const cardEl = document.createElement("div");
+      cardEl.className = "drone-card " + (!isSelectable ? "unavailable" : "");
+      cardEl.id = `card_${card.quote_id}`;
+
+      let cautionHtml = "";
+      if (card.cautions && card.cautions.length > 0) {
+        cautionHtml = `<div style="font-size: 0.72rem; color: #b45309; margin-top: 4px;">⚠️ ${card.cautions.join(", ")}</div>`;
+      }
+
+      let rejectionHtml = "";
+      if (card.rejection_reasons && card.rejection_reasons.length > 0) {
+        rejectionHtml = `<div style="font-size: 0.72rem; color: #b91c1c; margin-top: 4px;">⛔ ${card.rejection_reasons.join(", ")}</div>`;
+      }
+
+      cardEl.innerHTML = `
+        <div class="drone-card-header">
+          <div class="drone-model-title">
+            <span>🚁 ${card.drone_model}</span>
+            <span class="status-pill ${statusClass}">${card.availability_status}</span>
+          </div>
+          <div class="drone-price-badge">₹${card.pricing.total_price.toFixed(2)}</div>
+        </div>
+
+        <div class="drone-specs-grid">
+          <div class="spec-item"><strong>${card.estimated_pickup_time_min}m</strong>Pickup ETA</div>
+          <div class="spec-item"><strong>${card.estimated_delivery_duration_min}m</strong>Transit Time</div>
+          <div class="spec-item"><strong>${card.battery_percent}%</strong>Battery (${card.current_battery_wh}Wh)</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b;">
+          <span>Code: <b>${card.drone_code}</b> | Max: ${card.maximum_payload_kg} kg</span>
+          <span>Flight: ${card.flight_distance_km} km</span>
+        </div>
+
+        ${cautionHtml}
+        ${rejectionHtml}
+      `;
+
+      if (isSelectable) {
+        cardEl.onclick = () => selectDrone(card);
+      }
+
+      cardsList.appendChild(cardEl);
+    });
+
+    // Auto-select first available drone
+    if (data.available_drones.length > 0) {
+      selectDrone(data.available_drones[0]);
+    } else if (data.limited_drones.length > 0) {
+      selectDrone(data.limited_drones[0]);
+    }
+  }
+
+  function selectDrone(card) {
+    selectedQuoteId = card.quote_id;
+
+    // Highlight card
+    document.querySelectorAll(".drone-card").forEach(el => el.classList.remove("selected"));
+    const selEl = document.getElementById(`card_${card.quote_id}`);
+    if (selEl) selEl.classList.add("selected");
+
+    // Populate Price breakdown
+    document.getElementById("selectedPriceCard").style.display = "block";
+    document.getElementById("selectedDroneName").innerText = `${card.drone_model} (${card.drone_code})`;
+
+    const p = card.pricing;
+    document.getElementById("pbBase").innerText = `₹${p.base_fare.toFixed(2)}`;
+    document.getElementById("pbDistKm").innerText = card.flight_distance_km.toFixed(1);
+    document.getElementById("pbDist").innerText = `₹${p.distance_charge.toFixed(2)}`;
+    document.getElementById("pbWeightKg").innerText = card.maximum_payload_kg;
+    document.getElementById("pbWeight").innerText = `₹${p.weight_charge.toFixed(2)}`;
+    document.getElementById("pbPrio").innerText = `₹${p.priority_charge.toFixed(2)}`;
+    document.getElementById("pbService").innerText = `₹${p.service_fee.toFixed(2)}`;
+    document.getElementById("pbTax").innerText = `₹${p.tax_amount.toFixed(2)}`;
+    document.getElementById("pbTotal").innerText = `₹${p.total_price.toFixed(2)}`;
+
+    // Weather warning check
+    const isCaution = (card.weather_status === "YELLOW");
+    const advBox = document.getElementById("weatherAdvisoryBox");
+    if (isCaution) {
+      advBox.style.display = "block";
+      document.getElementById("weatherAckCheckbox").checked = false;
+    } else {
+      advBox.style.display = "none";
+    }
+  }
+
+  function confirmBooking() {
+    if (!selectedQuoteId) {
+      alert("Please select an available drone first.");
+      return;
+    }
+
+    const isCaution = (currentSearchResults && currentSearchResults.weather.classification === "YELLOW");
+    const weatherAck = isCaution ? document.getElementById("weatherAckCheckbox").checked : false;
+
+    if (isCaution && !weatherAck) {
+      alert("Please acknowledge the weather advisory checkbox before confirming.");
+      return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const btn = document.getElementById("btnConfirmBooking");
+    btn.disabled = true;
+    btn.innerText = "Securing Drone Lock...";
+
+    fetch("/booking/confirm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify({
+        quote_id: selectedQuoteId,
+        weather_acknowledged: weatherAck,
+        notes: "Smart Drone Booking Portal"
+      })
+    })
+    .then(res => res.json())
+    .then(payload => {
+      btn.disabled = false;
+      btn.innerText = "Confirm & Reserve Drone";
+
+      if (payload.status === "success") {
+        window.location.href = payload.redirect_url;
+      } else if (payload.status === "conflict") {
+        alert("Concurrency Notice: " + payload.message);
+        searchDrones(); // Refresh
+      } else {
+        alert("Booking failed: " + payload.message);
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerText = "Confirm & Reserve Drone";
+      alert("Network error confirming booking: " + err);
+    });
+  }
+</script>
+{% endblock %}
