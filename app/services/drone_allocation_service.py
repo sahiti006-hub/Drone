@@ -286,6 +286,7 @@ class DroneAllocationService:
     def evaluate_multi_drone_allocation(
         cls,
         request_ids: Optional[List[int]] = None,
+        drone_ids: Optional[List[int]] = None,
         algorithm_name: str = "PRIORITY_BEST_FIT",
         require_weather: bool = False,
     ) -> MultiDroneAllocationPlan:
@@ -307,10 +308,14 @@ class DroneAllocationService:
         requests_list = query.all()
 
         # 2. Fetch Available Drones
-        available_drones = Drone.query.filter_by(
+        drone_query = Drone.query.filter_by(
             status=DroneStatus.AVAILABLE.value,
             is_decommissioned=False,
-        ).all()
+        )
+        if drone_ids:
+            drone_query = drone_query.filter(Drone.id.in_(drone_ids))
+
+        available_drones = drone_query.all()
 
         plan = MultiDroneAllocationPlan(
             algorithm_name=algorithm_name,

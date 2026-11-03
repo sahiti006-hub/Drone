@@ -1,6 +1,6 @@
 # Smart Multipurpose Emergency Drone Delivery and Route Optimization System
 
-[![Automated Tests](https://img.shields.io/badge/pytest-122%20passed-success)](tests/)
+[![Automated Tests](https://img.shields.io/badge/pytest-125%20passed-success)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-Flask%203.1-informational)](https://flask.palletsprojects.com/)
@@ -372,6 +372,7 @@ Comprehensive academic and engineering documentation prepared for project evalua
 - **Final Presentation & Live Demo Script:** [`docs/final_presentation_demo.md`](docs/final_presentation_demo.md) — Step-by-step 10-phase demonstration script with pre-configured accounts, coordinates, controls, and expected observations.
 - **Academic Demonstration Guide:** [`docs/academic_demonstration_guide.md`](docs/academic_demonstration_guide.md) — Step-by-step presentation scripts and evaluator checkpoints.
 - **Viva Voce Technical Q&A:** [`docs/viva_technical_qa.md`](docs/viva_technical_qa.md) — Quick reference technical defense questions and answers.
+- **Optimization & Allocation Benchmark Report:** [`docs/optimization_benchmark_report.md`](docs/optimization_benchmark_report.md) — Comprehensive empirical audit and trade-off analysis benchmarking the Route Optimizer, Priority Best-Fit vs. FCFS Allocation across scale increments (5 to 80 requests), and in-flight dynamic rerouting.
 - **Production & Academic Release Checklist:** [`docs/release_checklist.md`](docs/release_checklist.md) — Comprehensive operations guide covering prerequisites, environment configuration, MySQL setup, WSGI/Docker startup, smoke tests, backups, and rollback procedures.
 - **Production Release Verification Report:** [`docs/production_release_verification.md`](docs/production_release_verification.md) — Independent release audit, security review, test results, Docker environment analysis, and classification verdict.
 - **Architectural & Security Audit Report:** [`docs/final_audit_report.md`](docs/final_audit_report.md) — Complete system audit of entry points, routes, models, services, concurrency, and security.
@@ -380,12 +381,15 @@ Comprehensive academic and engineering documentation prepared for project evalua
 
 ### Automated Verification Commands
 ```powershell
-# 1. Run all 122 automated tests with statement coverage (83% across 2,846 lines):
+# 1. Run all 125 automated tests with statement coverage (83% across 2,846 lines):
 pytest -v --cov=app --cov-report=term-missing
 
-# 2. Run independent ML module evaluation:
+# 2. Run algorithmic optimization and multi-drone allocation benchmarks:
+python scripts/run_algorithm_benchmarks.py
+
+# 3. Run independent ML module evaluation:
 python scripts/evaluate_ml_prediction_module.py
 
-# 3. Run full automated demonstration workflow:
+# 4. Run full automated demonstration workflow:
 python scripts/demonstrate_full_workflow.py
 ```

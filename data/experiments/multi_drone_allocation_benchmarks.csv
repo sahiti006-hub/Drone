@@ -1,0 +1,13 @@
+scale_id,scale_name,algorithm,total_requests,total_drones,matched_count,unmatched_count,idle_drones,overall_fulfillment_pct,critical_fulfillment_pct,high_fulfillment_pct,medium_fulfillment_pct,low_fulfillment_pct,total_fleet_energy_wh,mean_route_distance_km,mean_capacity_headroom_kg,execution_time_ms
+SCALE_TINY,Small Fleet / Low Contention,FCFS_GREEDY_BASELINE,5,3,3,2,0,60.0,50.0,100.0,100.0,0.0,271.27,11.51,2.27,53.291
+SCALE_TINY,Small Fleet / Low Contention,PRIORITY_BEST_FIT,5,3,3,2,0,60.0,100.0,100.0,0.0,0.0,303.45,11.9,1.32,2.349
+SCALE_SMALL,Balanced Fleet / Medium Contention,FCFS_GREEDY_BASELINE,12,6,6,6,0,50.0,33.3,66.7,66.7,33.3,399.36,7.83,1.71,2.439
+SCALE_SMALL,Balanced Fleet / Medium Contention,PRIORITY_BEST_FIT,12,6,6,6,0,50.0,100.0,100.0,0.0,0.0,548.24,10.81,1.34,2.324
+SCALE_MEDIUM,Municipal Fleet / High Contention,FCFS_GREEDY_BASELINE,25,12,12,13,0,48.0,42.9,66.7,50.0,33.3,1222.34,12.11,1.6,4.812
+SCALE_MEDIUM,Municipal Fleet / High Contention,PRIORITY_BEST_FIT,25,12,12,13,0,48.0,100.0,33.3,50.0,0.0,1294.84,13.09,1.69,4.63
+SCALE_LARGE,Regional Dispatch / Heavy Contention,FCFS_GREEDY_BASELINE,50,20,20,30,0,40.0,38.5,38.5,41.7,41.7,2008.5,12.0,1.47,7.474
+SCALE_LARGE,Regional Dispatch / Heavy Contention,PRIORITY_BEST_FIT,50,20,20,30,0,40.0,100.0,53.8,0.0,0.0,1896.91,11.31,1.53,9.917
+SCALE_STRESS,Severe Fleet Starvation Stress,FCFS_GREEDY_BASELINE,80,25,25,55,0,31.2,35.0,30.0,30.0,30.0,2233.43,10.74,1.76,7.605
+SCALE_STRESS,Severe Fleet Starvation Stress,PRIORITY_BEST_FIT,80,25,25,55,0,31.2,100.0,25.0,0.0,0.0,2421.54,11.45,1.49,14.843
+SCALE_INVERSION,Priority Inversion Bottleneck,FCFS_GREEDY_BASELINE,10,4,4,6,0,40.0,0.0,0.0,0.0,80.0,296.83,9.68,2.5,2.418
+SCALE_INVERSION,Priority Inversion Bottleneck,PRIORITY_BEST_FIT,10,4,4,6,0,40.0,40.0,0.0,0.0,40.0,353.88,10.54,1.25,2.214
