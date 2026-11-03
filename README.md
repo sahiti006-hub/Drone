@@ -367,6 +367,7 @@ Generated vector charts are available in [`reports/figures/`](reports/figures/):
 
 Comprehensive academic and engineering documentation prepared for project evaluation, external viva examination, and technical auditing:
 
+- **Academic Demonstration Runbook (Scenarios A–F):** [`docs/final_demo_runbook.md`](docs/final_demo_runbook.md) — Comprehensive pre-demo checklist, step-by-step browser and CLI execution guides for Scenarios A through F, expected observations, recovery procedures, and manual verification items.
 - **Full Academic Project Report:** [`docs/final_year_project_report.md`](docs/final_year_project_report.md) — Complete 30-section academic thesis document covering abstract, problem formulation, mathematical models, system architecture, database schema, implementation details, experimental results, and citations.
 - **Viva Voce Defense Guide (15 Sections A–O):** [`docs/viva_questions_and_answers.md`](docs/viva_questions_and_answers.md) — Comprehensive technical questions and answers covering clean architecture, 3NF schema, 3D corridors, multi-objective optimization, batch allocation, battery/payload constraints, weather safety, dynamic rerouting, advisory ML evaluation, security, and QA.
 - **Final Presentation & Live Demo Script:** [`docs/final_presentation_demo.md`](docs/final_presentation_demo.md) — Step-by-step 10-phase demonstration script with pre-configured accounts, coordinates, controls, and expected observations.
@@ -384,12 +385,15 @@ Comprehensive academic and engineering documentation prepared for project evalua
 # 1. Run all 125 automated tests with statement coverage (83% across 2,846 lines):
 pytest -v --cov=app --cov-report=term-missing
 
-# 2. Run algorithmic optimization and multi-drone allocation benchmarks:
+# 2. Run live academic demonstration scenarios A through F:
+python scripts/demonstrate_academic_scenarios.py --scenario all
+
+# 3. Run algorithmic optimization and multi-drone allocation benchmarks:
 python scripts/run_algorithm_benchmarks.py
 
-# 3. Run independent ML module evaluation:
+# 4. Run independent ML module evaluation:
 python scripts/evaluate_ml_prediction_module.py
 
-# 4. Run full automated demonstration workflow:
+# 5. Run full automated demonstration workflow:
 python scripts/demonstrate_full_workflow.py
 ```

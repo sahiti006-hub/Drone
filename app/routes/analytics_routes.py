@@ -31,12 +31,15 @@ def index():
     user = AuthService.get_current_user()
     metrics = AnalyticsService.get_dashboard_metrics(user)
     route_analytics = AnalyticsService.get_route_analytics_comparison()
+    from app.services.prediction_service import FlightPredictionService
+    ml_report = FlightPredictionService.get_evaluation_report()
 
     return render_template(
         "analytics/overview.html",
         user=user,
         metrics=metrics,
         analytics=route_analytics,
+        ml_report=ml_report,
     )
 
 
