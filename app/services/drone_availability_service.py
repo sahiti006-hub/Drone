@@ -57,6 +57,9 @@ class DroneAvailabilityService:
         cargo_weight_kg: float,
         cargo_category: str = "EMERGENCY_MEDICINE",
         priority: str = "HIGH",
+        delivery_direction: str = "SEND",
+        custom_item_name: Optional[str] = None,
+        package_size: Optional[str] = "SMALL",
     ) -> Dict[str, Any]:
         """Search and categorize all drones for a proposed delivery mission."""
         cargo_weight = float(cargo_weight_kg)
@@ -105,6 +108,9 @@ class DroneAvailabilityService:
                 priority=priority,
                 primary_corridor=primary_corridor,
                 weather_summary=weather_summary,
+                delivery_direction=delivery_direction,
+                custom_item_name=custom_item_name,
+                package_size=package_size,
             )
 
             status = card["availability_status"]
@@ -126,6 +132,9 @@ class DroneAvailabilityService:
                 "cargo_weight_kg": cargo_weight,
                 "cargo_category": cargo_category,
                 "priority": priority,
+                "delivery_direction": delivery_direction,
+                "custom_item_name": custom_item_name,
+                "package_size": package_size,
                 "flight_distance_km": round(flight_distance_km, 3),
             },
             "corridors": [c.to_dict() for c in candidate_corridors],
@@ -155,6 +164,9 @@ class DroneAvailabilityService:
         priority: str,
         primary_corridor: Any,
         weather_summary: WeatherConditionSummary,
+        delivery_direction: str = "SEND",
+        custom_item_name: Optional[str] = None,
+        package_size: Optional[str] = "SMALL",
     ) -> Dict[str, Any]:
         """Compute detailed performance, quote, and feasibility categorization for one drone."""
         unavailability_reasons: List[str] = []
@@ -265,6 +277,9 @@ class DroneAvailabilityService:
             estimated_delivery_duration_min=delivery_time_min,
             estimated_energy_wh=total_required_energy_wh,
             weather_classification=weather_summary.classification.value,
+            delivery_direction=delivery_direction or "SEND",
+            custom_item_name=custom_item_name,
+            package_size=package_size or "SMALL",
         )
 
         # Determine categorization
@@ -294,6 +309,9 @@ class DroneAvailabilityService:
             "estimated_energy_wh": round(total_required_energy_wh, 1),
             "corridor_name": primary_corridor.corridor_name,
             "weather_status": weather_summary.classification.value,
+            "delivery_direction": delivery_direction or "SEND",
+            "custom_item_name": custom_item_name,
+            "package_size": package_size or "SMALL",
             "availability_status": category,
             "is_bookable": bookable,
             "rejection_reasons": unavailability_reasons,
@@ -310,6 +328,14 @@ class DroneAvailabilityService:
         requester_id: int,
         weather_acknowledged: bool = False,
         notes: Optional[str] = None,
+        delivery_direction: Optional[str] = None,
+        collection_contact_name: Optional[str] = None,
+        collection_contact_phone: Optional[str] = None,
+        collection_readiness: Optional[str] = None,
+        collection_instructions: Optional[str] = None,
+        custom_item_name: Optional[str] = None,
+        custom_item_description: Optional[str] = None,
+        package_size: Optional[str] = None,
     ) -> DroneBooking:
         """Atomically confirm booking, lock drone, and instantiate delivery request.
 
@@ -381,6 +407,11 @@ class DroneAvailabilityService:
                     "Requester must acknowledge the weather advisory before confirmation."
                 )
 
+            # Determine effective delivery direction and item details
+            eff_direction = (delivery_direction or getattr(quote, "delivery_direction", None) or "SEND").upper()
+            eff_item_name = custom_item_name or getattr(quote, "custom_item_name", None)
+            eff_pkg_size = package_size or getattr(quote, "package_size", None) or "SMALL"
+
             # 4. Create and link DeliveryRequest
             from app.models.delivery_request import DeliveryRequest, RequestStatus, RequestPriority
             delivery_req = DeliveryRequest(
@@ -392,6 +423,7 @@ class DroneAvailabilityService:
                 destination_longitude=float(quote.destination_longitude),
                 payload_weight_kg=float(quote.cargo_weight_kg),
                 priority=quote.priority,
+                delivery_direction=eff_direction,
                 description=notes or f"Smart Drone Booking [{quote.quote_reference}]",
             )
             delivery_req.status = RequestStatus.ROUTE_CALCULATED.value
@@ -444,6 +476,14 @@ class DroneAvailabilityService:
                 final_price=quote.total_price,
                 weather_condition_at_booking="YELLOW" if is_caution else "GREEN",
                 weather_acknowledged_by_user=weather_acknowledged,
+                delivery_direction=eff_direction,
+                custom_item_name=eff_item_name,
+                custom_item_description=custom_item_description,
+                package_size=eff_pkg_size,
+                collection_readiness=collection_readiness,
+                collection_contact_name=collection_contact_name,
+                collection_contact_phone=collection_contact_phone,
+                collection_instructions=collection_instructions,
                 notes=notes,
             )
             db.session.add(booking)

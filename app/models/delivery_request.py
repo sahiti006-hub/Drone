@@ -49,6 +49,12 @@ class DeliveryRequest(db.Model):
     destination_latitude = db.Column(db.Numeric(10, 7), nullable=False)
     destination_longitude = db.Column(db.Numeric(10, 7), nullable=False)
     payload_weight_kg = db.Column(db.Numeric(6, 2), nullable=False)
+    delivery_direction = db.Column(
+        db.String(20),
+        nullable=False,
+        default="SEND",
+        server_default="SEND",
+    )
     description = db.Column(db.String(255), nullable=True)
     priority = db.Column(
         db.String(20),
@@ -105,6 +111,7 @@ class DeliveryRequest(db.Model):
         priority: str = RequestPriority.HIGH.value,
         status: str = RequestStatus.PENDING.value,
         description: str = None,
+        delivery_direction: str = "SEND",
     ):
         self.validate_coordinates(pickup_latitude, pickup_longitude, "Pickup")
         self.validate_coordinates(destination_latitude, destination_longitude, "Destination")
@@ -130,6 +137,7 @@ class DeliveryRequest(db.Model):
         self.priority = priority.value if isinstance(priority, RequestPriority) else str(priority).upper()
         self.status = status.value if isinstance(status, RequestStatus) else str(status).upper()
         self.description = description.strip() if description else None
+        self.delivery_direction = (delivery_direction or "SEND").upper()
 
     @staticmethod
     def validate_coordinates(lat: float, lng: float, label: str = "Coordinate") -> None:
@@ -156,6 +164,7 @@ class DeliveryRequest(db.Model):
                 "longitude": float(self.destination_longitude),
             },
             "payload_weight_kg": float(self.payload_weight_kg),
+            "delivery_direction": getattr(self, "delivery_direction", "SEND") or "SEND",
             "description": self.description,
             "priority": self.priority,
             "status": self.status,

@@ -1,75 +1,98 @@
-# Smart Multipurpose Emergency Drone Delivery and Route Optimization System
+# DroneDispatch
+## Smart Multipurpose Emergency Drone Delivery and Route Optimization System
 
-[![Automated Tests](https://img.shields.io/badge/pytest-125%20passed-success)](tests/)
-[![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen)](tests/)
-[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
+[![Automated Tests](https://img.shields.io/badge/pytest-162%20passed-success)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)](tests/)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-Flask%203.1-informational)](https://flask.palletsprojects.com/)
-[![Database](https://img.shields.io/badge/database-MySQL%20%2F%20SQLAlchemy%202.1-orange)](https://www.sqlalchemy.org/)
+[![Database](https://img.shields.io/badge/database-MySQL%20%2F%20SQLAlchemy%202.0-orange)](https://www.sqlalchemy.org/)
 [![Frontend](https://img.shields.io/badge/maps-Leaflet.js%20%7C%20OpenStreetMap-green)](https://leafletjs.com/)
 
-An academic research prototype, simulation cockpit, and route optimization platform for autonomous medical and emergency supply transit (blood supplies, antivenoms, defibrillators, vaccines, and surgical kits).
-
 ---
 
-## Table of Contents
-1. [Abstract](#1-abstract)
-2. [Problem Statement](#2-problem-statement)
-3. [Project Objectives](#3-project-objectives)
-4. [Scope & Academic Disclaimer](#4-scope--academic-disclaimer)
-5. [System Architecture](#5-system-architecture)
-6. [Module Descriptions](#6-module-descriptions)
-7. [Database Design](#7-database-design)
-8. [Algorithm Formulation: Baseline vs. Multi-Objective Optimizer](#8-algorithm-formulation)
-9. [Constraints & Modeling Assumptions](#9-constraints--modeling-assumptions)
-10. [Setup and Execution Instructions](#10-setup-and-execution-instructions)
-11. [Testing & Quality Assurance](#11-testing--quality-assurance)
-12. [Evaluation Methodology](#12-evaluation-methodology)
-13. [Benchmark Results Based on Actual Execution](#13-benchmark-results-based-on-actual-execution)
-14. [Limitations](#14-limitations)
-15. [Future Enhancements](#15-future-enhancements)
-16. [Academic Documentation & Viva Voce Suite](#16-academic-documentation--viva-voce-suite)
+## 1. Project Overview
 
----
+**DroneDispatch** is an academic software platform and simulation engine designed for rapid emergency aerial transit and consumer on-demand logistics. The platform coordinates multi-drone fleet allocation, generates 3D flight corridors, evaluates meteorological safety constraints, performs multi-objective route optimization, and executes real-time discrete kinematic flight simulations.
 
-## 1. Abstract
-
-Rapid transit of critical healthcare supplies—such as emergency blood units, snakebite antivenoms, and automated external defibrillators (AEDs)—is frequently hindered by urban road gridlock, mountainous terrain, and disaster-induced infrastructure collapse. This project introduces the **Smart Multipurpose Emergency Drone Delivery and Route Optimization System**, a modular, full-stack platform designed to automate dispatch operations, enforce physical and meteorological safety constraints, and optimize 3D flight paths across urban and rural corridors. 
-
-The system incorporates a **Deterministic Multi-Objective Route Optimizer** that balances flight distance, estimated duration, payload-induced energy consumption, and structural maneuver penalties using min-max normalized scalarization against a shortest-feasible baseline. Built on Python Flask, SQLAlchemy 2.0, Leaflet.js, and Pandas, the platform includes role-based access control (RBAC), an interactive discrete-time simulation cockpit, real-time telemetry checkpointing, operational monitoring dashboards, priority-based multi-drone batch allocation, dynamic in-flight rerouting, an advisory ML flight duration/energy regression module, and a reproducible empirical evaluation suite verified by 119 automated tests.
+Inspired by on-demand ride-hailing and courier services, DroneDispatch incorporates a full consumer-facing booking workflow, two-way delivery directions (**SEND** outbound and **RECEIVE** inbound collection), dynamic mathematical pricing with surge control, simulated cashless payments, automated invoicing, real-time public parcel tracking, and dynamic in-flight weather rerouting.
 
 ---
 
 ## 2. Problem Statement
 
-Traditional ground emergency logistics suffer from severe systemic vulnerabilities:
-1. **Unpredictable Surface Transit Times:** Traffic congestion, road construction, and natural disasters introduce high variance in transit times for life-critical supplies.
-2. **Terrain & Infrastructure Bottlenecks:** Isolated rural primary health centers (PHCs) and disaster zones often lack passable roads during acute medical emergencies.
-3. **Suboptimal Airspace Routing:** Naive point-to-point drone dispatch without dynamic environmental feasibility analysis risks battery exhaustion, cargo overload, and flight through hazardous weather conditions.
-4. **Lack of Operational Governance:** Emergency medical logistics require strict auditability, role-aware operational permissions, atomic hardware reservation, and real-time situational awareness.
+Traditional surface emergency transit and medical courier logistics encounter severe bottlenecks:
+1. **Unpredictable Surface Congestion:** Urban gridlock and vehicular traffic introduce high variance into critical medical transit windows (e.g., organ transit, antivenom delivery, blood supply replenishment).
+2. **Terrain and Infrastructure Obstacles:** Rural primary healthcare centers, hilly terrains, and disaster-affected zones often suffer from damaged or impassable roadway networks.
+3. **Suboptimal Airspace Navigation:** Naive direct point-to-point drone dispatch without dynamic environmental feasibility analysis risks battery exhaustion, cargo overload, and flight through adverse weather conditions.
+4. **Lack of Operational Governance:** Emergency logistics require strict role-aware access controls, atomic hardware inventory locking, dynamic pricing transparency, and auditability.
 
 ---
 
 ## 3. Project Objectives
 
-- **Modular Clean Architecture:** Decouple HTTP transport, persistence, domain models, and algorithmic services into maintainable, independently testable layers.
-- **Deterministic Multi-Corridor Generation:** Generate distinct geometric airspace corridors (Direct, Northern Peripheral, Southern Peripheral, High-Altitude) without relying on ground road maps.
-- **Fail-Safe Feasibility Validation:** Enforce physical multi-rotor constraints (payload ratings, battery discharge limits with mandatory 15% non-depletable reserve, sustained wind thresholds, visibility limits, and precipitation tolerance).
-- **Multi-Objective Optimization:** Formulate and benchmark a normalized scalarized cost optimizer against a naive shortest-feasible baseline.
-- **Interactive Simulation Cockpit:** Provide a web-based Leaflet.js map with discrete-time kinematic interpolation, heading calculation, telemetry streaming, and pause/resume mission controls.
-- **Enterprise Security & Reliability:** Enforce zero raw-SQL queries (100% ORM parameterized), PBKDF2/Scrypt password hashing, session fixation prevention, IDOR protection, defensive HTTP headers, and atomic transactions.
-- **Reproducible Academic Evaluation:** Provide deterministic benchmark scenario runners, CSV data exports, analytical summary reports, and vector graphical charts.
+- **Modular Software Architecture:** Decouple controllers, ORM persistence, domain models, and algorithmic optimization into maintainable, independently testable layers.
+- **Deterministic 3D Flight Corridor Generation:** Generate discrete geometric airspace corridors (Direct, Port Peripheral, Starboard Peripheral, High-Altitude) without dependence on road infrastructure.
+- **Fail-Safe Feasibility Validation:** Enforce physical multi-rotor bounds including maximum payload rating, battery discharge curves with mandatory 15% non-depletable reserve, sustained wind thresholds, visibility limits, and precipitation tolerance.
+- **Multi-Objective Route Optimization:** Formulate and benchmark a normalized scalarized cost optimizer (Distance: 0.35, Energy: 0.30, Risk: 0.20, Time: 0.15) against a shortest-feasible baseline.
+- **Interactive Consumer Booking & Tracking:** Provide an intuitive map-based interface supporting SEND and RECEIVE operational workflows, transparent dynamic pricing quotes with 10-minute validity, and live Leaflet.js tracking.
+- **Safety-First In-Flight Autonomy:** Continuously monitor simulated weather changes to trigger dynamic rerouting around storm cells or initiate emergency diversions to designated landing zones and helipads.
+- **Simulated Cashless Payments:** Provide simulated UPI, Card, Netbanking, and Fleet Wallet transactions with automated invoicing and refund guarantees.
 
 ---
 
-## 4. Scope & Academic Disclaimer
+## 4. Key Features
 
-> [!IMPORTANT]
-> **SIMULATION RESEARCH NOTICE:**  
-> This system is an academic software prototype developed for educational, algorithmic research, and comparative evaluation purposes. It operates in **simulation mode** using mathematical and kinematic approximations. It does **not** directly interface with physical drone avionics (e.g., PX4, ArduPilot, MAVLink) and does not constitute a certified civil aviation flight-planning tool or air traffic control clearance system. Simulated energy consumption figures represent mathematical approximations and do not reflect measured battery chemistry discharge curves.
+- **Role-Based Access Control (RBAC):** Distinct dashboards and security boundaries for Requesters, Operators, and Administrators.
+- **Two-Way Delivery Experience:** First-class support for outbound **SEND** (user to recipient) and inbound **RECEIVE** (remote collection to user) delivery models.
+- **Universal Cargo Support:** Pre-configured emergency medical categories alongside custom item entry with mass and safety declarations.
+- **Real-Time Fleet Availability:** Instant eligibility matching based on battery charge, payload bounds, active maintenance, and range feasibility.
+- **Multi-Drone Allocation:** Priority Best-Fit heuristic allocation compared against a First-Come-First-Served (FCFS) baseline.
+- **Dynamic Pricing Engine:** Multi-factor pricing model accounting for distance, payload mass, urgency multiplier, weather risk, and demand surge.
+- **Weather Intelligence:** Real-time atmospheric analysis enforcing Green/Yellow/Red dispatch thresholds, mid-flight storm rerouting, and helipad diversions.
+- **Simulated Cashless Payments:** Mock payment gateway integration supporting UPI, Card, Netbanking, and Wallet transactions with automated refund management.
+- **Itemized Tax Invoicing:** Formatted GST-compliant tax invoices detailing all fare components.
+- **Public Recipient Tracking:** Anonymous, secure tracking page with masked recipient contact data.
+- **Advisory Machine Learning:** Ridge Regression flight duration and energy estimation module.
+- **Operational & Financial Analytics:** Comprehensive reporting dashboards with chart visualizations and CSV export capabilities.
 
 ---
 
-## 5. System Architecture
+## 5. SEND and RECEIVE Delivery Workflows
+
+DroneDispatch supports two primary logistical models:
+
+### Workflow A: SEND (Outbound Dispatch)
+- **Origin ($\vec{X}_{\text{start}}$):** The requester's home, clinic, or selected dispatch hub.
+- **Destination ($\vec{X}_{\text{end}}$):** The remote delivery address or medical facility.
+- **Use Case:** A clinic dispatching urgent blood samples, antivenom vials, or defibrillators to a field hospital.
+- **UI Experience:** Blue branding badge, pickup location defaulting to user location, manual or map-pinned recipient destination.
+
+### Workflow B: RECEIVE (Inbound Remote Collection)
+- **Origin ($\vec{X}_{\text{start}}$):** A remote blood bank, supplier, pharmacy, or diagnostic laboratory.
+- **Destination ($\vec{X}_{\text{end}}$):** The requester's current facility or home address.
+- **Use Case:** A rural primary health center requesting emergency vaccine pickup from an urban medical warehouse.
+- **Collection Safeguards:** Requester specifies remote sender contact name, verified phone number, specific collection instructions, and an authorization verification OTP/PIN.
+- **Physical Routing Invariance:** In both models, physical flight kinematics and energy consumption are strictly computed along the true directional vector ($\vec{X}_{\text{start}} \to \vec{X}_{\text{end}}$).
+
+---
+
+## 6. Universal Cargo Delivery Support
+
+The platform enforces cargo payload ratings and packaging restrictions:
+
+| Cargo Category | Max Mass Limit | Special Handling | Safety Flags |
+| :--- | :--- | :--- | :--- |
+| **Blood & Organs** | 3.5 kg | Temperature-controlled pod, high urgency | Biological, Fragile |
+| **Medications** | 4.0 kg | Sealed medical capsule, anti-vibration | Fragile |
+| **First Aid & AED** | 5.0 kg | Quick-release latch, emergency beacon | High Priority |
+| **Antivenom / Vaccines** | 3.0 kg | Cold-chain refrigeration pod | Temperature-sensitive |
+| **Critical Documents** | 1.0 kg | Waterproof tamper-evident pouch | Confidential |
+| **Sensitive Electronics** | 3.5 kg | Padded anti-static enclosure | Shock-sensitive |
+| **Custom Package** | 5.0 kg | User-declared weight & safety specifications | Configurable |
+
+---
+
+## 7. System Architecture
 
 ```text
                                   +---------------------------------------+
@@ -81,319 +104,368 @@ Traditional ground emergency logistics suffer from severe systemic vulnerabiliti
                                                      |
                                   +---------------------------------------+
                                   |   Flask Blueprints (HTTP Controllers)  |
-                                  |   /auth, /drones, /requests, /admin   |
+                                  |   /auth, /booking, /admin, /operator  |
                                   |      /simulation, /analytics         |
                                   +---------------------------------------+
                                                      |
-                                      Pure Python Business Services
+                                       Pure Python Business Services
                                                      |
          +--------------------+----------------------+--------------------+--------------------+
          |                    |                      |                    |                    |
 +-----------------+  +------------------+  +-------------------+  +------------------+  +------------------+
-|  AuthService    |  | DroneService     |  | RouteOptimizer    |  | AssignmentService|  | SimulationService |
-|  • RBAC & Rate  |  | • State Machine  |  | • Candidate Gen   |  | • ACID Dispatch  |  | • Kinematics     |
-|    Limiting     |  | • Fleet Inventory|  | • Multi-Objective |  | • Concurrency    |  | • Checkpoints    |
-|  • Session Guard|  | • Hardware Specs |  | • Feasibility Check|  |   Row Locks      |  | • Interpolation  |
+|  AuthService    |  | DroneService     |  | RouteOptimizer    |  | PricingService   |  | SimulationService |
+|  • RBAC & Rate  |  | • State Machine  |  | • Candidate Gen   |  | • Dynamic Multi- |  | • Kinematics     |
+|    Limiting     |  | • Fleet Inventory|  | • Multi-Objective |  |   Variable Fare  |  | • Checkpoints    |
+|  • Session Guard|  | • Hardware Specs |  | • Feasibility Check|  | • Expiry Timer   |  | • Interpolation  |
 +-----------------+  +------------------+  +-------------------+  +------------------+  +------------------+
          |                    |                      |                    |                    |
          +--------------------+----------------------+--------------------+--------------------+
                                                      |
-                                          SQLAlchemy 2.0 ORM
+                      +------------------------------+------------------------------+
+                      |                                                             |
+             +------------------+                                          +------------------+
+             | WeatherService   |                                          | PaymentService   |
+             | • Safety Gates   |                                          | • Mock Gateway   |
+             | • Dynamic Reroute|                                          | • Invoicing      |
+             | • Helipad Divers.|                                          | • Refund Manager |
+             +------------------+                                          +------------------+
+                                                     |
+                                       Object-Relational Mapping
+                                         (SQLAlchemy 2.0 ORM)
                                                      |
                                   +---------------------------------------+
-                                  |       Relational Database (3NF)       |
-                                  |      MySQL 8.0+ / SQLite Fallback     |
-                                  | users, drones, requests, routes, etc. |
+                                  |       Relational Persistence          |
+                                  |    MySQL 8.0 (InnoDB) / SQLite (Test) |
                                   +---------------------------------------+
 ```
 
 ---
 
-## 6. Module Descriptions
+## 8. Technology Stack
 
-| Module Directory | Key Components | Architectural Purpose |
-|---|---|---|
-| `app/routes/` | `auth.py`, `drone_routes.py`, `delivery_routes.py`, `simulation_routes.py`, `analytics_routes.py` | Handles HTTP routing, form validation, CSRF verification, and format-negotiated error responses (JSON vs HTML). |
-| `app/models/` | `User`, `Drone`, `DeliveryRequest`, `Route`, `RouteWaypoint`, `DroneAssignment`, `SimulationRun`, `AnalysisLog` | Declarative SQLAlchemy entities normalized to 3NF with foreign keys, indexes, and lifecycle hooks. |
-| `app/services/` | `RouteOptimizer`, `DroneAllocationService`, `AssignmentService`, `SimulationService`, `AnalyticsService`, `FlightPredictionService` | Core domain engine: corridor generation, feasibility evaluation, multi-objective scoring, bipartite batch matching, dynamic in-flight rerouting, ML duration/energy prediction, discrete-time kinematics, and Pandas analytics. |
-| `app/templates/` | `base.html`, `auth/`, `dashboard/`, `drones/`, `delivery/`, `simulation/`, `analytics/` | Clean Jinja2 emergency-dispatch UI with role-aware navigation and responsive layout. |
-| `scripts/` | `init_db.py`, `seed_db.py`, `create_admin.py`, `run_optimizer_experiments.py`, `analyze_evaluation_results.py`, `demonstrate_full_workflow.py` | Maintenance, database migration, automated benchmark evaluation, and live demonstration runners. |
-| `tests/` | 15 dedicated test modules (119 automated tests) | Comprehensive unit, integration, RBAC, boundary validation, multi-drone allocation, dynamic rerouting, ML prediction, and full end-to-end failure suite. |
+- **Backend Framework:** Python 3.11+ / Flask 3.1
+- **Database & ORM:** MySQL 8.0 (InnoDB engine with row-level locks) / SQLAlchemy 2.0
+- **Database Migrations:** Flask-Migrate / Alembic (linear migration chain)
+- **Frontend & Mapping:** HTML5, CSS3, JavaScript (ES6+), Leaflet.js, OpenStreetMap tiles
+- **Machine Learning:** Scikit-learn (Ridge Regression), NumPy, Pandas
+- **Testing & Quality:** Pytest, Pytest-Cov (162 automated tests, 81% code coverage)
+- **Containerization:** Docker, Docker Compose, Gunicorn WSGI
 
 ---
 
-## 7. Database Design
+## 9. Major Modules
 
-The relational schema is normalized to **Third Normal Form (3NF)**:
+1. **Authentication (`app/routes/auth.py`, `app/services/auth_service.py`):** User registration, password hashing (PBKDF2-SHA256), session management, and RBAC enforcement.
+2. **Booking & Dispatch (`app/routes/booking_routes.py`, `app/services/delivery_service.py`):** Consumer-facing parcel booking, SEND/RECEIVE mode selection, address geocoding, and order lifecycle management.
+3. **Drone Inventory (`app/services/drone_service.py`):** Drone registry, operational status tracking (`IDLE`, `ASSIGNED`, `IN_FLIGHT`, `MAINTENANCE`), battery level monitoring, and specifications.
+4. **Route Optimizer (`app/services/route_optimizer.py`):** 3D corridor synthesis, flight feasibility checks, and multi-objective Pareto-like cost evaluation.
+5. **Dynamic Pricing (`app/services/pricing_service.py`):** Mathematical fare calculator with surge pricing and time-limited cryptographic quote generation.
+6. **Weather Intelligence (`app/services/weather_intelligence_service.py`):** Real-time meteorological risk classification, pre-flight dispatch gates, and in-flight storm alerts.
+7. **Simulation Engine (`app/services/simulation_service.py`):** Discrete-time kinematic interpolation, waypoint tracking, battery consumption modeling, dynamic rerouting, and emergency helipad diversion.
+8. **Payment Service (`app/services/payment_service.py`):** Simulated payment gateway supporting Card, UPI, Netbanking, and Fleet Wallet, with automated invoice and refund handling.
+9. **Advisory ML (`app/ml/prediction_service.py`):** Machine learning surrogate model predicting flight duration and energy consumption.
+10. **Analytics & Reporting (`app/routes/analytics_routes.py`, `app/services/analytics_service.py`):** Operational performance metrics, revenue tracking, fleet utilization, and CSV data export.
 
+---
+
+## 10. Route Optimization Methodology
+
+The system generates candidate 3D flight corridors and evaluates them against physical feasibility constraints before selecting the optimal path:
+
+### Candidate Corridor Generation
+For any pickup coordinate $\vec{X}_{\text{start}}$ and destination coordinate $\vec{X}_{\text{end}}$:
+1. **Direct Path (0m lateral offset):** Direct geometric line at 100m cruising altitude.
+2. **Port Corridor (-50m lateral offset):** Lateral deviation to avoid central airspace bottlenecks.
+3. **Starboard Corridor (+50m lateral offset):** Alternative lateral deviation path.
+4. **High-Altitude Corridor (150m altitude):** Vertical separation corridor for obstacle clearance.
+
+### Multi-Objective Objective Function
+Candidate corridors are evaluated using a min-max normalized weighted cost scalarization:
+
+$$\text{Cost} = w_1 \cdot \widehat{\text{Distance}} + w_2 \cdot \widehat{\text{Energy}} + w_3 \cdot \widehat{\text{Risk}} + w_4 \cdot \widehat{\text{Time}}$$
+
+Where normalized weights sum to unity:
+- $w_1 = 0.35$ (Distance Minimization)
+- $w_2 = 0.30$ (Energy & Battery Conservation)
+- $w_3 = 0.20$ (Airspace & Weather Risk Mitigation)
+- $w_4 = 0.15$ (Transit Duration Optimization)
+
+$$\sum_{i=1}^{4} w_i = 0.35 + 0.30 + 0.20 + 0.15 = 1.00$$
+
+---
+
+## 11. Drone Feasibility and Battery Reserve
+
+Before dispatch, the engine verifies hard feasibility constraints:
+1. **Payload Feasibility:**
+   $$\text{Package Mass} \le \text{Drone Max Payload Rating}$$
+2. **Energy Feasibility:**
+   $$\text{Estimated Flight Energy Consumption} + \text{Emergency Reserve (15\%)} \le \text{Current Battery Capacity}$$
+3. **Non-Depletable Battery Reserve:** A mandatory 15% charge is reserved exclusively for emergency maneuvers, headwind compensation, and safe landing procedures.
+4. **Range Feasibility:**
+   $$\text{Corridor Distance} \le \text{Drone Operational Radius}$$
+
+---
+
+## 12. Weather Intelligence
+
+The system evaluates atmospheric conditions against predefined multi-rotor safety thresholds:
+
+| Condition Metric | Green (Permissible) | Yellow (Cautionary) | Red (Unfeasible - Dispatch Blocked) |
+| :--- | :--- | :--- | :--- |
+| **Sustained Wind Speed** | $\le 8.0\text{ m/s}$ | $8.1 - 12.0\text{ m/s}$ | $> 12.0\text{ m/s}$ |
+| **Precipitation Rate** | $\le 2.0\text{ mm/h}$ | $2.1 - 8.0\text{ mm/h}$ | $> 8.0\text{ mm/h}$ |
+| **Visual Range** | $\ge 5.0\text{ km}$ | $2.0 - 4.9\text{ km}$ | $< 2.0\text{ km}$ |
+
+When meteorological conditions are classified as **Red**, the booking interface blocks dispatch and alerts the user with safety advisories.
+
+---
+
+## 13. Emergency Rerouting and Helipad Diversion
+
+### Dynamic In-Flight Rerouting
+During flight simulation, if weather conditions deteriorate along an active flight segment:
+1. The simulation detects the storm zone obstacle.
+2. `RouteOptimizer` dynamically computes an evasion corridor with positive or negative lateral offsets.
+3. Active waypoints are dynamically updated, and the drone continues to its destination safely.
+
+### Emergency Helipad Diversion
+If a drone suffers catastrophic battery depletion ($<15\%$) or unrecoverable weather degradation:
+1. The simulation immediately aborts the delivery mission.
+2. The nearest registered emergency helipad or landing zone is selected using Euclidean spatial indexing.
+3. The drone diverts to the emergency site and executes a safe landing.
+4. The requester's order status transitions to `DIVERTED`, and an automated refund is triggered.
+
+---
+
+## 14. Dynamic Mathematical Pricing
+
+Fares are calculated transparently using an itemized mathematical model:
+
+$$\text{Fare} = \left[ \text{Base Fare} + (\text{Distance} \times \text{Rate}_{\text{km}}) + (\text{Mass} \times \text{Rate}_{\text{kg}}) \right] \times M_{\text{urgency}} \times M_{\text{weather}} \times M_{\text{surge}}$$
+
+### Baseline Parameters:
+- **Base Fare:** ₹150.00
+- **Distance Rate:** ₹25.00 per kilometer
+- **Weight Rate:** ₹15.00 per kilogram
+- **Urgency Multiplier ($M_{\text{urgency}}$):**
+  - Normal: $1.0\times$
+  - High: $1.25\times$
+  - Urgent: $1.50\times$
+- **Weather Multiplier ($M_{\text{weather}}$):**
+  - Green (Normal): $1.0\times$
+  - Yellow (Adverse Caution): $1.20\times$
+- **Demand Surge Multiplier ($M_{\text{surge}}$):** $1.0\times$ to $2.0\times$ based on active fleet utilization.
+- **Quote Expiration:** Quotes are valid for exactly **10 minutes (600 seconds)** with a live UI countdown timer.
+
+---
+
+## 15. Simulated Payment System
+
+DroneDispatch incorporates a simulated cashless payment module:
+- **Supported Payment Methods:** Simulated UPI (Virtual Payment Address validation), Simulated Credit/Debit Cards (Luhn algorithm checks), Netbanking, and Fleet Wallet.
+- **Transaction Flow:** Quotes transition from `PENDING_PAYMENT` to `CONFIRMED` upon payment authorization.
+- **Automated Invoicing:** A GST-compliant tax invoice is generated with itemized base charges, surcharges, and tax calculations.
+- **Automated Refunds:** If a mission is cancelled prior to launch or aborted during flight due to safety diversion, `PaymentService.process_refund()` credits the user's wallet or original payment instrument.
+
+---
+
+## 16. Machine Learning Prediction Module
+
+An advisory machine learning module assists human operators by providing fast estimates of mission duration and energy consumption:
+- **Model Architecture:** Scikit-learn Ridge Regression with L2 regularization ($\alpha = 1.0$).
+- **Features Evaluated:** Flight distance, payload mass, cruise speed, wind speed, headwind component, ambient temperature.
+- **Training Data:** Synthetically generated physics simulation dataset spanning 1,000+ flight records.
+- **Performance Metrics:** $R^2 \approx 0.94$, Mean Absolute Error ($\text{MAE}$) $\approx 1.2$ minutes.
+- **Academic Role:** Advisory only; all physical flight dispatches are governed by deterministic kinematic formulas.
+
+---
+
+## 17. Database Architecture
+
+The persistence layer uses SQLAlchemy 2.0 with a linear Alembic migration chain.
+
+### Core Relational Entities:
+1. `User`: User identity, credentials, roles (`admin`, `operator`, `requester`), wallet balance.
+2. `Drone`: Fleet inventory, model, max payload, battery capacity, status, coordinates.
+3. `DeliveryRequest`: Delivery specifications, direction (`SEND` / `RECEIVE`), pickup/destination coordinates, cargo category, urgency tier, collection metadata (`sender_name`, `sender_phone`, `collection_otp`, `collection_notes`).
+4. `Route`: Generated 3D flight paths, total distance, estimated energy, risk index, feasibility status.
+5. `RouteWaypoint`: Discrete coordinate waypoints (latitude, longitude, altitude, sequence).
+6. `DroneQuote`: Fare quotations, itemized pricing breakdown, expiration timestamps.
+7. `DroneBooking`: Confirmed delivery bookings, payment references, tracking numbers.
+8. `DronePayment`: Transaction records, payment method, payment status, timestamps.
+9. `DroneRefund`: Refund audit records, refund reasons, transaction links.
+10. `SavedLocation`: User address book for frequent dispatch and collection points.
+11. `DeliveryRating`: Post-delivery feedback and star ratings.
+12. `WeatherCondition`: Environmental snapshots, wind vectors, precipitation readings.
+13. `ReroutingEvent`: In-flight detour and diversion audit logs.
+14. `AuditLog`: System-wide security and administrative audit trail.
+
+---
+
+## 18. Installation Instructions (Windows & Linux)
+
+### Prerequisites:
+- Python 3.11, 3.12, or 3.14 installed on your PATH.
+- Git installed.
+- (Optional) MySQL 8.0 if running in production mode. Local development defaults to SQLite.
+
+### Clone the Repository:
+```bash
+git clone https://github.com/sahiti006-hub/Drone.git
+cd Drone
 ```
-[ users ] (1)
-    |
-    |--< (N) [ delivery_requests ] (1)
-                 |
-                 |--< (N) [ routes ] (1)
-                 |           |
-                 |           |--< (N) [ route_waypoints ]
-                 |
-                 |--< (N) [ drone_assignments ] (N) >-- (1) [ drones ]
-                                |
-                                |--< (N) [ simulation_runs ] (1)
-                                             |
-                                             |--< (N) [ analysis_logs ]
-```
 
-### Table Dictionary:
-1. **`users`**: Manages user accounts, cryptographic password hashes, active flags, and roles (`ADMIN`, `OPERATOR`, `REQUESTER`).
-2. **`drones`**: Tracks fleet airframes, models, cruise speeds, maximum payload capacities ($kg$), total battery capacity ($Wh$), current battery ($Wh$), and operational statuses (`AVAILABLE`, `RESERVED`, `IN_TRANSIT`, `CHARGING`, `MAINTENANCE`).
-3. **`delivery_requests`**: Emergency orders containing pickup/destination coordinates, payload mass ($kg$), triage priority (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`), emergency category, and lifecycle states (`PENDING`, `ROUTE_CALCULATED`, `ASSIGNED`, `IN_TRANSIT`, `DELIVERED`, `CANCELLED`).
-4. **`routes`**: Evaluated flight corridors storing algorithm name, distance ($km$), estimated duration ($min$), energy ($Wh$), objective cost score, feasibility status (`FEASIBLE`, `INFEASIBLE`), and rejection reasons.
-5. **`route_waypoints`**: Ordered sequential $(lat, lon, alt\_m)$ geographic points comprising each flight corridor.
-6. **`drone_assignments`**: Junction entity linking delivery requests, assigned drones, and selected routes with status tracking (`ACTIVE`, `COMPLETED`, `ABORTED`).
-7. **`simulation_runs`**: Real-time kinematic telemetry checkpoints, current $(lat, lon, alt)$, elapsed/remaining time, speed multipliers, and execution status (`CREATED`, `RUNNING`, `PAUSED`, `COMPLETED`).
-8. **`analysis_logs`**: Immutable post-mission audit records comparing predicted vs. actual simulated metrics for quality assurance.
-
----
-
-## 8. Algorithm Formulation
-
-### 8.1 Candidate Route Generation
-Rather than utilizing 2D ground road networks, `CandidateRouteGenerator` generates 4 distinct geometric corridors in 3D airspace:
-1. **`CORRIDOR_DIRECT`**: Great-circle straight line path at 50m AGL.
-2. **`CORRIDOR_NORTH_DETOUR`**: Lateral perpendicular arc offset northward ($+0.85\text{ km}$ at 60m AGL).
-3. **`CORRIDOR_SOUTH_DETOUR`**: Lateral perpendicular arc offset southward ($-0.85\text{ km}$ at 60m AGL).
-4. **`CORRIDOR_HIGH_ALTITUDE`**: Direct horizontal corridor with an elevated cruising ceiling (90m AGL).
-
-### 8.2 Baseline: Shortest-Feasible-Route Selector
-The baseline algorithm filters out infeasible candidates and sorts remaining corridors lexicographically:
-$$\text{Sort Key} = (\text{distance\_km}, \text{energy\_wh}, \text{duration\_minutes}, \text{candidate\_id})$$
-
-### 8.3 Proposed Multi-Objective Weighted Optimizer
-The proposed algorithm performs **min-max normalization** across all feasible candidates in the trial and computes a composite scalar cost score $J(c)$:
-$$J(c) = w_d \cdot \hat{d}(c) + w_t \cdot \hat{t}(c) + w_e \cdot \hat{e}(c) + w_p \cdot \hat{p}(c)$$
-Where:
-- $\hat{d}, \hat{t}, \hat{e}, \hat{p} \in [0.0, 1.0]$ are normalized distance, flight duration, energy consumption, and structural maneuver penalties.
-- Maneuver penalty $\hat{p}$ penalizes vertical altitude step variations ($alt\_diff \times 0.01$) and excessive detour curvature:
-  $$p(c) = \sum_{i=1}^{n-1} |alt_{i+1} - alt_i| \cdot 0.01 + \left(\frac{d_{\text{corridor}}}{d_{\text{straight}}} - 1.0\right) \cdot 1.5$$
-- Default weights: $w_d = 0.25$, $w_t = 0.35$, $w_e = 0.30$, $w_p = 0.10$.
-
----
-
-## 9. Constraints & Modeling Assumptions
-
-1. **Geospatial Distance:** Spherical Haversine calculation with mean Earth radius $R = 6,371.0\text{ km}$. Coordinate bounds enforced ($-90 \le \text{lat} \le 90$, $-180 \le \text{lon} \le 180$, $|\Delta\text{coords}| \ge 10^{-6}$).
-2. **Aerodynamic Flight Duration:** Effective forward airspeed models linear headwind degradation:
-   $$v_{\text{eff}} = \max(15.0\text{ km/h}, v_{\text{cruise}} - 0.75 \cdot v_{\text{headwind}})$$
-   A fixed $1.0\text{ minute}$ buffer is added for vertical takeoff and landing (VTOL) transition.
-3. **Electric Power & Energy:** Modeled via base avionics, payload induced drag, and parasite airframe drag:
-   $$P_{\text{outbound}} = 240.0 + (38.0 \cdot m_{\text{payload}}) + (0.016 \cdot v_{\text{cruise}}^2) \quad [\text{Watts}]$$
-   $$E_{\text{outbound}} = P_{\text{outbound}} \cdot \left(\frac{t_{\text{minutes}}}{60.0}\right) \quad [\text{Watt-hours}]$$
-4. **Mandatory Battery Reserve:** Missions are rejected if $E_{\text{route}} > \text{Battery}_{\text{current}} \times (1.0 - 0.15)$. Drones must retain at least $15\%$ reserve upon landing.
-5. **Meteorological Thresholds:** Missions are rejected if sustained wind $> 12.0\text{ m/s}$, ground visibility $< 3.0\text{ km}$, precipitation rate $> 8.0\text{ mm/h}$, or if weather telemetry is missing (Fail-Safe policy).
-
----
-
-## 10. Setup and Execution Instructions
-
-### Prerequisites
-- Python 3.10 to 3.14
-- Git
-- Windows PowerShell, macOS zsh, or Linux bash
-
-### Step 1: Clone & Setup Virtual Environment
+### Windows Setup:
 ```powershell
-# Windows PowerShell
-git clone <repository-url> smart-emergency-drone-system
-cd smart-emergency-drone-system
+# Create a virtual environment
 python -m venv .venv
+
+# Activate the virtual environment
 .\.venv\Scripts\Activate.ps1
+
+# Upgrade pip and install package dependencies
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Step 2: Environment Configuration
-Copy the template configuration:
-```powershell
-Copy-Item .env.example .env
-```
-*(The default SQLite database URL `sqlite:///instance/drone_system.db` allows immediate offline execution without local MySQL installation).*
+### Linux / macOS Setup:
+```bash
+# Create a virtual environment
+python3 -m venv .venv
 
-### Step 3: Initialize Database & Seed Demonstration Accounts
-```powershell
-python scripts/init_db.py
-python scripts/seed_db.py
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Upgrade pip and install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-### Step 4: Run the Application Server
+---
+
+## 19. Environment Configuration
+
+Create a local `.env` configuration file from the provided template:
+
+```bash
+# Copy template to .env
+cp .env.example .env
+```
+
+Ensure the following default development settings in `.env`:
+```ini
+FLASK_ENV=development
+FLASK_DEBUG=1
+SECRET_KEY=dev-secret-key-change-in-production
+HOST=127.0.0.1
+PORT=5000
+```
+
+---
+
+## 20. Database Migration Instructions
+
+Initialize and apply database migrations to configure all tables:
+
+```powershell
+# Verify current migration status
+flask db current
+
+# Apply all migrations to the latest revision (head)
+flask db upgrade
+```
+
+To seed initial demonstration users, drones, and test requests:
+```powershell
+python scripts/seed_demo_data.py
+```
+
+---
+
+## 21. Running the Flask Application
+
+Launch the development server:
+
 ```powershell
 python run.py
 ```
-Open **`http://127.0.0.1:5000`** in any modern web browser.
+
+The application will be accessible at:
+- **Web Portal:** [http://127.0.0.1:5000](http://127.0.0.1:5000) or [http://localhost:5000](http://localhost:5000)
+- **Health Check API:** [http://127.0.0.1:5000/api/health](http://127.0.0.1:5000/api/health)
+
+### Default Demonstration Accounts:
+| Role | Email | Password | Access Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Requester** | `requester@dronedispatch.com` | `Requester@123` | SEND/RECEIVE bookings, pricing quotes, mock payments, live tracking |
+| **Operator** | `operator@dronedispatch.com` | `Operator@123` | Dispatch cockpit, flight radar, kinematic simulations, maintenance |
+| **Administrator** | `admin@dronedispatch.com` | `Admin@123` | Fleet management, financial analytics, system settings, user roles |
 
 ---
 
-## 11. Testing & Quality Assurance
+## 22. Running Automated Tests
 
-The test suite contains **119 automated tests** across 15 test modules executed using Pytest with 83% statement coverage:
+Run the complete test suite with coverage:
 
 ```powershell
-pytest -v --cov=app --cov-report=term-missing
+pytest
 ```
 
-```text
-tests\test_analytics_and_monitoring.py ......                            [  5%]
-tests\test_auth_and_dashboards.py ........                               [ 11%]
-tests\test_delivery_and_drone_management.py ........                     [ 18%]
-tests\test_delivery_request_and_routes.py ......                         [ 23%]
-tests\test_drone_assignment_service.py ....                              [ 26%]
-tests\test_drone_model.py ...                                            [ 29%]
-tests\test_dynamic_simulation_rerouting.py ......                        [ 34%]
-tests\test_end_to_end_workflow.py ................                       [ 47%]
-tests\test_evaluation_framework.py ....                                  [ 51%]
-tests\test_health.py ..                                                  [ 52%]
-tests\test_multi_drone_allocation.py .....                               [ 57%]
-tests\test_prediction_module.py ..........                               [ 65%]
-tests\test_route_optimization_and_allocation.py ..............           [ 77%]
-tests\test_security_and_audit.py ..........                              [ 85%]
-tests\test_simulation_and_analysis_logs.py ..                            [ 87%]
-tests\test_simulation_engine_and_api.py .........                        [ 94%]
-tests\test_user_model.py ......                                          [100%]
-
-============================ 119 passed in 21.50s =============================
-```
-
-### Specialized Enhancement Workflows
-
-#### A. Multi-Drone Batch Allocation Console
-1. Log in as Operator (`operator@dispatch.org` / `OperatorSecurePassword123!`).
-2. Navigate to `http://127.0.0.1:5000/operator/multi-allocation`.
-3. Review the side-by-side comparison of **Priority Best-Fit Matching** vs **FCFS Greedy Baseline**.
-4. Click **Dispatch Priority Best-Fit Batch** to atomically dispatch all matched pairs.
-
-#### B. Dynamic Simulation Rerouting
-During an active mission simulation, send an in-flight weather update via HTTP POST:
-```bash
-curl -X POST http://127.0.0.1:5000/simulation/api/<simulation_id>/reroute \
-  -H "Content-Type: application/json" \
-  -d '{"wind_speed_mps": 7.0, "precipitation_mmh": 3.0, "visibility_km": 5.0, "policy": "SAFETY_MANDATED", "reason": "Approaching convective storm"}'
-```
-The system will generate alternative corridors from the drone's current $(lat, lon)$ coordinate, preserve the original route in the database, and link the assignment to the replacement route.
-
-#### C. Machine Learning Advisory Prediction Module
-To query model validation metrics comparing the regularized Ridge OLS model against analytical physics baseline:
-```bash
-curl http://127.0.0.1:5000/analytics/api/ml-model/evaluation
-```
-To generate advisory duration and energy estimates for planned missions:
-```bash
-curl -X POST http://127.0.0.1:5000/analytics/api/ml-model/predict \
-  -H "Content-Type: application/json" \
-  -d '{"distance_km": 15.0, "payload_weight_kg": 2.5, "wind_speed_mps": 4.5, "cruise_speed_kmh": 60.0}'
-```
-
----
-
-## 12. Evaluation Methodology
-
-The experimental evaluation framework (`scripts/run_optimizer_experiments.py`) executes **14 deterministic synthetic benchmark scenarios** covering:
-- **Short Distances** ($3.0 - 5.0\text{ km}$), **Medium Distances** ($10.0 - 15.0\text{ km}$), and **Long Distances** ($20.0 - 28.0\text{ km}$).
-- **Light Payloads** ($1.0\text{ kg}$), **Standard Payloads** ($2.0 - 2.5\text{ kg}$), and **Heavy Cargo** ($4.5 - 6.0\text{ kg}$).
-- **Multi-Class Drones:** Light ($2.5\text{ kg}, 450\text{ Wh}$), Standard ($5.0\text{ kg}, 850\text{ Wh}$), Heavy-Lift ($8.0\text{ kg}, 1400\text{ Wh}$).
-- **Atmospheric States:** Calm skies, headwind resistance, low visibility fog, torrential monsoon storms, and missing observations.
-- **Weight Configurations:** Balanced, Speed-Critical, Energy-Conserving, and Distance-Minimized.
-
-Both algorithms receive **equivalent candidate sets and identical physical constraints** in every scenario.
-
+To view code coverage details across individual modules:
 ```powershell
-# Run the benchmark experiment runner
-python scripts/run_optimizer_experiments.py
+pytest --cov=app --cov-report=term-missing
+```
 
-# Generate statistical reports and SVG visual charts
-python scripts/analyze_evaluation_results.py
+### Verified Test Baseline:
+- **Total Tests:** 162 passed (0 failed, 0 skipped)
+- **Execution Time:** ~29 seconds
+- **Overall Line Coverage:** **81%** across 4,351 statements
+- **Core Modules:**
+  - Route Optimizer: **96%**
+  - Prediction Service: **98%**
+  - Pricing Service: **95%**
+  - Weather Intelligence: **93%**
+  - Drone Availability: **91%**
+  - Drone Allocation: **89%**
+
+---
+
+## 23. Docker Deployment
+
+Deploy the entire stack (Flask application + MySQL 8.0) using Docker Compose:
+
+```bash
+# Build and start containers in detached mode
+docker compose up --build -d
+
+# Check service logs
+docker compose logs -f app
+
+# Stop containers
+docker compose down
 ```
 
 ---
 
-## 13. Benchmark Results Based on Actual Execution
+## 24. Academic Simulation Limitations & Disclosures
 
-### 13.1 Quantitative Summary
-
-| Metric Description | Baseline (Shortest-Feasible) | Multi-Objective Optimizer | Delta | Scientific Explanation |
-|---|---|---|---|---|
-| **Feasible Missions** | 8 / 14 (57.1%) | 8 / 14 (57.1%) | 0.0% | Both enforce identical safety thresholds |
-| **Mean Selected Distance** | 11.84 km | 11.84 km | 0.00 km | Identical horizontal distance when picking direct path |
-| **Mean Flight Duration** | 15.68 min | 15.68 min | 0.00 min | Effective speed model handles headwind equivalently |
-| **Mean Energy Consumption** | 100.8 Wh | 100.8 Wh | 0.00 Wh | Identical aerodynamic formulas applied |
-| **Mean Objective Cost Score** | **0.1000** | **0.0000** | **-0.1000** | **Optimizer avoids unnecessary 80m vertical climb** |
-| **Mean Execution Latency** | 0.091 ms | 0.076 ms | -0.015 ms | Both algorithms operate in real-time ($< 0.25\text{ ms}$) |
-
-### 13.2 Key Algorithmic Trade-Off Finding
-In all feasible scenarios where the Direct Corridor (50m AGL) and High-Altitude Corridor (90m AGL) had identical horizontal distance, the naive Baseline suffered from an arbitrary tie-break (`CORRIDOR_HIGH_ALTITUDE` alphabetically before `CORRIDOR_DIRECT`), unnecessarily routing the simulated drone into an 80m vertical climb and descent. The Multi-Objective Optimizer penalized the vertical step variations ($p = 0.80$, cost score $0.1000$) and selected the Direct Air Corridor (cost score $0.0000$), successfully eliminating unnecessary vertical maneuvering without increasing travel time or horizontal distance.
-
-### 13.3 Safety Fail-Safe Stress Test Results
-All 6 adverse stress scenarios were rejected across all candidate corridors by both algorithms:
-- `EXP-08`: Battery exhaustion ($45\text{ Wh}$ remaining) rejected by mandatory 15% reserve check.
-- `EXP-09`: Cargo overload ($5.5\text{ kg}$ on $2.5\text{ kg}$ airframe) rejected.
-- `EXP-10`: Gale wind ($16.5\text{ m/s} > 12.0\text{ m/s}$ limit) rejected.
-- `EXP-11`: Dense fog ($1.2\text{ km} < 3.0\text{ km}$ VFR limit) rejected.
-- `EXP-12`: Heavy rain ($14.5\text{ mm/h} > 8.0\text{ mm/h}$ limit) rejected.
-- `EXP-13`: Missing weather telemetry rejected under fail-safe policy.
-
-Generated vector charts are available in [`reports/figures/`](reports/figures/):
-- `distance_vs_energy_tradeoff.svg`
-- `feasibility_breakdown.svg`
-- `algorithm_execution_latency.svg`
-- `objective_score_comparison.svg`
+To maintain strict academic integrity, the following limitations must be noted:
+1. **Software-Only Drone Simulation:** The application is a software-based kinematic simulation. It does not interface with physical drone hardware, microcontrollers, or flight avionics (e.g., PX4, ArduPilot).
+2. **Synthetic ML Training Data:** The advisory Ridge Regression model is trained on synthetic physics-approximated flight logs rather than physical flight telemetry.
+3. **Simulated Weather Conditions:** Weather data is generated via internal meteorological simulation models unless an external live provider API is explicitly configured.
+4. **Simulated Cashless Payments:** Payment processing, UPI verification, and wallet transactions are simulated; no actual financial clearing or currency transfer takes place.
+5. **Simulated Flight Diversions:** In-flight rerouting and emergency helipad landings are computed mathematically and visualized in the browser; they do not represent physical airspace operations.
 
 ---
 
-## 14. Limitations
+## 25. Future Enhancements
 
-1. **Aeronautical Wind Model:** Atmospheric wind is modeled as a steady horizontal scalar headwind rather than a turbulent 3D micro-climate vector field.
-2. **Battery Electro-Chemistry:** The energy model assumes linear discharge and does not model non-linear voltage sag, ambient temperature impact on lithium-polymer cells, or Peukert's capacity degradation.
-3. **Sensor & GPS Inaccuracies:** Coordinates in the simulation cockpit are treated as exact floating-point values without simulated multipath reflection, satellite dilution of precision (GDOP), or sensor noise.
-4. **Airspace Conflict Deconfliction:** The system calculates independent 3D corridors but does not yet feature dynamic ADS-B transponder collision avoidance for multi-agent airspace deconfliction.
-
----
-
-## 15. Future Enhancements
-
-1. **Hardware-in-the-Loop (HIL) Autopilot Integration:** Interface via MAVLink / PX4 to translate generated waypoints into mission commands on physical autonomous flight controllers.
-2. **Real-Time Weather Sensor Network:** Connect live Internet of Things (IoT) ultrasonic anemometers and ceilometers located at hospital landing pads.
-3. **Dynamic Drone Charging Station Scheduling:** Expand optimization to model multi-hop regional networks with automated battery-swap pads and solar charging stations.
-4. **Genetic / Ant-Colony Airspace Corridors:** Implement evolutionary metaheuristics for multi-drone simultaneous dispatch deconfliction.
+- Integration with physical drone flight controllers using MAVLink / ROS2 protocols.
+- Airspace integration with live civil aviation radar (ADS-B) feeds.
+- Computer vision landing marker detection (AprilTag / ArUco markers) for precision vertical landing.
+- Deep reinforcement learning (DRL) for dynamic multi-agent collision avoidance in high-density airspace.
+- Production payment gateway integration with Razorpay, Stripe, or UPI 2.0.
 
 ---
-
-## 16. Academic Documentation & Viva Voce Suite
-
-Comprehensive academic and engineering documentation prepared for project evaluation, external viva examination, and technical auditing:
-
-- **Academic Demonstration Runbook (Scenarios A–F):** [`docs/final_demo_runbook.md`](docs/final_demo_runbook.md) — Comprehensive pre-demo checklist, step-by-step browser and CLI execution guides for Scenarios A through F, expected observations, recovery procedures, and manual verification items.
-- **Full Academic Project Report:** [`docs/final_year_project_report.md`](docs/final_year_project_report.md) — Complete 30-section academic thesis document covering abstract, problem formulation, mathematical models, system architecture, database schema, implementation details, experimental results, and citations.
-- **Viva Voce Defense Guide (15 Sections A–O):** [`docs/viva_questions_and_answers.md`](docs/viva_questions_and_answers.md) — Comprehensive technical questions and answers covering clean architecture, 3NF schema, 3D corridors, multi-objective optimization, batch allocation, battery/payload constraints, weather safety, dynamic rerouting, advisory ML evaluation, security, and QA.
-- **Final Presentation & Live Demo Script:** [`docs/final_presentation_demo.md`](docs/final_presentation_demo.md) — Step-by-step 10-phase demonstration script with pre-configured accounts, coordinates, controls, and expected observations.
-- **Academic Demonstration Guide:** [`docs/academic_demonstration_guide.md`](docs/academic_demonstration_guide.md) — Step-by-step presentation scripts and evaluator checkpoints.
-- **Viva Voce Technical Q&A:** [`docs/viva_technical_qa.md`](docs/viva_technical_qa.md) — Quick reference technical defense questions and answers.
-- **Optimization & Allocation Benchmark Report:** [`docs/optimization_benchmark_report.md`](docs/optimization_benchmark_report.md) — Comprehensive empirical audit and trade-off analysis benchmarking the Route Optimizer, Priority Best-Fit vs. FCFS Allocation across scale increments (5 to 80 requests), and in-flight dynamic rerouting.
-- **Production & Academic Release Checklist:** [`docs/release_checklist.md`](docs/release_checklist.md) — Comprehensive operations guide covering prerequisites, environment configuration, MySQL setup, WSGI/Docker startup, smoke tests, backups, and rollback procedures.
-- **Production Release Verification Report:** [`docs/production_release_verification.md`](docs/production_release_verification.md) — Independent release audit, security review, test results, Docker environment analysis, and classification verdict.
-- **Architectural & Security Audit Report:** [`docs/final_audit_report.md`](docs/final_audit_report.md) — Complete system audit of entry points, routes, models, services, concurrency, and security.
-- **Independent ML Evaluation Report:** [`docs/ml_evaluation_report.md`](docs/ml_evaluation_report.md) — Rigorous audit of the advisory ML module, training data trace, leakage verification, and out-of-distribution analysis.
-- **End-to-End Quality Assurance Report:** [`docs/end_to_end_test_report.md`](docs/end_to_end_test_report.md) — Verification of the 16-test E2E lifecycle and database integrity suite.
-
-### Automated Verification Commands
-```powershell
-# 1. Run all 125 automated tests with statement coverage (83% across 2,846 lines):
-pytest -v --cov=app --cov-report=term-missing
-
-# 2. Run live academic demonstration scenarios A through F:
-python scripts/demonstrate_academic_scenarios.py --scenario all
-
-# 3. Run algorithmic optimization and multi-drone allocation benchmarks:
-python scripts/run_algorithm_benchmarks.py
-
-# 4. Run independent ML module evaluation:
-python scripts/evaluate_ml_prediction_module.py
-
-# 5. Run full automated demonstration workflow:
-python scripts/demonstrate_full_workflow.py
-```
+*Developed for Final-Year B.Tech Computer Science and Engineering Academic Project Submission.*

@@ -247,7 +247,7 @@
           <span style="font-size: 0.75rem; color: #64748b;">Includes 3D corridor allocation, weather checks, and operator supervision</span>
         </td>
         <td>Fixed</td>
-        <td class="amount">₹{{ "%.2f"|format(invoice.items.base_fare) }}</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.itemized_charges.base_fare) }}</td>
       </tr>
       <tr>
         <td>
@@ -255,7 +255,7 @@
           <span style="font-size: 0.75rem; color: #64748b;">{{ "%.2f"|format(invoice.mission.flight_distance_km) }} km traversed</span>
         </td>
         <td>Per km</td>
-        <td class="amount">₹{{ "%.2f"|format(invoice.items.distance_charge) }}</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.itemized_charges.distance_charge) }}</td>
       </tr>
       <tr>
         <td>
@@ -263,7 +263,7 @@
           <span style="font-size: 0.75rem; color: #64748b;">{{ invoice.mission.cargo_weight_kg }} kg cargo carried</span>
         </td>
         <td>Per kg</td>
-        <td class="amount">₹{{ "%.2f"|format(invoice.items.weight_charge) }}</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.itemized_charges.weight_charge) }}</td>
       </tr>
       <tr>
         <td>
@@ -271,7 +271,7 @@
           <span style="font-size: 0.75rem; color: #64748b;">Priority Tier: {{ invoice.mission.priority }}</span>
         </td>
         <td>Tier rate</td>
-        <td class="amount">₹{{ "%.2f"|format(invoice.items.priority_fee) }}</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.itemized_charges.priority_fee) }}</td>
       </tr>
       <tr>
         <td>
@@ -279,7 +279,7 @@
           <span style="font-size: 0.75rem; color: #64748b;">Real-time radar sampling and automated safe reroute capability</span>
         </td>
         <td>Service fee</td>
-        <td class="amount">₹{{ "%.2f"|format(invoice.items.service_fee) }}</td>
+        <td class="amount">₹{{ "%.2f"|format(invoice.itemized_charges.service_fee) }}</td>
       </tr>
     </tbody>
   </table>
@@ -288,15 +288,15 @@
   <table class="summary-table">
     <tr>
       <td>Subtotal:</td>
-      <td>₹{{ "%.2f"|format(invoice.items.subtotal) }}</td>
+      <td>₹{{ "%.2f"|format(invoice.itemized_charges.subtotal) }}</td>
     </tr>
     <tr>
-      <td>GST ({{ "%.1f"|format(invoice.items.tax_rate_percent) }}%):</td>
-      <td>₹{{ "%.2f"|format(invoice.items.tax_amount) }}</td>
+      <td>GST ({{ "%.1f"|format(invoice.itemized_charges.tax_rate_percent) }}%):</td>
+      <td>₹{{ "%.2f"|format(invoice.itemized_charges.tax_amount) }}</td>
     </tr>
     <tr class="total-row">
       <td>Total Amount:</td>
-      <td>₹{{ "%.2f"|format(invoice.items.total_amount) }}</td>
+      <td>₹{{ "%.2f"|format(invoice.itemized_charges.total_amount) }}</td>
     </tr>
     {% if invoice.refunds and invoice.refunds.total_refunded > 0 %}
     <tr style="color: #dc2626; font-weight: 700;">
@@ -305,7 +305,7 @@
     </tr>
     <tr style="border-top: 1px dashed #cbd5e1; font-weight: 800; color: #0f172a;">
       <td>Net Settlement:</td>
-      <td>₹{{ "%.2f"|format(invoice.items.total_amount - invoice.refunds.total_refunded) }}</td>
+      <td>₹{{ "%.2f"|format(invoice.itemized_charges.total_amount - invoice.refunds.total_refunded) }}</td>
     </tr>
     {% endif %}
   </table>

@@ -44,6 +44,7 @@ class DeliveryService:
         payload_weight_kg: float,
         priority: str = RequestPriority.HIGH.value,
         description: str = None,
+        delivery_direction: str = "SEND",
     ) -> DeliveryRequest:
         """Create and persist a new emergency delivery request with strict server-side validation."""
         # 1. Validate Requester
@@ -74,6 +75,7 @@ class DeliveryService:
             priority=clean_priority,
             status=RequestStatus.PENDING.value,
             description=description,
+            delivery_direction=delivery_direction or "SEND",
         )
 
         db.session.add(req)

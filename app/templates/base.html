@@ -9,14 +9,18 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body>
+  {% set curr_user = current_user or user %}
   <div class="app-container">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- Sidebar Navigation - Sticky & Independently Scrollable -->
+    <aside class="sidebar" id="appSidebar">
       <div class="sidebar-header">
         <div class="logo-badge">
           <span>🚁 DroneDispatch</span>
         </div>
-        <div class="mode-tag">Simulation Mode</div>
+        <div class="mode-tag">Academic Simulation</div>
       </div>
 
       <nav class="sidebar-nav">
@@ -25,7 +29,7 @@
           <span>📊 Dashboard</span>
         </a>
 
-        {% if current_user and current_user.role == 'ADMIN' %}
+        {% if curr_user and curr_user.role == 'ADMIN' %}
         <div class="nav-section-title">Fleet & Logistics</div>
         <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
           <span>🚁 Book Drone</span>
@@ -48,13 +52,13 @@
         <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="nav-link {% if request.endpoint and 'manage_weather_scenario' in request.endpoint %}active{% endif %}">
           <span>🌦️ Weather Console</span>
         </a>
-        <a href="{{ url_for('delivery.new_request') }}" class="nav-link">
+        <a href="{{ url_for('delivery.new_request') }}" class="nav-link {% if request.endpoint and 'delivery.new_request' in request.endpoint %}active{% endif %}">
           <span>➕ New Request</span>
         </a>
-        <a href="{{ url_for('drone.new_drone') }}" class="nav-link">
+        <a href="{{ url_for('drone.new_drone') }}" class="nav-link {% if request.endpoint and 'drone.new' in request.endpoint %}active{% endif %}">
           <span>➕ Register Drone</span>
         </a>
-        {% elif current_user and current_user.role == 'OPERATOR' %}
+        {% elif curr_user and curr_user.role == 'OPERATOR' %}
         <div class="nav-section-title">Operations</div>
         <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
           <span>🚁 Book Drone</span>
@@ -77,19 +81,16 @@
         <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="nav-link {% if request.endpoint and 'manage_weather_scenario' in request.endpoint %}active{% endif %}">
           <span>🌦️ Weather Console</span>
         </a>
-        <a href="{{ url_for('delivery.new_request') }}" class="nav-link">
+        <a href="{{ url_for('delivery.new_request') }}" class="nav-link {% if request.endpoint and 'delivery.new_request' in request.endpoint %}active{% endif %}">
           <span>➕ New Request</span>
         </a>
-        {% elif current_user and current_user.role == 'REQUESTER' %}
+        {% elif curr_user and curr_user.role == 'REQUESTER' %}
         <div class="nav-section-title">My Orders</div>
         <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
           <span>🚁 Book Drone</span>
         </a>
         <a href="{{ url_for('booking.booking_history') }}" class="nav-link {% if request.endpoint and 'booking_history' in request.endpoint %}active{% endif %}">
           <span>📋 My Bookings</span>
-        </a>
-        <a href="{{ url_for('dashboard.requester_dashboard') }}" class="nav-link {% if request.endpoint and 'requester_dashboard' in request.endpoint %}active{% endif %}">
-          <span>📦 My Dashboard</span>
         </a>
         <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
           <span>📋 Track Deliveries</span>
@@ -108,10 +109,15 @@
     <div class="main-wrapper">
       <!-- Topbar Navigation -->
       <header class="topbar">
-        <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+        <div style="display: flex; align-items: center;">
+          <button class="btn-hamburger" id="sidebarToggleBtn" aria-label="Toggle navigation drawer">
+            ☰
+          </button>
+          <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+        </div>
         
         <div class="user-profile-menu" style="display: flex; align-items: center; gap: 14px;">
-          {% if current_user %}
+          {% if curr_user %}
           <!-- In-App Notification Bell -->
           <div class="notification-wrapper" style="position: relative;">
             <button id="notifBellBtn" class="btn btn-outline btn-sm" style="position: relative; padding: 6px 10px; font-size: 1rem; border-radius: 50%;" aria-label="Notifications">
@@ -130,10 +136,10 @@
           </div>
 
           <div class="user-badge">
-            <div class="user-avatar">{{ current_user.full_name[0] }}</div>
+            <div class="user-avatar">{{ curr_user.full_name[0] }}</div>
             <div class="user-info">
-              <span class="user-name">{{ current_user.full_name }}</span>
-              <span class="user-role-pill">{{ current_user.role }}</span>
+              <span class="user-name">{{ curr_user.full_name }}</span>
+              <span class="user-role-pill">{{ curr_user.role }}</span>
             </div>
           </div>
           <form action="{{ url_for('auth.logout') }}" method="POST" style="margin: 0;">
@@ -244,6 +250,26 @@
     })();
   </script>
   {% endif %}
+  <script>
+    // Mobile Drawer Toggle
+    (function() {
+      const toggleBtn = document.getElementById('sidebarToggleBtn');
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+
+      if (toggleBtn && sidebar && backdrop) {
+        toggleBtn.addEventListener('click', function() {
+          sidebar.classList.toggle('mobile-open');
+          backdrop.classList.toggle('active');
+        });
+
+        backdrop.addEventListener('click', function() {
+          sidebar.classList.remove('mobile-open');
+          backdrop.classList.remove('active');
+        });
+      }
+    })();
+  </script>
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

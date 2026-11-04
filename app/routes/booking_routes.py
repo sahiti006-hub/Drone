@@ -42,6 +42,28 @@ def new_booking():
     emergency_types = [e.value for e in EmergencyType]
     priorities = [p.value for p in RequestPriority]
     diversions = WeatherIntelligenceService.get_or_seed_diversion_locations()
+    saved_locs = user.saved_locations.all() if hasattr(user, "saved_locations") else []
+    recent_bookings = (
+        DroneBooking.query.filter_by(requester_id=user.id)
+        .order_by(DroneBooking.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    prefill = {
+        "direction": request.args.get("direction", "SEND").upper(),
+        "pickup_lat": request.args.get("pickup_lat", ""),
+        "pickup_lng": request.args.get("pickup_lng", ""),
+        "dest_lat": request.args.get("dest_lat", ""),
+        "dest_lng": request.args.get("dest_lng", ""),
+        "cargo_category": request.args.get("cargo_category", ""),
+        "cargo_weight_kg": request.args.get("cargo_weight_kg", "1.0"),
+        "priority": request.args.get("priority", "HIGH"),
+        "pickup_name": request.args.get("pickup_name", ""),
+        "dest_name": request.args.get("dest_name", ""),
+        "custom_item_name": request.args.get("custom_item_name", ""),
+        "package_size": request.args.get("package_size", "SMALL"),
+    }
 
     return render_template(
         "booking/book.html",
@@ -49,6 +71,9 @@ def new_booking():
         emergency_types=emergency_types,
         priorities=priorities,
         diversion_locations=diversions,
+        saved_locations=saved_locs,
+        recent_bookings=recent_bookings,
+        prefill=prefill,
     )
 
 
@@ -67,6 +92,9 @@ def search_drones():
         cargo_weight = float(data.get("cargo_weight_kg", 1.0))
         cargo_category = data.get("cargo_category", EmergencyType.EMERGENCY_MEDICINE.value)
         priority = data.get("priority", RequestPriority.HIGH.value)
+        delivery_direction = data.get("delivery_direction", "SEND").upper()
+        custom_item_name = data.get("custom_item_name", "")
+        package_size = data.get("package_size", "SMALL")
 
         results = DroneAvailabilityService.search_available_drones(
             requester_id=user.id,
@@ -77,6 +105,9 @@ def search_drones():
             cargo_weight_kg=cargo_weight,
             cargo_category=cargo_category,
             priority=priority,
+            delivery_direction=delivery_direction,
+            custom_item_name=custom_item_name,
+            package_size=package_size,
         )
         return jsonify({"status": "success", "data": results}), 200
 
@@ -110,12 +141,28 @@ def confirm_booking():
         quote_id = int(data.get("quote_id", 0))
         weather_ack = str(data.get("weather_acknowledged", "false")).lower() in ("true", "1", "yes")
         notes = data.get("notes", "")
+        delivery_direction = data.get("delivery_direction")
+        collection_contact_name = data.get("collection_contact_name")
+        collection_contact_phone = data.get("collection_contact_phone")
+        collection_readiness = data.get("collection_readiness")
+        collection_instructions = data.get("collection_instructions")
+        custom_item_name = data.get("custom_item_name")
+        custom_item_description = data.get("custom_item_description")
+        package_size = data.get("package_size")
 
         booking = DroneAvailabilityService.confirm_and_lock_booking(
             quote_id=quote_id,
             requester_id=user.id,
             weather_acknowledged=weather_ack,
             notes=notes,
+            delivery_direction=delivery_direction,
+            collection_contact_name=collection_contact_name,
+            collection_contact_phone=collection_contact_phone,
+            collection_readiness=collection_readiness,
+            collection_instructions=collection_instructions,
+            custom_item_name=custom_item_name,
+            custom_item_description=custom_item_description,
+            package_size=package_size,
         )
 
         flash(
@@ -287,15 +334,126 @@ def view_invoice(booking_id: int):
 @booking_bp.route("/history", methods=["GET"])
 @login_required
 def booking_history():
-    """Requester personal booking history."""
+    """Requester personal booking history with direction and status filters."""
     user = AuthService.get_current_user()
-    bookings = (
-        DroneBooking.query.filter_by(requester_id=user.id)
-        .order_by(DroneBooking.created_at.desc())
-        .all()
-    )
+    direction_filter = request.args.get("direction", "ALL").upper()
+    status_filter = request.args.get("status", "ALL").upper()
+
+    query = DroneBooking.query.filter_by(requester_id=user.id)
+
+    if direction_filter in ["SEND", "RECEIVE"]:
+        query = query.filter(DroneBooking.delivery_direction == direction_filter)
+
+    if status_filter == "ACTIVE":
+        query = query.filter(
+            DroneBooking.status.in_([
+                BookingStatus.CONFIRMED.value,
+                BookingStatus.PAID.value,
+                BookingStatus.DISPATCHED.value,
+                BookingStatus.IN_FLIGHT.value,
+                BookingStatus.WEATHER_CAUTION.value,
+                BookingStatus.REROUTED.value,
+            ])
+        )
+    elif status_filter == "COMPLETED":
+        query = query.filter(DroneBooking.status == BookingStatus.DELIVERED.value)
+    elif status_filter == "CANCELLED":
+        query = query.filter(DroneBooking.status == BookingStatus.CANCELLED.value)
+    elif status_filter == "DIVERTED":
+        query = query.filter(DroneBooking.status == BookingStatus.DIVERTED.value)
+
+    bookings = query.order_by(DroneBooking.created_at.desc()).all()
+
     return render_template(
         "booking/history.html",
         current_user=user,
         bookings=bookings,
+        direction_filter=direction_filter,
+        status_filter=status_filter,
+    )
+
+
+@booking_bp.route("/<int:booking_id>/rate", methods=["POST"])
+@login_required
+def rate_booking(booking_id: int):
+    """Submit post-delivery customer rating and experience feedback."""
+    user = AuthService.get_current_user()
+    booking = db.session.get(DroneBooking, booking_id)
+    if not booking:
+        abort(404)
+
+    if user.role == UserRole.REQUESTER.value and booking.requester_id != user.id:
+        abort(403)
+
+    if booking.status != BookingStatus.DELIVERED.value:
+        if request.is_json:
+            return jsonify({
+                "status": "error",
+                "message": "Ratings can only be submitted for completed deliveries.",
+            }), 400
+        flash("Ratings can only be submitted for completed deliveries.", "warning")
+        return redirect(url_for("booking.view_booking", booking_id=booking.id))
+
+    data = request.get_json(silent=True) or request.form
+    try:
+        rating_val = int(data.get("rating", 5))
+        rating_val = max(1, min(5, rating_val))
+    except (ValueError, TypeError):
+        rating_val = 5
+
+    feedback = data.get("feedback_text", "").strip()
+    booking_score = int(data.get("booking_experience_score", 5)) if data.get("booking_experience_score") else None
+    speed_score = int(data.get("speed_score", 5)) if data.get("speed_score") else None
+
+    from app.models.delivery_rating import DeliveryRating
+    existing_rating = DeliveryRating.query.filter_by(booking_id=booking.id).first()
+    if existing_rating:
+        existing_rating.rating = rating_val
+        existing_rating.feedback_text = feedback
+        existing_rating.booking_experience_score = booking_score
+        existing_rating.speed_score = speed_score
+    else:
+        new_rating = DeliveryRating(
+            booking_id=booking.id,
+            user_id=user.id,
+            rating=rating_val,
+            feedback_text=feedback,
+            booking_experience_score=booking_score,
+            speed_score=speed_score,
+        )
+        db.session.add(new_rating)
+
+    db.session.commit()
+    flash("Thank you! Your delivery experience feedback has been recorded.", "success")
+
+    if request.is_json:
+        return jsonify({"status": "success", "message": "Feedback submitted successfully."}), 200
+
+    return redirect(url_for("booking.view_booking", booking_id=booking.id))
+
+
+@booking_bp.route("/track/<string:reference>", methods=["GET"])
+def public_tracking(reference: str):
+    """Public shareable live tracking HUD (Uber ride share link style, no sensitive medical details)."""
+    booking = DroneBooking.query.filter_by(booking_reference=reference).first()
+    if not booking:
+        abort(404)
+
+    drone = booking.drone
+    alerts = booking.weather_alerts.order_by(db.desc("created_at")).all()
+    quote = booking.quote
+
+    # Link simulation run if assignment exists
+    sim_run = None
+    if booking.delivery_request and booking.delivery_request.assignments.first():
+        assign = booking.delivery_request.assignments.first()
+        sim_run = assign.simulation_runs.first()
+
+    return render_template(
+        "booking/public_tracking.html",
+        booking=booking,
+        drone=drone,
+        alerts=alerts,
+        quote=quote,
+        simulation=sim_run,
     )

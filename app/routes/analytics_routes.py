@@ -37,6 +37,7 @@ def index():
 
     return render_template(
         "analytics/overview.html",
+        current_user=user,
         user=user,
         metrics=metrics,
         analytics=route_analytics,
@@ -78,6 +79,7 @@ def delivery_monitor():
 
     return render_template(
         "analytics/delivery_monitor.html",
+        current_user=user,
         user=user,
         deliveries=deliveries,
         metrics=metrics,

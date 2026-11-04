@@ -74,6 +74,186 @@ def list_diversion_locations():
 
 
 # ==============================================================================
+# SAVED LOCATIONS API (Uber/Rapido Address Book)
+# ==============================================================================
+
+@api_ext_bp.route("/api/saved-locations", methods=["GET", "POST"])
+@login_required
+def handle_saved_locations():
+    """List or create saved delivery locations for current user."""
+    user = AuthService.get_current_user()
+    from app.models.saved_location import SavedLocation
+
+    if request.method == "POST":
+        data = request.get_json(silent=True) or request.form
+        label = data.get("label", "").strip()
+        loc_type = data.get("location_type", "HOSPITAL").upper()
+        address = data.get("address", "").strip()
+        try:
+            lat = float(data.get("latitude", 0))
+            lng = float(data.get("longitude", 0))
+        except (ValueError, TypeError):
+            return jsonify({"status": "error", "message": "Valid numerical coordinates are required."}), 400
+
+        if not label or lat == 0 or lng == 0:
+            return jsonify({"status": "error", "message": "Label and valid coordinates are required."}), 400
+
+        loc = SavedLocation(
+            user_id=user.id,
+            label=label,
+            location_type=loc_type,
+            address=address,
+            latitude=Decimal(str(round(lat, 7))),
+            longitude=Decimal(str(round(lng, 7))),
+        )
+        db.session.add(loc)
+        db.session.commit()
+        return jsonify({"status": "success", "location": loc.to_dict()}), 201
+
+    locations = user.saved_locations.order_by(SavedLocation.created_at.desc()).all()
+    # If user has no saved locations yet, initialize with standard regional hospital hubs
+    if not locations:
+        default_hubs = [
+            {"label": "Victoria Hospital Trauma Center", "location_type": "HOSPITAL", "address": "Fort Road, Kalasipalya", "latitude": 12.9634, "longitude": 77.5756},
+            {"label": "Bowring & Lady Curzon Hospital", "location_type": "HOSPITAL", "address": "Shivaji Nagar", "latitude": 12.9833, "longitude": 77.6044},
+            {"label": "NIMHANS Neurological Center", "location_type": "HOSPITAL", "address": "Hosur Road, Lakkasandra", "latitude": 12.9392, "longitude": 77.5975},
+            {"label": "KC General Hospital", "location_type": "HOSPITAL", "address": "5th Cross, Malleswaram", "latitude": 12.9996, "longitude": 77.5709},
+        ]
+        for dh in default_hubs:
+            db.session.add(SavedLocation(
+                user_id=user.id,
+                label=dh["label"],
+                location_type=dh["location_type"],
+                address=dh["address"],
+                latitude=Decimal(str(dh["latitude"])),
+                longitude=Decimal(str(dh["longitude"])),
+            ))
+        db.session.commit()
+        locations = user.saved_locations.all()
+
+    return jsonify({"status": "success", "locations": [loc.to_dict() for loc in locations]}), 200
+
+
+@api_ext_bp.route("/api/saved-locations/<int:location_id>", methods=["DELETE"])
+@login_required
+def delete_saved_location(location_id: int):
+    """Delete a saved delivery location."""
+    user = AuthService.get_current_user()
+    from app.models.saved_location import SavedLocation
+    loc = db.session.get(SavedLocation, location_id)
+    if not loc or loc.user_id != user.id:
+        return jsonify({"status": "error", "message": "Location not found or unauthorized."}), 404
+
+    db.session.delete(loc)
+    db.session.commit()
+    return jsonify({"status": "success"}), 200
+
+
+# ==============================================================================
+# LOCATION AUTOCOMPLETE & GEOCODING API
+# ==============================================================================
+
+@api_ext_bp.route("/api/locations/search", methods=["GET"])
+def search_locations():
+    """Geocode search suggestions with OpenStreetMap Nominatim and trusted local medical hubs."""
+    query = request.args.get("q", "").strip().lower()
+    if not query or len(query) < 2:
+        return jsonify({"status": "success", "results": []}), 200
+
+    # Trusted regional medical landmark directory for instantaneous, offline-resilient matching
+    LOCAL_LANDMARKS = [
+        {"name": "Victoria Hospital Trauma Center", "address": "Fort Road, Kalasipalya, Bangalore", "lat": 12.9634, "lng": 77.5756, "type": "hospital"},
+        {"name": "Bowring & Lady Curzon Hospital", "address": "Shivaji Nagar, Bangalore", "lat": 12.9833, "lng": 77.6044, "type": "hospital"},
+        {"name": "NIMHANS Neuro & Psychiatric Center", "address": "Hosur Road, Lakkasandra, Bangalore", "lat": 12.9392, "lng": 77.5975, "type": "hospital"},
+        {"name": "KC General Hospital", "address": "5th Cross, Malleswaram, Bangalore", "lat": 12.9996, "lng": 77.5709, "type": "hospital"},
+        {"name": "Manipal Hospital Central Hub", "address": "HAL Airport Road, Bangalore", "lat": 12.9592, "lng": 77.6444, "type": "hospital"},
+        {"name": "Narayana Health City Hub", "address": "Bommasandra Industrial Area, Bangalore", "lat": 12.8258, "lng": 77.6897, "type": "hospital"},
+        {"name": "Central Red Cross Blood Bank", "address": "Race Course Road, Bangalore", "lat": 12.9815, "lng": 77.5840, "type": "blood_bank"},
+        {"name": "Indira Gandhi Institute of Child Health", "address": "South Hospital Complex, Bangalore", "lat": 12.9348, "lng": 77.5938, "type": "hospital"},
+        {"name": "St. John's Medical College Hospital", "address": "Sarjapur Road, Koramangala, Bangalore", "lat": 12.9304, "lng": 77.6186, "type": "hospital"},
+        {"name": "Central Drone Operations Base Depot", "address": "Cubbon Park Airway Hub, Bangalore", "lat": 12.9716, "lng": 77.5946, "type": "depot"},
+    ]
+
+    results = []
+    for lm in LOCAL_LANDMARKS:
+        if query in lm["name"].lower() or query in lm["address"].lower():
+            results.append({
+                "display_name": f"{lm['name']}, {lm['address']}",
+                "name": lm["name"],
+                "lat": lm["lat"],
+                "lng": lm["lng"],
+                "type": lm["type"],
+                "source": "verified_medical_hub",
+            })
+
+    # Query Nominatim if fewer than 3 matches locally
+    if len(results) < 3:
+        try:
+            import urllib.request
+            import urllib.parse
+            import json
+            encoded = urllib.parse.quote(f"{query}, Bangalore")
+            url = f"https://nominatim.openstreetmap.org/search?q={encoded}&format=json&limit=4&addressdetails=1"
+            req = urllib.request.Request(url, headers={"User-Agent": "DroneDispatchEmergencySystem/2.0"})
+            with urllib.request.urlopen(req, timeout=1.2) as response:
+                osm_data = json.loads(response.read().decode())
+                for item in osm_data:
+                    results.append({
+                        "display_name": item.get("display_name"),
+                        "name": item.get("name") or item.get("display_name").split(",")[0],
+                        "lat": float(item.get("lat")),
+                        "lng": float(item.get("lon")),
+                        "type": item.get("type", "address"),
+                        "source": "openstreetmap_nominatim",
+                    })
+        except Exception:
+            pass
+
+    return jsonify({"status": "success", "results": results[:6]}), 200
+
+
+# ==============================================================================
+# QUICK PRICE & DURATION ESTIMATOR API
+# ==============================================================================
+
+@api_ext_bp.route("/api/booking/estimate", methods=["POST"])
+def get_quick_estimate():
+    """Quick preliminary fare and duration estimate without locking fleet resources."""
+    from app.services.route_optimizer import haversine_distance
+    from app.services.pricing_service import PricingService
+    data = request.get_json(silent=True) or request.form
+
+    try:
+        p_lat = float(data.get("pickup_latitude", 0))
+        p_lng = float(data.get("pickup_longitude", 0))
+        d_lat = float(data.get("destination_latitude", 0))
+        d_lng = float(data.get("destination_longitude", 0))
+        weight = float(data.get("cargo_weight_kg", 1.0))
+        priority = data.get("priority", "HIGH")
+
+        dist_km = haversine_distance(p_lat, p_lng, d_lat, d_lng)
+        if dist_km < 0.05:
+            return jsonify({"status": "error", "message": "Pickup and destination must be distinct (minimum 50m)."}), 400
+
+        breakdown = PricingService.calculate_price_breakdown(
+            flight_distance_km=dist_km,
+            cargo_weight_kg=weight,
+            priority=priority,
+        )
+        est_duration_min = max(2.0, round((dist_km / 60.0) * 60.0, 1))
+
+        return jsonify({
+            "status": "success",
+            "distance_km": round(dist_km, 2),
+            "estimated_duration_min": est_duration_min,
+            "estimated_price": breakdown["total_price"],
+            "price_breakdown": breakdown,
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+# ==============================================================================
 # ADMIN PRICING CONFIGURATION
 # ==============================================================================
 

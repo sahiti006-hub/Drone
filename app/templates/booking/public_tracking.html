@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Drone Tracking - {{ booking.booking_reference }} | DroneDispatch</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body {
+      background-color: #f5f8fc;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .public-tracker-header {
+      background: #111827;
+      color: #ffffff;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1479d1;
+    }
+    .public-tracker-container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .public-tracker-container {
+        grid-template-columns: 1fr;
+      }
+      #publicMap {
+        height: 400px !important;
+      }
+    }
+    .public-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 18px;
+    }
+    #publicMap {
+      width: 100%;
+      height: 600px;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      box-shadow: var(--shadow-sm);
+    }
+    .live-pulse-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #16a34a;
+      box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
+      animation: pulse-green 1.6s infinite;
+      margin-right: 6px;
+    }
+    @keyframes pulse-green {
+      0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(22, 163, 74, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Clean Public Header -->
+  <header class="public-tracker-header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 1.4rem;">🚁</span>
+      <div>
+        <div style="font-weight: 800; font-size: 1.15rem; color: #38bdf8;">DroneDispatch Live Tracker</div>
+        <div style="font-size: 0.72rem; color: #94a3b8;">Autonomous Emergency Airway System</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="live-pulse-dot"></span>
+      <span style="font-size: 0.82rem; font-weight: 700; color: #f8fafc; letter-spacing: 0.05em;">LIVE TRANSMISSION</span>
+    </div>
+  </header>
+
+  <div class="public-tracker-container">
+    <!-- Left Column: Status, ETA, & Timeline -->
+    <div>
+      <div class="public-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Tracking Reference</div>
+            <strong style="font-size: 1.15rem; color: #0f172a;">{{ booking.booking_reference }}</strong>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            {% if booking.delivery_direction == 'RECEIVE' %}
+            <span class="badge-direction-receive">📥 RECEIVE</span>
+            {% else %}
+            <span class="badge-direction-send">📤 SEND</span>
+            {% endif %}
+            <span class="status-badge-lg badge-{{ booking.status.lower() }}">
+              {{ booking.status.replace('_', ' ') }}
+            </span>
+          </div>
+        </div>
+
+        <div style="background: {% if booking.delivery_direction == 'RECEIVE' %}#eff6ff{% else %}#f8fafc{% endif %}; border: 1px solid {% if booking.delivery_direction == 'RECEIVE' %}#bfdbfe{% else %}#e2e8f0{% endif %}; border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 14px; font-size: 0.82rem; font-weight: 700; color: {% if booking.delivery_direction == 'RECEIVE' %}#1d4ed8{% else %}#334155{% endif %};">
+          {% if booking.delivery_direction == 'RECEIVE' %}
+          📥 Your item is being collected and delivered to you.
+          {% else %}
+          📤 Your item is on its way to the destination.
+          {% endif %}
+        </div>
+
+        <div class="meta-grid" style="margin-bottom: 16px;">
+          <div class="meta-item">
+            <div class="meta-label">Payload Category</div>
+            <div class="meta-value">{{ booking.cargo_category.replace('_', ' ') }}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Total Distance</div>
+            <div class="meta-value">{{ "%.2f"|format(booking.flight_distance_km) }} km</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Assigned Drone</div>
+            <div class="meta-value">{% if drone %}{{ drone.model_name }}{% else %}Emergency Fleet{% endif %}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Weather Clearance</div>
+            <div class="meta-value" style="color: {% if booking.weather_classification == 'GREEN' %}#16a34a{% elif booking.weather_classification == 'YELLOW' %}#d97706{% else %}#dc2626{% endif %};">
+              {{ booking.weather_classification or 'GREEN' }}
+            </div>
+          </div>
+        </div>
+
+        {% if booking.custom_item_name %}
+        <div style="margin-bottom: 14px; padding: 8px 12px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: var(--radius-sm); font-size: 0.8rem;">
+          <strong style="color: #6b21a8;">📦 Custom Item:</strong> {{ booking.custom_item_name }}
+          {% if booking.package_size %}&bull; <span style="color: #7e22ce;">{{ booking.package_size }}</span>{% endif %}
+        </div>
+        {% endif %}
+
+        {% if booking.status == 'DELIVERED' %}
+        <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: var(--radius-md); padding: 14px; text-align: center; color: #166534; font-weight: 800;">
+          ✅ Emergency Medical Package Safely Delivered
+        </div>
+        {% elif booking.status in ['IN_FLIGHT', 'DISPATCHED', 'REROUTED'] %}
+        <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: var(--radius-md); padding: 14px; text-align: center; color: #1e40af; font-weight: 800;">
+          🚁 Drone in Flight &bull; Airway Corridor Enforced
+        </div>
+        {% elif booking.status == 'DIVERTED' %}
+        <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: var(--radius-md); padding: 14px; text-align: center; color: #991b1b; font-weight: 800;">
+          🚨 Safety Diversion Mandated &bull; Landing at Clearing
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- 8-Step Progress Timeline -->
+      <div class="public-card">
+        <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; text-transform: uppercase;">
+          Flight Progress Milestones
+        </h3>
+
+        {% set s = booking.status %}
+        <div class="timeline-stepper">
+          <div class="stepper-item completed">
+            <div class="stepper-marker">✓</div>
+            <div class="stepper-content">
+              <div class="stepper-title">Booking Confirmed</div>
+              <div class="stepper-sub">Emergency corridor allocated</div>
+            </div>
+          </div>
+
+          <div class="stepper-item {% if s in ['PAID', 'DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'REROUTED', 'WEATHER_CAUTION', 'DIVERTED'] %}completed{% elif s == 'CONFIRMED' %}active{% else %}pending{% endif %}">
+            <div class="stepper-marker">{% if s in ['PAID', 'DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'REROUTED', 'WEATHER_CAUTION', 'DIVERTED'] %}✓{% else %}2{% endif %}</div>
+            <div class="stepper-content">
+              <div class="stepper-title">Payment Cleared</div>
+              <div class="stepper-sub">Digital settlement complete</div>
+            </div>
+          </div>
+
+          <div class="stepper-item {% if s in ['DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'REROUTED', 'WEATHER_CAUTION', 'DIVERTED'] %}completed{% elif s == 'PAID' %}active{% else %}pending{% endif %}">
+            <div class="stepper-marker">{% if s in ['DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'REROUTED', 'WEATHER_CAUTION', 'DIVERTED'] %}✓{% else %}3{% endif %}</div>
+            <div class="stepper-content">
+              <div class="stepper-title">Drone Assigned & Initialized</div>
+              <div class="stepper-sub">Telemetry synchronization active</div>
+            </div>
+          </div>
+
+          <div class="stepper-item {% if s in ['IN_FLIGHT', 'DELIVERED', 'REROUTED', 'DIVERTED'] %}completed{% elif s == 'DISPATCHED' %}active{% else %}pending{% endif %}">
+            <div class="stepper-marker">{% if s in ['IN_FLIGHT', 'DELIVERED', 'REROUTED', 'DIVERTED'] %}✓{% else %}4{% endif %}</div>
+            <div class="stepper-content">
+              <div class="stepper-title">{% if booking.delivery_direction == 'RECEIVE' %}Travelling to Collection Location{% else %}Ferrying to Pickup Point{% endif %}</div>
+              <div class="stepper-sub">{% if booking.delivery_direction == 'RECEIVE' %}Navigating to sender/pickup point{% else %}Navigating to dispatch pad{% endif %}</div>
+            </div>
+          </div>
+
+          <div class="stepper-item {% if s in ['IN_FLIGHT', 'DELIVERED', 'REROUTED', 'DIVERTED'] %}completed{% else %}pending{% endif %}">
+            <div class="stepper-marker">{% if s in ['IN_FLIGHT', 'DELIVERED', 'REROUTED', 'DIVERTED'] %}✓{% else %}5{% endif %}</div>
+            <div class="stepper-content">
+              <div class="stepper-title">{% if booking.delivery_direction == 'RECEIVE' %}Cargo Collected & Verified{% else %}Package Picked Up{% endif %}</div>
+              <div class="stepper-sub">{% if booking.delivery_direction == 'RECEIVE' %}Item collected and verified: {{ booking.cargo_weight_kg }} kg{% else %}Cargo container locked{% endif %}</div>
+            </div>
+          </div>
+
+          <div class="stepper-item {% if s in ['DELIVERED'] %}completed{% elif s in ['IN_FLIGHT', 'REROUTED', 'WEATHER_CAUTION', 'DIVERTED'] %}active{% else %}pending{% endif %}">
+            <div class="stepper-marker">{% if s in ['DELIVERED'] %}✓{% else %}6{% endif %}</div>
+            <div class="stepper-content">
+              <div class="stepper-title">Drone In Flight</div>
+              <div class="stepper-sub">Cruising at standard airway altitude</div>
+            </div>
+          </div>
+
+          <div class="stepper-item {% if s in ['DELIVERED'] %}completed{% elif s in ['IN_FLIGHT', 'REROUTED'] %}active{% else %}pending{% endif %}">
+            <div class="stepper-marker">{% if s in ['DELIVERED'] %}✓{% else %}7{% endif %}</div>
+            <div class="stepper-content">
+              <div class="stepper-title">Approaching Destination</div>
+              <div class="stepper-sub">Descent and final obstacle check</div>
+            </div>
+          </div>
+
+          <div class="stepper-item {% if s == 'DELIVERED' %}completed{% else %}pending{% endif %}">
+            <div class="stepper-marker">{% if s == 'DELIVERED' %}✓{% else %}8{% endif %}</div>
+            <div class="stepper-content">
+              <div class="stepper-title">Delivery Completed</div>
+              <div class="stepper-sub">Verified hospital handoff</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulation Disclaimer -->
+      <div style="font-size: 0.75rem; color: #64748b; padding: 0 4px; line-height: 1.4;">
+        🔒 <strong>Privacy & Academic Simulation Notice:</strong> This link provides public flight tracking without revealing patient identities or hospital case notes. All drone coordinates and kinematics are simulated for research and academic evaluation.
+      </div>
+    </div>
+
+    <!-- Right Column: Interactive Map -->
+    <div>
+      <div class="public-card" style="padding: 12px;">
+        <div id="publicMap"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const pLat = {{ booking.pickup_latitude }};
+      const pLng = {{ booking.pickup_longitude }};
+      const dLat = {{ booking.destination_latitude }};
+      const dLng = {{ booking.destination_longitude }};
+      const status = "{{ booking.status }}";
+
+      const map = L.map('publicMap').setView([pLat, pLng], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors | DroneDispatch Simulation'
+      }).addTo(map);
+
+      setTimeout(() => { map.invalidateSize(); }, 200);
+
+      // Pickup Marker
+      L.marker([pLat, pLng], {
+        icon: L.divIcon({
+          className: 'pin-pickup',
+          html: '<div style="background:#16a34a;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);">📍</div>',
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        })
+      }).addTo(map).bindPopup("<b>📍 Pickup Origin</b>");
+
+      // Destination Marker
+      L.marker([dLat, dLng], {
+        icon: L.divIcon({
+          className: 'pin-dest',
+          html: '<div style="background:#dc2626;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);">🏁</div>',
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        })
+      }).addTo(map).bindPopup("<b>🏁 Delivery Destination</b>");
+
+      // Flight Corridor
+      L.polyline([[pLat, pLng], [dLat, dLng]], {
+        color: '#1479d1',
+        weight: 4,
+        dashArray: '6, 6'
+      }).addTo(map);
+
+      // Fit bounds
+      map.fitBounds([[pLat, pLng], [dLat, dLng]], { padding: [50, 50] });
+
+      // Drone Marker
+      let droneLat = pLat, droneLng = pLng;
+      if (status === 'DELIVERED') {
+        droneLat = dLat;
+        droneLng = dLng;
+      } else if (["IN_FLIGHT", "DISPATCHED", "REROUTED"].includes(status)) {
+        droneLat = (pLat + dLat) / 2;
+        droneLng = (pLng + dLng) / 2;
+      }
+
+      L.marker([droneLat, droneLng], {
+        icon: L.divIcon({
+          className: 'drone-pin',
+          html: '<div style="background:#111827;border:2px solid #38bdf8;color:white;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 12px rgba(56,189,248,0.7);">🚁</div>',
+          iconSize: [34, 34],
+          iconAnchor: [17, 17]
+        })
+      }).addTo(map).bindPopup("<b>🚁 Active Drone Position</b><br>Status: " + status);
+    });
+  </script>
+</body>
+</html>

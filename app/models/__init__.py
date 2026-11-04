@@ -18,7 +18,7 @@ from app.models.analysis_log import AnalysisLog, EvaluationStatus
 # Uber/Rapido-Style Smart Booking, Pricing, Weather, and Payments Extensions
 from app.models.pricing_configuration import PricingConfiguration
 from app.models.drone_quote import DroneQuote
-from app.models.drone_booking import DroneBooking, BookingStatus
+from app.models.drone_booking import DroneBooking, BookingStatus, DeliveryDirection
 from app.models.payment_transaction import (
     PaymentTransaction,
     PaymentStatus,
@@ -32,6 +32,8 @@ from app.models.weather_intelligence import (
     SafeDiversionLocation,
 )
 from app.models.notification import Notification, NotificationType
+from app.models.saved_location import SavedLocation
+from app.models.delivery_rating import DeliveryRating
 
 __all__ = [
     "User",
@@ -60,6 +62,7 @@ __all__ = [
     "DroneQuote",
     "DroneBooking",
     "BookingStatus",
+    "DeliveryDirection",
     "PaymentTransaction",
     "PaymentStatus",
     "PaymentMethod",
@@ -70,4 +73,6 @@ __all__ = [
     "SafeDiversionLocation",
     "Notification",
     "NotificationType",
+    "SavedLocation",
+    "DeliveryRating",
 ]

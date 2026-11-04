@@ -271,6 +271,8 @@ def requester_dashboard():
     total_count = metrics["total_requests"]
     in_transit_count = sum(1 for r in my_requests if r.status in {RequestStatus.ASSIGNED.value, RequestStatus.IN_TRANSIT.value})
     delivered_count = metrics["completed_deliveries"]
+    items_sent_count = sum(1 for b in my_bookings if (getattr(b, "delivery_direction", None) or "SEND") == "SEND")
+    items_received_count = sum(1 for b in my_bookings if (getattr(b, "delivery_direction", None) or "SEND") == "RECEIVE")
 
     return render_template(
         "dashboard/requester_dashboard.html",
@@ -284,6 +286,8 @@ def requester_dashboard():
         total_count=total_count,
         in_transit_count=in_transit_count,
         delivered_count=delivered_count,
+        items_sent_count=items_sent_count,
+        items_received_count=items_received_count,
         emergency_types=[e.value for e in EmergencyType],
         priorities=[p.value for p in RequestPriority],
     )

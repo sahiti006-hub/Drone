@@ -100,10 +100,41 @@
 <div class="history-header">
   <div>
     <h2 style="font-size: 1.3rem; font-weight: 700; color: #0f172a; margin: 0;">On-Demand Flight Bookings</h2>
-    <p style="font-size: 0.82rem; color: #64748b; margin: 4px 0 0 0;">View your simulated autonomous emergency drone dispatch missions and billing receipts.</p>
+    <p style="font-size: 0.82rem; color: #64748b; margin: 4px 0 0 0;">View your simulated autonomous emergency drone dispatch missions, collection tasks, and billing receipts.</p>
   </div>
-  <a href="{{ url_for('booking.new_booking') }}" class="btn btn-primary">
-    🚁 Book Emergency Drone
+  <div style="display: flex; gap: 8px;">
+    <a href="{{ url_for('booking.new_booking', direction='SEND') }}" class="btn btn-primary" style="font-size: 0.85rem;">
+      📤 Send Item
+    </a>
+    <a href="{{ url_for('booking.new_booking', direction='RECEIVE') }}" class="btn btn-secondary" style="font-size: 0.85rem;">
+      📥 Receive Item
+    </a>
+  </div>
+</div>
+
+<!-- Filter Pills -->
+<div class="filter-pills-row" style="margin-bottom: 16px;">
+  <a href="{{ url_for('booking.booking_history') }}" class="filter-pill {% if direction_filter == 'ALL' and status_filter == 'ALL' %}active{% endif %}">
+    All Missions
+  </a>
+  <a href="{{ url_for('booking.booking_history', direction='SEND', status=status_filter) }}" class="filter-pill {% if direction_filter == 'SEND' %}active{% endif %}">
+    📤 Send Missions
+  </a>
+  <a href="{{ url_for('booking.booking_history', direction='RECEIVE', status=status_filter) }}" class="filter-pill {% if direction_filter == 'RECEIVE' %}active{% endif %}">
+    📥 Receive Missions
+  </a>
+  <span style="color: #cbd5e1; align-self: center;">|</span>
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='ACTIVE') }}" class="filter-pill {% if status_filter == 'ACTIVE' %}active{% endif %}">
+    Active
+  </a>
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='COMPLETED') }}" class="filter-pill {% if status_filter == 'COMPLETED' %}active{% endif %}">
+    Completed
+  </a>
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='DIVERTED') }}" class="filter-pill {% if status_filter == 'DIVERTED' %}active{% endif %}">
+    Diverted
+  </a>
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='CANCELLED') }}" class="filter-pill {% if status_filter == 'CANCELLED' %}active{% endif %}">
+    Cancelled
   </a>
 </div>
 
@@ -126,6 +157,13 @@
       {% for b in bookings %}
       <tr>
         <td>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            {% if b.delivery_direction == 'RECEIVE' %}
+            <span class="badge-direction-receive" style="font-size: 0.68rem; padding: 2px 6px;">📥 RECEIVE</span>
+            {% else %}
+            <span class="badge-direction-send" style="font-size: 0.68rem; padding: 2px 6px;">📤 SEND</span>
+            {% endif %}
+          </div>
           <a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" style="font-weight: 700; color: #0284c7; text-decoration: none;">
             {{ b.booking_reference }}
           </a>
@@ -137,6 +175,11 @@
         </td>
         <td>
           <div style="font-weight: 600;">{{ b.cargo_category.replace('_', ' ') }}</div>
+          {% if b.custom_item_name %}
+          <div style="font-size: 0.75rem; color: #7e22ce; font-weight: 700;">
+            📦 {{ b.custom_item_name }} {% if b.package_size %}({{ b.package_size }}){% endif %}
+          </div>
+          {% endif %}
           <div style="font-size: 0.75rem; color: #64748b;">
             {{ b.cargo_weight_kg }} kg &bull; <span style="font-weight: 700; color: #0284c7;">{{ b.priority }}</span>
           </div>
@@ -168,6 +211,9 @@
           <div style="display: flex; gap: 6px; justify-content: flex-end;">
             <a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">
               Cockpit
+            </a>
+            <a href="{{ url_for('booking.new_booking', direction=b.delivery_direction or 'SEND', pickup_lat=b.pickup_latitude, pickup_lng=b.pickup_longitude, dest_lat=b.destination_latitude, dest_lng=b.destination_longitude, cargo_category=b.cargo_category, cargo_weight_kg=b.cargo_weight_kg, priority=b.priority, custom_item_name=b.custom_item_name or '', package_size=b.package_size or '') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 4px 8px;" title="Re-book this flight">
+              Re-book
             </a>
             {% if b.status in ['PAID', 'DISPATCHED', 'IN_FLIGHT', 'DELIVERED', 'DIVERTED', 'WEATHER_CAUTION', 'REROUTED'] %}
             <a href="{{ url_for('booking.view_invoice', booking_id=b.id) }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 4px 8px;" target="_blank">

@@ -43,6 +43,9 @@ class DroneQuote(db.Model):
     cargo_weight_kg = db.Column(db.Numeric(6, 2), nullable=False)
     cargo_category = db.Column(db.String(50), nullable=False)
     priority = db.Column(db.String(20), nullable=False)
+    delivery_direction = db.Column(db.String(20), nullable=False, default="SEND", server_default="SEND")
+    custom_item_name = db.Column(db.String(150), nullable=True)
+    package_size = db.Column(db.String(30), nullable=True, default="SMALL")
 
     # Evaluated route performance
     corridor_name = db.Column(db.String(100), nullable=False)
@@ -76,6 +79,28 @@ class DroneQuote(db.Model):
     pricing_config = db.relationship("PricingConfiguration")
     booking = db.relationship("DroneBooking", back_populates="quote", uselist=False)
 
+    @property
+    def distance_km(self) -> float:
+        """Alias for flight_distance_km."""
+        return float(self.flight_distance_km) if self.flight_distance_km is not None else 0.0
+
+    @property
+    def weight_kg(self) -> float:
+        """Alias for cargo_weight_kg."""
+        return float(self.cargo_weight_kg) if self.cargo_weight_kg is not None else 0.0
+
+    @property
+    def priority_fee(self) -> float:
+        """Alias for priority_charge."""
+        return float(self.priority_charge) if self.priority_charge is not None else 0.0
+
+    @property
+    def tax_rate_percent(self) -> float:
+        """Tax percentage rate from configuration or standard 18%."""
+        if self.pricing_config and hasattr(self.pricing_config, "tax_rate_percent"):
+            return float(self.pricing_config.tax_rate_percent)
+        return 18.0
+
     def is_expired(self) -> bool:
         """Verify whether quote has exceeded its time-to-live."""
         if not self.expires_at:
@@ -97,6 +122,9 @@ class DroneQuote(db.Model):
             "cargo_weight_kg": float(self.cargo_weight_kg),
             "cargo_category": self.cargo_category,
             "priority": self.priority,
+            "delivery_direction": self.delivery_direction or "SEND",
+            "custom_item_name": self.custom_item_name,
+            "package_size": self.package_size or "SMALL",
             "corridor_name": self.corridor_name,
             "flight_distance_km": float(self.flight_distance_km),
             "ferry_distance_km": float(self.ferry_distance_km),

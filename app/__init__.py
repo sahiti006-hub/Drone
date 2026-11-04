@@ -94,6 +94,14 @@ def create_app(config_name=None):
             "database_configured": bool(flask_app.config.get("SQLALCHEMY_DATABASE_URI")),
         }, 200
 
+    # Register context processors to ensure current_user is unconditionally available to all templates
+    @flask_app.context_processor
+    def inject_template_globals():
+        from app.services.auth_service import AuthService
+        from flask import g
+        user = getattr(g, "current_user", None) or AuthService.get_current_user()
+        return {"current_user": user, "user": user}
+
     # Security Headers Hook
     @flask_app.after_request
     def set_security_headers(response):
@@ -104,11 +112,11 @@ def create_app(config_name=None):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: https://tile.openstreetmap.org; "
-            "connect-src 'self'; "
-            "font-src 'self';"
+            "script-src 'self' 'unsafe-inline' https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; "
+            "img-src 'self' data: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://unpkg.com; "
+            "connect-src 'self' https://nominatim.openstreetmap.org; "
+            "font-src 'self' https://fonts.gstatic.com;"
         )
         return response
 

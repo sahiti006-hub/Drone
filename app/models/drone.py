@@ -96,6 +96,16 @@ class Drone(db.Model):
             return 0.0
         return round((float(self.current_battery_wh) / float(self.battery_capacity_wh)) * 100.0, 2)
 
+    @property
+    def battery_level(self) -> float:
+        """Alias for battery_percentage."""
+        return self.battery_percentage
+
+    @property
+    def drone_id_code(self) -> str:
+        """Alias for drone_code."""
+        return self.drone_code
+
     def can_transition_to(self, target_status: str | DroneStatus) -> bool:
         """Validate whether the requested status transition conforms to state machine rules."""
         target = target_status if isinstance(target_status, DroneStatus) else DroneStatus(target_status)

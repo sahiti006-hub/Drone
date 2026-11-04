@@ -126,6 +126,9 @@ class PricingService:
         estimated_delivery_duration_min: float,
         estimated_energy_wh: float,
         weather_classification: str = "GREEN",
+        delivery_direction: str = "SEND",
+        custom_item_name: Optional[str] = None,
+        package_size: Optional[str] = "SMALL",
     ) -> DroneQuote:
         """Create and persist an immutable quote with strict time-to-live."""
         cfg = cls.get_or_create_active_config()
@@ -150,6 +153,9 @@ class PricingService:
             cargo_weight_kg=cargo_weight_kg,
             cargo_category=cargo_category,
             priority=priority.upper(),
+            delivery_direction=delivery_direction or "SEND",
+            custom_item_name=custom_item_name,
+            package_size=package_size or "SMALL",
             corridor_name=corridor_name,
             flight_distance_km=flight_distance_km,
             ferry_distance_km=ferry_distance_km,
