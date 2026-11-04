@@ -19,18 +19,18 @@
 
   .weather-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     padding: 24px;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 24px;
   }
 
   .weather-card-title {
     font-size: 1.1rem;
-    font-weight: 700;
-    color: #0f172a;
-    border-bottom: 1px solid #f1f5f9;
+    font-weight: 800;
+    color: var(--color-deep-wine);
+    border-bottom: 1px solid var(--color-soft-blush);
     padding-bottom: 12px;
     margin-bottom: 18px;
     display: flex;
@@ -39,7 +39,7 @@
   }
 
   .active-scenario-banner {
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 16px 20px;
     margin-bottom: 24px;
     display: flex;
@@ -48,24 +48,25 @@
   }
 
   .banner-active {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
+    background: var(--color-danger-bg);
+    border: 1px solid var(--color-pale-rose);
+    color: var(--color-danger);
   }
 
   .banner-nominal {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #166534;
+    background: #E6F5EE;
+    border: 1px solid #C4E8D7;
+    color: #16845B;
   }
 
   .preset-btn {
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-size: 0.82rem;
-    font-weight: 600;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
+    font-weight: 700;
+    border: 1px solid var(--color-border);
+    background: var(--color-soft-blush);
+    color: var(--color-deep-wine);
     cursor: pointer;
     transition: all 0.15s;
     margin-right: 6px;
@@ -73,7 +74,8 @@
   }
 
   .preset-btn:hover {
-    background: #e2e8f0;
+    background: var(--color-blush);
+    border-color: var(--color-burgundy);
   }
 
   .form-row-3 {
@@ -92,8 +94,8 @@
   .form-label {
     display: block;
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #475569;
+    font-weight: 700;
+    color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 6px;
@@ -102,10 +104,10 @@
   .form-input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     font-size: 0.95rem;
-    color: #0f172a;
+    color: var(--color-text-main);
     box-sizing: border-box;
   }
 

@@ -7,7 +7,11 @@ from app.models.delivery_request import (
     RequestPriority,
     RequestStatus,
     EmergencyType,
+    CargoCategory,
+    CARGO_CATEGORY_REGISTRY,
+    normalize_cargo_category,
 )
+from app.models.request_activity import RequestActivity
 from app.models.route import Route, FeasibilityStatus
 from app.models.route_waypoint import RouteWaypoint
 from app.models.weather_snapshot import WeatherSnapshot, WeatherDataSource
@@ -46,6 +50,10 @@ __all__ = [
     "RequestPriority",
     "RequestStatus",
     "EmergencyType",
+    "CargoCategory",
+    "CARGO_CATEGORY_REGISTRY",
+    "normalize_cargo_category",
+    "RequestActivity",
     "Route",
     "FeasibilityStatus",
     "RouteWaypoint",

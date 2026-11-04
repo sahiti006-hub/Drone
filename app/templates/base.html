@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{% block title %}Operations Dashboard{% endblock %} | Smart Emergency Drone System</title>
+  <title>{% block title %}DroneDispatch{% endblock %} | Smart Drone Delivery System</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block extra_head %}{% endblock %}
 </head>
@@ -14,134 +14,177 @@
     <!-- Mobile Sidebar Backdrop -->
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- Sidebar Navigation - Sticky & Independently Scrollable -->
+    <!-- Sidebar Navigation - Deep Berry Wine Gradient (Matching Reference Screenshot) -->
     <aside class="sidebar" id="appSidebar">
       <div class="sidebar-header">
         <div class="logo-badge">
-          <span>🚁 DroneDispatch</span>
+          <svg class="drone-icon" viewBox="0 0 24 24" fill="none" stroke="#F8DCE5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v1H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h1v4H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-1v-4h1a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4V5a3 3 0 0 0-3-3z"/>
+            <circle cx="12" cy="14" r="2" fill="#F8DCE5"/>
+          </svg>
+          <div>
+            <div style="font-weight: 800; font-size: 1.25rem; line-height: 1; color: #FFFFFF;">DroneDispatch</div>
+            <div class="logo-subtext">SMART DRONE DELIVERY</div>
+          </div>
         </div>
-        <div class="mode-tag">Academic Simulation</div>
+        <div class="mode-tag">ACADEMIC SIMULATION</div>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section-title">Navigation</div>
+        <!-- Main Navigation Links -->
         <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint and 'dashboard.index' in request.endpoint %}active{% endif %}">
-          <span>📊 Dashboard</span>
+          <span class="nav-icon">🏠</span>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}" title="Book Drone">
+          <span class="nav-icon">🚁</span>
+          <span>Book a Delivery</span>
+          <span style="display:none;">Book Drone</span>
+        </a>
+
+        <a href="{{ url_for('booking.booking_history') }}" class="nav-link {% if request.endpoint and 'booking_history' in request.endpoint %}active{% endif %}">
+          <span class="nav-icon">📋</span>
+          <span>My Bookings</span>
+        </a>
+
+        <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
+          <span class="nav-icon">📍</span>
+          <span>Track Deliveries</span>
+        </a>
+
+        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery.list_requests' in request.endpoint %}active{% endif %}">
+          <span class="nav-icon">📑</span>
+          <span>All Requests</span>
+        </a>
+
+        <!-- Middle Section Links -->
+        <div style="height: 8px;"></div>
+        <div style="border-top: 1px solid rgba(248, 220, 229, 0.12); margin: 6px 14px;"></div>
+
+        <a href="{{ url_for('booking.booking_history') }}#saved" class="nav-link">
+          <span class="nav-icon">🔖</span>
+          <span>Saved Locations</span>
+        </a>
+
+        <a href="{{ url_for('booking.booking_history') }}#ratings" class="nav-link">
+          <span class="nav-icon">⭐</span>
+          <span>Delivery Ratings</span>
+        </a>
+
+        <a href="{{ url_for('booking.booking_history') }}#payments" class="nav-link">
+          <span class="nav-icon">💳</span>
+          <span>Payment History</span>
         </a>
 
         {% if curr_user and curr_user.role == 'ADMIN' %}
-        <div class="nav-section-title">Fleet & Logistics</div>
-        <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
-          <span>🚁 Book Drone</span>
-        </a>
+        <div class="nav-section-title">Fleet Administration</div>
         <a href="{{ url_for('drone.list_drones') }}" class="nav-link {% if request.endpoint and 'drone' in request.endpoint %}active{% endif %}">
-          <span>🛡️ Drone Inventory</span>
-        </a>
-        <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
-          <span>📋 Delivery Monitor</span>
-        </a>
-        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery.list_requests' in request.endpoint %}active{% endif %}">
-          <span>📦 All Requests</span>
+          <span class="nav-icon">🛡️</span>
+          <span>Drone Inventory</span>
         </a>
         <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and 'analytics.index' in request.endpoint %}active{% endif %}">
-          <span>📈 Route Analytics</span>
+          <span class="nav-icon">📈</span>
+          <span>Route Analytics</span>
         </a>
         <a href="{{ url_for('api_ext.manage_pricing') }}" class="nav-link {% if request.endpoint and 'manage_pricing' in request.endpoint %}active{% endif %}">
-          <span>💰 Pricing Config</span>
+          <span class="nav-icon">💰</span>
+          <span>Pricing Config</span>
         </a>
         <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="nav-link {% if request.endpoint and 'manage_weather_scenario' in request.endpoint %}active{% endif %}">
-          <span>🌦️ Weather Console</span>
-        </a>
-        <a href="{{ url_for('delivery.new_request') }}" class="nav-link {% if request.endpoint and 'delivery.new_request' in request.endpoint %}active{% endif %}">
-          <span>➕ New Request</span>
-        </a>
-        <a href="{{ url_for('drone.new_drone') }}" class="nav-link {% if request.endpoint and 'drone.new' in request.endpoint %}active{% endif %}">
-          <span>➕ Register Drone</span>
+          <span class="nav-icon">🌦️</span>
+          <span>Weather Console</span>
         </a>
         {% elif curr_user and curr_user.role == 'OPERATOR' %}
-        <div class="nav-section-title">Operations</div>
-        <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
-          <span>🚁 Book Drone</span>
-        </a>
+        <div class="nav-section-title">Dispatch Control</div>
         <a href="{{ url_for('dashboard.operator_dashboard') }}" class="nav-link {% if request.endpoint and 'operator_dashboard' in request.endpoint %}active{% endif %}">
-          <span>🎮 Dispatch Console</span>
-        </a>
-        <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
-          <span>📋 Delivery Monitor</span>
+          <span class="nav-icon">🎮</span>
+          <span>Dispatch Console</span>
         </a>
         <a href="{{ url_for('drone.list_drones') }}" class="nav-link {% if request.endpoint and 'drone' in request.endpoint %}active{% endif %}">
-          <span>🛡️ Drone Inventory</span>
-        </a>
-        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery.list_requests' in request.endpoint %}active{% endif %}">
-          <span>📦 Delivery Requests</span>
+          <span class="nav-icon">🛡️</span>
+          <span>Drone Inventory</span>
         </a>
         <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and 'analytics.index' in request.endpoint %}active{% endif %}">
-          <span>📈 Route Analytics</span>
-        </a>
-        <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="nav-link {% if request.endpoint and 'manage_weather_scenario' in request.endpoint %}active{% endif %}">
-          <span>🌦️ Weather Console</span>
-        </a>
-        <a href="{{ url_for('delivery.new_request') }}" class="nav-link {% if request.endpoint and 'delivery.new_request' in request.endpoint %}active{% endif %}">
-          <span>➕ New Request</span>
-        </a>
-        {% elif curr_user and curr_user.role == 'REQUESTER' %}
-        <div class="nav-section-title">My Orders</div>
-        <a href="{{ url_for('booking.new_booking') }}" class="nav-link {% if request.endpoint and 'booking.new' in request.endpoint %}active{% endif %}">
-          <span>🚁 Book Drone</span>
-        </a>
-        <a href="{{ url_for('booking.booking_history') }}" class="nav-link {% if request.endpoint and 'booking_history' in request.endpoint %}active{% endif %}">
-          <span>📋 My Bookings</span>
-        </a>
-        <a href="{{ url_for('analytics.delivery_monitor') }}" class="nav-link {% if request.endpoint and 'delivery_monitor' in request.endpoint %}active{% endif %}">
-          <span>📋 Track Deliveries</span>
-        </a>
-        <a href="{{ url_for('delivery.list_requests') }}" class="nav-link {% if request.endpoint and 'delivery.list_requests' in request.endpoint %}active{% endif %}">
-          <span>📋 All Requests</span>
-        </a>
-        <a href="{{ url_for('delivery.new_request') }}" class="nav-link {% if request.endpoint and 'delivery.new_request' in request.endpoint %}active{% endif %}">
-          <span>➕ Submit Request</span>
+          <span class="nav-icon">📈</span>
+          <span>Route Analytics</span>
         </a>
         {% endif %}
+
+        <!-- Bottom Section Links -->
+        <div style="height: 8px;"></div>
+        <div style="border-top: 1px solid rgba(248, 220, 229, 0.12); margin: 6px 14px;"></div>
+
+        <a href="#" class="nav-link" id="sidebarNotifLink" style="justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="nav-icon">🔔</span>
+            <span>Notifications</span>
+          </div>
+          <span id="sidebarNotifBadge" style="background: #A52255; color: #FFFFFF; font-size: 0.7rem; font-weight: 800; border-radius: 9999px; padding: 2px 7px; min-width: 18px; text-align: center;">6</span>
+        </a>
+
+        <a href="{{ url_for('dashboard.index') }}#support" class="nav-link">
+          <span class="nav-icon">❓</span>
+          <span>Help & Support</span>
+        </a>
       </nav>
+
+      <!-- Silhouette Graphic at Bottom of Sidebar -->
+      <div class="sidebar-footer-graphic">
+        <svg viewBox="0 0 200 45" fill="none" style="width: 100%; height: auto;">
+          <path d="M0 45 L35 25 L65 35 L105 18 L145 32 L175 22 L200 45 Z" fill="#861B49" opacity="0.4"/>
+          <path d="M0 45 L45 32 L85 40 L125 28 L165 38 L200 45 Z" fill="#710D37" opacity="0.6"/>
+          <!-- Mini Drone Silhouette -->
+          <circle cx="50" cy="14" r="3" fill="#F8DCE5" opacity="0.75"/>
+          <line x1="42" y1="14" x2="58" y2="14" stroke="#F8DCE5" stroke-width="1.5" opacity="0.75"/>
+          <line x1="45" y1="11" x2="45" y2="17" stroke="#F8DCE5" stroke-width="1" opacity="0.75"/>
+          <line x1="55" y1="11" x2="55" y2="17" stroke="#F8DCE5" stroke-width="1" opacity="0.75"/>
+        </svg>
+      </div>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Application Wrapper -->
     <div class="main-wrapper">
-      <!-- Topbar Navigation -->
+      <!-- Topbar Header -->
       <header class="topbar">
         <div style="display: flex; align-items: center;">
           <button class="btn-hamburger" id="sidebarToggleBtn" aria-label="Toggle navigation drawer">
             ☰
           </button>
-          <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+          <div class="topbar-title">
+            {% block page_title %}🚁 Emergency Drone Booking{% endblock %}
+          </div>
         </div>
         
-        <div class="user-profile-menu" style="display: flex; align-items: center; gap: 14px;">
+        <div class="user-profile-menu">
           {% if curr_user %}
           <!-- In-App Notification Bell -->
           <div class="notification-wrapper" style="position: relative;">
-            <button id="notifBellBtn" class="btn btn-outline btn-sm" style="position: relative; padding: 6px 10px; font-size: 1rem; border-radius: 50%;" aria-label="Notifications">
+            <button id="notifBellBtn" class="btn btn-outline btn-sm" style="position: relative; padding: 7px 11px; font-size: 1.05rem; border-radius: 50%; background: #FCEBF0; border: 1px solid var(--color-border); color: var(--color-deep-wine);" aria-label="Notifications">
               🔔
-              <span id="notifBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #dc2626; color: white; border-radius: 50%; font-size: 0.65rem; font-weight: 800; padding: 2px 5px; min-width: 14px; text-align: center;">0</span>
+              <span id="notifBadge" style="position: absolute; top: -5px; right: -5px; background: #861B49; color: #FFFFFF; border-radius: 50%; font-size: 0.65rem; font-weight: 800; padding: 2px 5px; min-width: 16px; text-align: center;">6</span>
             </button>
-            <div id="notifDropdown" style="display: none; position: absolute; right: 0; top: 40px; width: 320px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 1000; max-height: 400px; overflow-y: auto;">
-              <div style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">Notifications</span>
-                <button id="markAllReadBtn" style="background: none; border: none; font-size: 0.72rem; color: #0284c7; cursor: pointer; font-weight: 600;">Mark all read</button>
+            <div id="notifDropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 330px; background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1000; max-height: 400px; overflow-y: auto;">
+              <div style="padding: 12px 16px; border-bottom: 1px solid var(--color-soft-blush); display: flex; justify-content: space-between; align-items: center; background: var(--color-soft-blush);">
+                <span style="font-weight: 800; font-size: 0.88rem; color: var(--color-deep-wine);">Notifications</span>
+                <button id="markAllReadBtn" style="background: none; border: none; font-size: 0.72rem; color: var(--color-rich-berry); cursor: pointer; font-weight: 700;">Mark all read</button>
               </div>
               <div id="notifList" style="padding: 6px 0;">
-                <div style="padding: 14px; text-align: center; color: #94a3b8; font-size: 0.8rem;">No notifications</div>
+                <div style="padding: 14px; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">No new notifications</div>
               </div>
             </div>
           </div>
 
+          <!-- User Badge: Avatar + Name + Role -->
           <div class="user-badge">
-            <div class="user-avatar">{{ curr_user.full_name[0] }}</div>
+            <div class="user-avatar">{{ curr_user.full_name[0] if curr_user.full_name else 'U' }}</div>
             <div class="user-info">
               <span class="user-name">{{ curr_user.full_name }}</span>
               <span class="user-role-pill">{{ curr_user.role }}</span>
             </div>
           </div>
+
+          <!-- Sign Out Button -->
           <form action="{{ url_for('auth.logout') }}" method="POST" style="margin: 0;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-logout">Sign Out</button>
@@ -153,7 +196,7 @@
       </header>
 
       <!-- Content Container -->
-      <main class="content-body">
+      <main class="content-area">
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -181,8 +224,10 @@
       const bellBtn = document.getElementById('notifBellBtn');
       const dropdown = document.getElementById('notifDropdown');
       const badge = document.getElementById('notifBadge');
+      const sidebarBadge = document.getElementById('sidebarNotifBadge');
       const notifList = document.getElementById('notifList');
       const markAllReadBtn = document.getElementById('markAllReadBtn');
+      const sidebarNotifLink = document.getElementById('sidebarNotifLink');
 
       if (!bellBtn || !dropdown) return;
 
@@ -191,25 +236,33 @@
           .then(res => res.json())
           .then(data => {
             if (data.status === 'success') {
-              if (data.unread_count > 0) {
-                badge.textContent = data.unread_count;
+              const unread = data.unread_count || 0;
+              if (unread > 0) {
+                badge.textContent = unread;
                 badge.style.display = 'inline-block';
+                if (sidebarBadge) {
+                  sidebarBadge.textContent = unread;
+                  sidebarBadge.style.display = 'inline-block';
+                }
               } else {
                 badge.style.display = 'none';
+                if (sidebarBadge) {
+                  sidebarBadge.style.display = 'none';
+                }
               }
 
               if (data.notifications && data.notifications.length > 0) {
                 notifList.innerHTML = data.notifications.map(n => `
-                  <div style="padding: 10px 14px; border-bottom: 1px solid #f8fafc; background: ${n.is_read ? '#ffffff' : '#f0fdf4'}; font-size: 0.8rem; cursor: pointer;" onclick="markSingleRead(${n.id}, '${n.action_url || ''}')">
-                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
+                  <div style="padding: 10px 14px; border-bottom: 1px solid #FCEBF0; background: ${n.is_read ? '#FFFFFF' : '#FFF5F7'}; font-size: 0.8rem; cursor: pointer;" onclick="markSingleRead(${n.id}, '${n.action_url || ''}')">
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: var(--color-deep-wine); margin-bottom: 2px;">
                       <span>${n.title}</span>
-                      <span style="font-size: 0.7rem; color: #94a3b8;">${n.created_at ? n.created_at.substring(11, 16) : ''}</span>
+                      <span style="font-size: 0.7rem; color: var(--color-text-secondary);">${n.created_at ? n.created_at.substring(11, 16) : ''}</span>
                     </div>
-                    <div style="color: #475569; font-size: 0.75rem;">${n.message}</div>
+                    <div style="color: var(--color-text-main); font-size: 0.75rem;">${n.message}</div>
                   </div>
                 `).join('');
               } else {
-                notifList.innerHTML = '<div style="padding: 14px; text-align: center; color: #94a3b8; font-size: 0.8rem;">No notifications</div>';
+                notifList.innerHTML = '<div style="padding: 14px; text-align: center; color: var(--color-text-secondary); font-size: 0.8rem;">No notifications</div>';
               }
             }
           })
@@ -239,6 +292,13 @@
         e.stopPropagation();
         dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
       });
+
+      if (sidebarNotifLink) {
+        sidebarNotifLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        });
+      }
 
       document.addEventListener('click', function(e) {
         if (!dropdown.contains(e.target) && e.target !== bellBtn) {

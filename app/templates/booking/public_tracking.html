@@ -9,19 +9,21 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     body {
-      background-color: #f5f8fc;
+      background-color: var(--color-light-pink);
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--color-text-main);
     }
     .public-tracker-header {
-      background: #111827;
+      background: linear-gradient(135deg, #590D2B 0%, #710D37 100%);
       color: #ffffff;
       padding: 16px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #1479d1;
+      border-bottom: 2px solid var(--color-burgundy);
+      box-shadow: var(--shadow-sm);
     }
     .public-tracker-container {
       max-width: 1200px;
@@ -41,7 +43,7 @@
     }
     .public-card {
       background: #ffffff;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       padding: 22px;
       box-shadow: var(--shadow-sm);
@@ -51,7 +53,7 @@
       width: 100%;
       height: 600px;
       border-radius: var(--radius-lg);
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--color-border);
       box-shadow: var(--shadow-sm);
     }
     .live-pulse-dot {
@@ -77,13 +79,13 @@
     <div style="display: flex; align-items: center; gap: 10px;">
       <span style="font-size: 1.4rem;">🚁</span>
       <div>
-        <div style="font-weight: 800; font-size: 1.15rem; color: #38bdf8;">DroneDispatch Live Tracker</div>
-        <div style="font-size: 0.72rem; color: #94a3b8;">Autonomous Emergency Airway System</div>
+        <div style="font-weight: 800; font-size: 1.15rem; color: #FFFFFF;">DroneDispatch Live Tracker</div>
+        <div style="font-size: 0.72rem; color: var(--color-blush);">Autonomous Emergency Airway System</div>
       </div>
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
       <span class="live-pulse-dot"></span>
-      <span style="font-size: 0.82rem; font-weight: 700; color: #f8fafc; letter-spacing: 0.05em;">LIVE TRANSMISSION</span>
+      <span style="font-size: 0.82rem; font-weight: 800; color: #FFFFFF; letter-spacing: 0.05em;">LIVE TRANSMISSION</span>
     </div>
   </header>
 
@@ -93,8 +95,8 @@
       <div class="public-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <div>
-            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Tracking Reference</div>
-            <strong style="font-size: 1.15rem; color: #0f172a;">{{ booking.booking_reference }}</strong>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase;">Tracking Reference</div>
+            <strong style="font-size: 1.15rem; color: var(--color-deep-wine);">{{ booking.booking_reference }}</strong>
           </div>
           <div style="display: flex; gap: 6px; align-items: center;">
             {% if booking.delivery_direction == 'RECEIVE' %}
@@ -108,7 +110,7 @@
           </div>
         </div>
 
-        <div style="background: {% if booking.delivery_direction == 'RECEIVE' %}#eff6ff{% else %}#f8fafc{% endif %}; border: 1px solid {% if booking.delivery_direction == 'RECEIVE' %}#bfdbfe{% else %}#e2e8f0{% endif %}; border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 14px; font-size: 0.82rem; font-weight: 700; color: {% if booking.delivery_direction == 'RECEIVE' %}#1d4ed8{% else %}#334155{% endif %};">
+        <div style="background: {% if booking.delivery_direction == 'RECEIVE' %}var(--color-light-pink){% else %}var(--color-soft-blush){% endif %}; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 14px; font-size: 0.82rem; font-weight: 700; color: var(--color-deep-wine);">
           {% if booking.delivery_direction == 'RECEIVE' %}
           📥 Your item is being collected and delivered to you.
           {% else %}
@@ -138,9 +140,9 @@
         </div>
 
         {% if booking.custom_item_name %}
-        <div style="margin-bottom: 14px; padding: 8px 12px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: var(--radius-sm); font-size: 0.8rem;">
-          <strong style="color: #6b21a8;">📦 Custom Item:</strong> {{ booking.custom_item_name }}
-          {% if booking.package_size %}&bull; <span style="color: #7e22ce;">{{ booking.package_size }}</span>{% endif %}
+        <div style="margin-bottom: 14px; padding: 8px 12px; background: var(--color-light-pink); border: 1px solid var(--color-pale-rose); border-radius: var(--radius-sm); font-size: 0.8rem;">
+          <strong style="color: var(--color-deep-wine);">📦 Custom Item:</strong> {{ booking.custom_item_name }}
+          {% if booking.package_size %}&bull; <span style="color: var(--color-rich-berry);">{{ booking.package_size }}</span>{% endif %}
         </div>
         {% endif %}
 
@@ -242,20 +244,45 @@
     <!-- Right Column: Interactive Map -->
     <div>
       <div class="public-card" style="padding: 12px;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; background: #590D2B; padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--color-burgundy); color: #ffffff; font-size: 0.72rem; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+          <div><span style="color: var(--color-blush); font-weight: 700;">SPEED:</span> <strong id="pubSpeed" style="color: #ffffff;">-- km/h</strong></div>
+          <div><span style="color: var(--color-blush); font-weight: 700;">ALTITUDE:</span> <strong id="pubAlt" style="color: #ffffff;">-- m</strong></div>
+          <div><span style="color: var(--color-blush); font-weight: 700;">DISTANCE:</span> <strong id="pubDist" style="color: #ffffff;">-- km</strong></div>
+          <div><span style="color: var(--color-blush); font-weight: 700;">PROGRESS:</span> <strong id="pubProgress" style="color: #86efac;">--%</strong></div>
+        </div>
         <div id="publicMap"></div>
       </div>
     </div>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const pLat = {{ booking.pickup_latitude }};
-      const pLng = {{ booking.pickup_longitude }};
-      const dLat = {{ booking.destination_latitude }};
-      const dLng = {{ booking.destination_longitude }};
-      const status = "{{ booking.status }}";
+    let map, droneMarker, completedPolyline, remainingPolyline;
+    const ref = "{{ booking.booking_reference }}";
+    const pLat = {{ booking.pickup_latitude }};
+    const pLng = {{ booking.pickup_longitude }};
+    const dLat = {{ booking.destination_latitude }};
+    const dLng = {{ booking.destination_longitude }};
 
-      const map = L.map('publicMap').setView([pLat, pLng], 13);
+    function createDroneSvgHtml(heading) {
+      return `
+        <div style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 6px rgba(89, 13, 43, 0.45));">
+          <svg id="pubDroneSvg" style="width: 36px; height: 36px; transform: rotate(${heading}deg); transition: transform 0.4s ease-out;" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="14" fill="#590D2B" stroke="#F8DCE5" stroke-width="3"/>
+            <polygon points="50,18 43,32 57,32" fill="#F8DCE5"/>
+            <line x1="24" y1="24" x2="76" y2="76" stroke="#861B49" stroke-width="4" stroke-linecap="round"/>
+            <line x1="24" y1="76" x2="76" y2="24" stroke="#861B49" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="24" cy="24" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+            <circle cx="76" cy="24" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+            <circle cx="24" cy="76" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+            <circle cx="76" cy="76" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+            <circle cx="50" cy="50" r="4.5" fill="#22c55e"/>
+          </svg>
+        </div>
+      `;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      map = L.map('publicMap').setView([pLat, pLng], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors | DroneDispatch Simulation'
       }).addTo(map);
@@ -282,34 +309,62 @@
         })
       }).addTo(map).bindPopup("<b>🏁 Delivery Destination</b>");
 
-      // Flight Corridor
-      L.polyline([[pLat, pLng], [dLat, dLng]], {
-        color: '#1479d1',
+      // Route Polylines
+      completedPolyline = L.polyline([[pLat, pLng]], {
+        color: '#16a34a',
+        weight: 5,
+        opacity: 0.9
+      }).addTo(map);
+
+      remainingPolyline = L.polyline([[pLat, pLng], [dLat, dLng]], {
+        color: '#861B49',
         weight: 4,
+        opacity: 0.85,
         dashArray: '6, 6'
       }).addTo(map);
 
-      // Fit bounds
       map.fitBounds([[pLat, pLng], [dLat, dLng]], { padding: [50, 50] });
 
-      // Drone Marker
-      let droneLat = pLat, droneLng = pLng;
-      if (status === 'DELIVERED') {
-        droneLat = dLat;
-        droneLng = dLng;
-      } else if (["IN_FLIGHT", "DISPATCHED", "REROUTED"].includes(status)) {
-        droneLat = (pLat + dLat) / 2;
-        droneLng = (pLng + dLng) / 2;
-      }
-
-      L.marker([droneLat, droneLng], {
+      droneMarker = L.marker([pLat, pLng], {
         icon: L.divIcon({
           className: 'drone-pin',
-          html: '<div style="background:#111827;border:2px solid #38bdf8;color:white;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 12px rgba(56,189,248,0.7);">🚁</div>',
-          iconSize: [34, 34],
-          iconAnchor: [17, 17]
+          html: createDroneSvgHtml(0),
+          iconSize: [42, 42],
+          iconAnchor: [21, 21]
         })
-      }).addTo(map).bindPopup("<b>🚁 Active Drone Position</b><br>Status: " + status);
+      }).addTo(map).bindPopup("<b>🚁 Active Drone Flight</b>");
+
+      // Telemetry Polling
+      function pollPublicTelemetry() {
+        fetch(`/booking/track/${ref}/telemetry`)
+          .then(res => res.json())
+          .then(resData => {
+            if (resData.status === 'success') {
+              const t = resData.data || resData;
+              const lat = t.current_latitude;
+              const lng = t.current_longitude;
+              const heading = t.heading_deg || 0;
+
+              if (droneMarker) {
+                droneMarker.setLatLng([lat, lng]);
+                const svg = document.getElementById("pubDroneSvg");
+                if (svg) svg.style.transform = `rotate(${heading}deg)`;
+              }
+
+              if (t.completed_path && completedPolyline) completedPolyline.setLatLngs(t.completed_path);
+              if (t.remaining_path && remainingPolyline) remainingPolyline.setLatLngs(t.remaining_path);
+
+              document.getElementById("pubSpeed").innerText = `${(t.speed_kmh || 60).toFixed(0)} km/h`;
+              document.getElementById("pubAlt").innerText = `${(t.current_altitude_m || 120).toFixed(0)} m`;
+              document.getElementById("pubDist").innerText = `${(t.distance_travelled_km || 0).toFixed(1)} km`;
+              document.getElementById("pubProgress").innerText = `${(t.progress_percentage || 0).toFixed(1)}%`;
+            }
+          })
+          .catch(err => console.debug("Public telemetry error:", err));
+      }
+
+      pollPublicTelemetry();
+      setInterval(pollPublicTelemetry, 1500);
     });
   </script>
 </body>

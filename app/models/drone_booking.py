@@ -144,6 +144,12 @@ class DroneBooking(db.Model):
         cascade="all, delete-orphan",
         lazy="dynamic",
     )
+    activities = db.relationship(
+        "RequestActivity",
+        backref="booking",
+        lazy="dynamic",
+        order_by="RequestActivity.created_at.asc()",
+    )
 
     @property
     def latest_payment(self):

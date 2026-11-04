@@ -1260,3 +1260,473 @@ class SimulationService:
             severity="DANGER",
         )
         return safety_report
+
+    # =========================================================================
+    # PART 1: REQUEST-DRIVEN CONTINUOUS LIVE DRONE MOVEMENT & BOOKING SIMULATION
+    # =========================================================================
+
+    @classmethod
+    def get_or_create_simulation_for_booking(cls, booking_id: int) -> SimulationRun:
+        """Fetch or initialize simulation infrastructure (DeliveryRequest, Route, DroneAssignment, SimulationRun) for a booking."""
+        from app.models.drone_booking import DroneBooking, BookingStatus
+        from app.models.delivery_request import DeliveryRequest, RequestStatus
+        from app.models.route import Route, FeasibilityStatus
+        from app.models.route_waypoint import RouteWaypoint
+        from app.models.drone_assignment import DroneAssignment, AssignmentStatus
+        from app.models.drone import Drone, DroneStatus
+        from app.services.route_optimizer import CandidateRouteGenerator
+
+        booking = db.session.get(DroneBooking, booking_id)
+        if not booking:
+            raise SimulationServiceError(f"DroneBooking #{booking_id} not found.")
+
+        # Ensure DeliveryRequest exists
+        delivery_req = booking.delivery_request
+        if not delivery_req:
+            delivery_req = DeliveryRequest(
+                requester_id=booking.requester_id,
+                emergency_type=booking.cargo_category,
+                pickup_latitude=booking.pickup_latitude,
+                pickup_longitude=booking.pickup_longitude,
+                destination_latitude=booking.destination_latitude,
+                destination_longitude=booking.destination_longitude,
+                payload_weight_kg=booking.cargo_weight_kg,
+                delivery_direction=booking.delivery_direction,
+                description=f"Auto-generated mission for Booking #{booking.booking_reference}",
+            )
+            db.session.add(delivery_req)
+            db.session.flush()
+            booking.delivery_request_id = delivery_req.id
+
+        # Ensure feasible Route with RouteWaypoints exists
+        route = Route.query.filter_by(
+            delivery_request_id=delivery_req.id,
+            feasibility_status=FeasibilityStatus.FEASIBLE.value,
+        ).first()
+
+        if not route or not route.waypoints:
+            # Generate candidate corridors
+            candidates = CandidateRouteGenerator.generate_candidates(
+                pickup_lat=float(booking.pickup_latitude),
+                pickup_lng=float(booking.pickup_longitude),
+                dest_lat=float(booking.destination_latitude),
+                dest_lng=float(booking.destination_longitude),
+            )
+            primary = candidates[0] if candidates else None
+            if not primary:
+                raise SimulationServiceError("Could not generate candidate flight corridor.")
+
+            route = Route(
+                delivery_request_id=delivery_req.id,
+                algorithm_name=f"OPTIMIZED_{primary.corridor_name}",
+                estimated_distance_km=primary.distance_km,
+                estimated_duration_minutes=primary.duration_minutes,
+                estimated_energy_wh=primary.energy_wh,
+                route_score=1.0,
+                feasibility_status=FeasibilityStatus.FEASIBLE.value,
+            )
+            db.session.add(route)
+            db.session.flush()
+
+            for idx, wp in enumerate(primary.waypoints):
+                db.session.add(RouteWaypoint(
+                    route_id=route.id,
+                    sequence_number=idx,
+                    latitude=wp.latitude,
+                    longitude=wp.longitude,
+                    altitude_m=wp.altitude_m,
+                ))
+            db.session.flush()
+
+        # Ensure DroneAssignment exists
+        assignment = DroneAssignment.query.filter_by(
+            delivery_request_id=delivery_req.id,
+        ).filter(DroneAssignment.status != AssignmentStatus.FAILED.value).first()
+
+        if not assignment:
+            assignment = DroneAssignment(
+                delivery_request_id=delivery_req.id,
+                drone_id=booking.drone_id,
+                route_id=route.id,
+                status=AssignmentStatus.ACTIVE.value,
+            )
+            db.session.add(assignment)
+            db.session.flush()
+
+        # Get or create SimulationRun
+        sim = cls.get_or_create_simulation(assignment.id)
+        return sim
+
+    @classmethod
+    def start_booking_simulation(cls, booking_id: int) -> SimulationRun:
+        """Start or resume continuous flight simulation for a confirmed/paid booking."""
+        from app.models.drone_booking import DroneBooking, BookingStatus
+        from app.models.drone import Drone, DroneStatus
+        from app.models.drone_assignment import AssignmentStatus
+        from app.models.request_activity import RequestActivity
+
+        booking = db.session.get(DroneBooking, booking_id)
+        if not booking:
+            raise SimulationServiceError(f"Booking #{booking_id} not found.")
+
+        sim = cls.get_or_create_simulation_for_booking(booking_id)
+        if sim.status == SimulationStatus.COMPLETED.value:
+            return sim
+
+        now = datetime.now(timezone.utc)
+        sim.status = SimulationStatus.RUNNING.value
+        if not sim.start_time:
+            sim.start_time = now
+
+        cp = sim.get_checkpoint()
+        cp["last_tick_timestamp"] = now.timestamp()
+        sim.checkpoint_json = json.dumps(cp)
+
+        booking.status = BookingStatus.IN_FLIGHT.value
+        if sim.assignment and sim.assignment.drone:
+            sim.assignment.drone.status = DroneStatus.IN_TRANSIT.value
+        if sim.assignment:
+            sim.assignment.status = AssignmentStatus.ACTIVE.value
+
+        # Log activity
+        if booking.delivery_request_id:
+            db.session.add(RequestActivity(
+                delivery_request_id=booking.delivery_request_id,
+                booking_id=booking.id,
+                actor_role="OPERATOR",
+                from_status=booking.status,
+                to_status=BookingStatus.IN_FLIGHT.value,
+                action="FLIGHT_SIMULATION_STARTED",
+                reason="Live drone dispatched along optimized flight corridor.",
+            ))
+
+        db.session.commit()
+        return sim
+
+    @classmethod
+    def pause_booking_simulation(cls, booking_id: int) -> SimulationRun:
+        """Pause flight simulation at the current checkpoint."""
+        from app.models.request_activity import RequestActivity
+
+        sim = cls.get_or_create_simulation_for_booking(booking_id)
+        if sim.status == SimulationStatus.RUNNING.value:
+            sim.status = SimulationStatus.PAUSED.value
+            if sim.assignment and sim.assignment.delivery_request_id:
+                db.session.add(RequestActivity(
+                    delivery_request_id=sim.assignment.delivery_request_id,
+                    booking_id=booking_id,
+                    actor_role="OPERATOR",
+                    from_status="IN_FLIGHT",
+                    to_status="PAUSED",
+                    action="FLIGHT_SIMULATION_PAUSED",
+                    reason="Mission paused by user/operator command.",
+                ))
+            db.session.commit()
+        return sim
+
+    @classmethod
+    def resume_booking_simulation(cls, booking_id: int) -> SimulationRun:
+        """Resume paused flight simulation without jumping coordinates."""
+        from app.models.drone_booking import DroneBooking, BookingStatus
+        from app.models.request_activity import RequestActivity
+
+        booking = db.session.get(DroneBooking, booking_id)
+        sim = cls.get_or_create_simulation_for_booking(booking_id)
+        if sim.status == SimulationStatus.PAUSED.value:
+            sim.status = SimulationStatus.RUNNING.value
+            cp = sim.get_checkpoint()
+            cp["last_tick_timestamp"] = datetime.now(timezone.utc).timestamp()
+            sim.checkpoint_json = json.dumps(cp)
+            if booking:
+                booking.status = BookingStatus.IN_FLIGHT.value
+
+            if sim.assignment and sim.assignment.delivery_request_id:
+                db.session.add(RequestActivity(
+                    delivery_request_id=sim.assignment.delivery_request_id,
+                    booking_id=booking_id,
+                    actor_role="OPERATOR",
+                    from_status="PAUSED",
+                    to_status="IN_FLIGHT",
+                    action="FLIGHT_SIMULATION_RESUMED",
+                    reason="Mission resumed along flight path.",
+                ))
+            db.session.commit()
+        return sim
+
+    @classmethod
+    def set_booking_simulation_speed(cls, booking_id: int, speed_multiplier: float) -> SimulationRun:
+        """Set simulation speed multiplier (1x, 2x, 5x)."""
+        sim = cls.get_or_create_simulation_for_booking(booking_id)
+        speed_f = float(speed_multiplier)
+        if speed_f not in (1.0, 2.0, 5.0):
+            speed_f = max(0.5, min(10.0, speed_f))
+        sim.speed_multiplier = speed_f
+        db.session.commit()
+        return sim
+
+    @classmethod
+    def reset_booking_simulation(cls, booking_id: int) -> SimulationRun:
+        """Reset simulation back to start coordinates."""
+        from app.models.drone_booking import DroneBooking, BookingStatus
+        from app.models.drone import Drone, DroneStatus
+        from app.models.drone_assignment import AssignmentStatus
+        from app.models.request_activity import RequestActivity
+
+        booking = db.session.get(DroneBooking, booking_id)
+        sim = cls.get_or_create_simulation_for_booking(booking_id)
+
+        sim.status = SimulationStatus.CREATED.value
+        sim.current_progress_percent = 0.0
+        sim.distance_covered_km = 0.0
+        sim.remaining_distance_km = sim.total_sim_seconds * 0.01666  # estimate or total
+        sim.current_latitude = float(booking.pickup_latitude)
+        sim.current_longitude = float(booking.pickup_longitude)
+        sim.elapsed_sim_seconds = 0.0
+        sim.start_time = None
+        sim.end_time = None
+        sim.checkpoint_json = json.dumps({"heading_deg": 0.0, "segment_index": 0})
+
+        if booking:
+            booking.status = BookingStatus.CONFIRMED.value
+        if sim.assignment and sim.assignment.drone:
+            sim.assignment.drone.status = DroneStatus.RESERVED.value
+        if sim.assignment:
+            sim.assignment.status = AssignmentStatus.ACTIVE.value
+
+        if sim.assignment and sim.assignment.delivery_request_id:
+            db.session.add(RequestActivity(
+                delivery_request_id=sim.assignment.delivery_request_id,
+                booking_id=booking_id,
+                actor_role="OPERATOR",
+                from_status="ANY",
+                to_status="CONFIRMED",
+                action="FLIGHT_SIMULATION_RESET",
+                reason="Mission reset back to departure coordinates.",
+            ))
+
+        db.session.commit()
+        return sim
+
+    @classmethod
+    def tick_simulation_for_booking(cls, booking_id: int, current_timestamp: Optional[float] = None) -> Dict[str, Any]:
+        """Request-driven simulation tick advancing drone position along actual route waypoints.
+        
+        Serverless compatible: Advances state proportionally to elapsed time on each incoming request.
+        """
+        from app.models.drone_booking import DroneBooking, BookingStatus
+        from app.models.delivery_request import RequestStatus
+        from app.models.drone import Drone, DroneStatus
+        from app.models.drone_assignment import AssignmentStatus
+        from app.models.request_activity import RequestActivity
+        from app.models.route_waypoint import RouteWaypoint
+
+        booking = db.session.get(DroneBooking, booking_id)
+        if not booking:
+            raise SimulationServiceError(f"Booking #{booking_id} not found.")
+
+        sim = cls.get_or_create_simulation_for_booking(booking_id)
+        assignment = sim.assignment
+        drone = assignment.drone if assignment else None
+        route = assignment.route if assignment else None
+
+        # Fetch route waypoints
+        waypoints_query = (
+            RouteWaypoint.query
+            .filter_by(route_id=route.id)
+            .order_by(RouteWaypoint.sequence_number.asc())
+            .all()
+        )
+        wp_dicts = [wp.to_dict() for wp in waypoints_query]
+        cum_distances, total_distance_km = get_route_segment_metrics(wp_dicts)
+
+        now_ts = current_timestamp if current_timestamp is not None else datetime.now(timezone.utc).timestamp()
+        cp = sim.get_checkpoint()
+        last_tick = cp.get("last_tick_timestamp")
+
+        # If simulation is RUNNING, advance progress based on elapsed time
+        if sim.status == SimulationStatus.RUNNING.value:
+            if last_tick is None:
+                if sim.start_time:
+                    st = sim.start_time if sim.start_time.tzinfo else sim.start_time.replace(tzinfo=timezone.utc)
+                    last_tick = st.timestamp()
+                else:
+                    last_tick = now_ts
+                cp["last_tick_timestamp"] = last_tick
+
+            delta_t = max(0.0, now_ts - float(last_tick))
+
+            # Prevent double-counting on rapid concurrent polls (< 0.05s)
+            if delta_t >= 0.05:
+                # Cap delta_t at 10.0s for visual continuity unless explicit timestamp provided
+                effective_delta_t = delta_t if current_timestamp is not None else min(delta_t, 10.0)
+                sim_speed_multiplier = float(sim.speed_multiplier or 1.0)
+                sim_delta_seconds = effective_delta_t * sim_speed_multiplier
+
+                cruise_speed_kmh = float(drone.cruise_speed_kmh) if (drone and drone.cruise_speed_kmh) else 60.0
+                dist_advance_km = cruise_speed_kmh * (sim_delta_seconds / 3600.0)
+
+                new_covered_km = min(float(sim.distance_covered_km) + dist_advance_km, total_distance_km)
+                sim.distance_covered_km = new_covered_km
+                sim.remaining_distance_km = max(0.0, total_distance_km - new_covered_km)
+                sim.elapsed_sim_seconds = float(sim.elapsed_sim_seconds) + sim_delta_seconds
+                sim.current_progress_percent = (new_covered_km / total_distance_km) * 100.0 if total_distance_km > 0 else 100.0
+
+                # Interpolate exact coordinate along waypoints
+                interp = interpolate_position(
+                    waypoints=wp_dicts,
+                    distance_km=new_covered_km,
+                    cumulative_distances=cum_distances,
+                    total_distance_km=total_distance_km,
+                )
+                sim.current_latitude = interp["latitude"]
+                sim.current_longitude = interp["longitude"]
+                sim.current_altitude_m = interp["altitude_m"]
+
+                # Update heading and checkpoint
+                cp["heading_deg"] = interp["heading_deg"]
+                cp["segment_index"] = interp["segment_index"]
+                cp["last_tick_timestamp"] = now_ts
+
+                # Battery modeling: drain battery proportionally down to safe reserve
+                if sim.current_battery_wh and drone and drone.battery_capacity_wh:
+                    total_energy = float(route.estimated_energy_wh or (total_distance_km * 25.0))
+                    energy_used = total_energy * (sim.current_progress_percent / 100.0)
+                    sim.current_battery_wh = max(10.0, float(drone.battery_capacity_wh) - energy_used)
+
+                # Lifecycle stage updates
+                if sim.current_progress_percent >= 100.0:
+                    sim.status = SimulationStatus.COMPLETED.value
+                    sim.end_time = datetime.now(timezone.utc)
+                    booking.status = BookingStatus.DELIVERED.value
+                    if booking.delivery_request:
+                        booking.delivery_request.status = RequestStatus.DELIVERED.value
+                    if assignment:
+                        assignment.status = AssignmentStatus.COMPLETED.value
+                    if drone:
+                        drone.status = DroneStatus.AVAILABLE.value
+
+                    # Log completion activity
+                    if booking.delivery_request_id:
+                        db.session.add(RequestActivity(
+                            delivery_request_id=booking.delivery_request_id,
+                            booking_id=booking.id,
+                            actor_role="SYSTEM",
+                            from_status="IN_FLIGHT",
+                            to_status="DELIVERED",
+                            action="DELIVERY_COMPLETED",
+                            reason="Drone successfully arrived at destination coordinates.",
+                        ))
+                elif sim.current_progress_percent >= 85.0:
+                    booking.status = BookingStatus.IN_FLIGHT.value
+                    if booking.delivery_request:
+                        booking.delivery_request.status = "APPROACHING"
+                elif sim.current_progress_percent >= 5.0:
+                    booking.status = BookingStatus.IN_FLIGHT.value
+                    if booking.delivery_request:
+                        booking.delivery_request.status = RequestStatus.IN_TRANSIT.value
+                else:
+                    booking.status = BookingStatus.DISPATCHED.value
+
+                sim.checkpoint_json = json.dumps(cp)
+                db.session.commit()
+
+        # Calculate completed and remaining path coordinate lists
+        curr_lat = float(sim.current_latitude if sim.current_latitude is not None else booking.pickup_latitude)
+        curr_lng = float(sim.current_longitude if sim.current_longitude is not None else booking.pickup_longitude)
+        curr_heading = float(cp.get("heading_deg", 0.0))
+        seg_idx = int(cp.get("segment_index", 0))
+
+        completed_coords = []
+        for i in range(min(seg_idx + 1, len(wp_dicts))):
+            completed_coords.append([wp_dicts[i]["latitude"], wp_dicts[i]["longitude"]])
+        completed_coords.append([curr_lat, curr_lng])
+
+        remaining_coords = [[curr_lat, curr_lng]]
+        for i in range(seg_idx + 1, len(wp_dicts)):
+            remaining_coords.append([wp_dicts[i]["latitude"], wp_dicts[i]["longitude"]])
+
+        # Dynamic ETA in minutes / seconds
+        cruise_kmh = float(drone.cruise_speed_kmh) if (drone and drone.cruise_speed_kmh) else 60.0
+        rem_km = float(sim.remaining_distance_km)
+        eta_seconds = (rem_km / cruise_kmh) * 3600.0 if (cruise_kmh > 0 and sim.status != SimulationStatus.COMPLETED.value) else 0.0
+        eta_minutes = round(eta_seconds / 60.0, 1)
+
+        # Battery percentage
+        batt_pct = 100.0
+        if drone and drone.battery_capacity_wh and sim.current_battery_wh:
+            batt_pct = round((float(sim.current_battery_wh) / float(drone.battery_capacity_wh)) * 100.0, 1)
+
+        return {
+            "booking_id": booking.id,
+            "booking_reference": booking.booking_reference,
+            "delivery_status": booking.status,
+            "delivery_direction": booking.delivery_direction,
+            "delivery_category": booking.cargo_category,
+            "custom_item_name": booking.custom_item_name,
+            "pickup": {
+                "latitude": float(booking.pickup_latitude),
+                "longitude": float(booking.pickup_longitude),
+            },
+            "destination": {
+                "latitude": float(booking.destination_latitude),
+                "longitude": float(booking.destination_longitude),
+            },
+            "drone": {
+                "id": drone.id if drone else None,
+                "code": drone.drone_code if drone else "N/A",
+                "model": drone.model_name if drone else "N/A",
+                "cruise_speed_kmh": cruise_kmh,
+                "battery_percent": batt_pct,
+                "current_battery_wh": round(float(sim.current_battery_wh or 0), 1),
+            },
+            "telemetry": {
+                "latitude": curr_lat,
+                "longitude": curr_lng,
+                "altitude_m": float(sim.current_altitude_m or 50.0),
+                "heading_deg": curr_heading,
+                "speed_kmh": round(cruise_kmh * float(sim.speed_multiplier or 1.0), 1) if sim.status == SimulationStatus.RUNNING.value else 0.0,
+                "speed_multiplier": float(sim.speed_multiplier or 1.0),
+            },
+            "route": {
+                "id": route.id if route else None,
+                "total_distance_km": round(total_distance_km, 2),
+                "distance_covered_km": round(float(sim.distance_covered_km), 2),
+                "remaining_distance_km": round(float(sim.remaining_distance_km), 2),
+                "progress_percent": round(float(sim.current_progress_percent), 1),
+                "eta_minutes": eta_minutes,
+                "eta_seconds": round(eta_seconds),
+                "all_waypoints": [[wp["latitude"], wp["longitude"]] for wp in wp_dicts],
+                "completed_path": completed_coords,
+                "remaining_path": remaining_coords,
+            },
+            "simulation": {
+                "id": sim.id,
+                "run_code": sim.run_code,
+                "status": sim.status,
+                "is_running": sim.status == SimulationStatus.RUNNING.value,
+                "is_paused": sim.status == SimulationStatus.PAUSED.value,
+                "is_completed": sim.status == SimulationStatus.COMPLETED.value,
+            },
+            "weather": {
+                "classification": booking.weather_condition_at_booking,
+                "wind_speed_mps": 4.5,
+                "summary": "Nominal flight corridor conditions",
+            },
+            # Flat convenience telemetry fields for high-performance UI and HUD bindings:
+            "current_latitude": curr_lat,
+            "current_longitude": curr_lng,
+            "current_altitude_m": float(sim.current_altitude_m or 50.0),
+            "heading_deg": curr_heading,
+            "speed_kmh": round(cruise_kmh * float(sim.speed_multiplier or 1.0), 1) if sim.status == SimulationStatus.RUNNING.value else 0.0,
+            "speed_multiplier": float(sim.speed_multiplier or 1.0),
+            "total_distance_km": round(total_distance_km, 2),
+            "distance_travelled_km": round(float(sim.distance_covered_km), 2),
+            "distance_remaining_km": round(float(sim.remaining_distance_km), 2),
+            "progress_percentage": round(float(sim.current_progress_percent), 1),
+            "battery_percentage": batt_pct,
+            "estimated_arrival_minutes": eta_minutes,
+            "simulation_status": sim.status,
+            "completed_path": completed_coords,
+            "remaining_path": remaining_coords,
+        }
+

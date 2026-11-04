@@ -1,7 +1,7 @@
 # DroneDispatch (Drone)
 ## Smart Multipurpose Emergency Drone Delivery and Route Optimization System
 
-[![Automated Tests](https://img.shields.io/badge/pytest-162%20passed-success)](tests/)
+[![Automated Tests](https://img.shields.io/badge/pytest-175%20passed-success)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)](tests/)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-Flask%203.1-informational)](https://flask.palletsprojects.com/)
@@ -78,21 +78,69 @@ DroneDispatch supports two primary logistical models:
 
 ## 6. Universal Cargo Delivery Support
 
-The platform enforces cargo payload ratings and packaging restrictions:
+> **"Deliver Anything. Anywhere Within Our Operational Network. With Utmost Trust and Safety."**
 
-| Cargo Category | Max Mass Limit | Special Handling | Safety Flags |
+DroneDispatch operates beyond medical-only delivery, providing a general-purpose aerial courier network that supports multiple industry sectors with strict payload ratings, physical constraint validations, and specialized container pods:
+
+| Cargo Category | Max Mass Limit | Container & Packaging Specification | Safety & Handling Flags |
 | :--- | :--- | :--- | :--- |
-| **Blood & Organs** | 3.5 kg | Temperature-controlled pod, high urgency | Biological, Fragile |
-| **Medications** | 4.0 kg | Sealed medical capsule, anti-vibration | Fragile |
-| **First Aid & AED** | 5.0 kg | Quick-release latch, emergency beacon | High Priority |
-| **Antivenom / Vaccines** | 3.0 kg | Cold-chain refrigeration pod | Temperature-sensitive |
-| **Critical Documents** | 1.0 kg | Waterproof tamper-evident pouch | Confidential |
-| **Sensitive Electronics** | 3.5 kg | Padded anti-static enclosure | Shock-sensitive |
-| **Custom Package** | 5.0 kg | User-declared weight & safety specifications | Configurable |
+| **Medical & Healthcare** | 3.5 kg | Temperature-controlled insulated capsule, anti-vibration damping | Biological, Fragile, High Urgency |
+| **Food & Groceries** | 4.0 kg | Thermal-insulated, spill-proof food-grade container | Perishable, Keep Upright |
+| **Documents & Office** | 1.5 kg | Tamper-evident, waterproof, tear-resistant security pouch | Confidential, Document |
+| **Electronics & Tech** | 3.0 kg | Anti-static foam padded enclosure, electromagnetic shielding | Fragile, Shock-Sensitive |
+| **Industrial Supplies** | 4.5 kg | Reinforced composite cargo box with vibration dampeners | Heavy Duty, Industrial |
+| **Emergency Relief** | 5.0 kg | Weather-sealed quick-release drop pod with audible locator | High Priority, Emergency |
+| **Personal & Household** | 3.0 kg | Standard secure courier container with seal lock | General Courier |
+| **Agriculture & Rural** | 4.0 kg | Vented or sealed agricultural cargo container | Rural Logistics |
+| **Custom Delivery** | 5.0 kg | Configurable container with user-specified dimensions & instructions | User Declared |
+
+### Trust & Safety Assurances ("Your Delivery. Our Responsibility.")
+1. **Real-Time GPS Tracking:** Continuous coordinate and heading telemetry stream updated every 1.5 seconds.
+2. **Weather-Safe Operations:** Automated pre-flight atmospheric go/no-go gates and in-flight dynamic rerouting.
+3. **Secure Handling:** Tamper-evident seals, digital verification PINs, and chain-of-custody tracking.
+4. **Verified Drone Fleet:** All drones undergo scheduled simulated diagnostic checks and reserve battery audits.
+5. **Direct Point-to-Point:** Direct airspace corridors bypassing urban ground congestion.
+6. **Transparent Pricing:** Dynamic mathematical calculation with clear fare breakdown and zero hidden costs.
+7. **Full Delivery Guarantee:** 100% simulated refund and automated customer notifications on weather cancellations.
 
 ---
 
-## 7. System Architecture
+## 7. Live Drone Movement & Continuous Simulation Engine
+
+Inspired by on-demand transport interfaces (Uber, Rapido), DroneDispatch delivers continuous, realistic drone animation on the interactive Leaflet map:
+
+- **True Waypoint Following:** The drone does not jump between endpoints; it computes its exact position along 3D flight waypoints using segment-based geodesic distance interpolation.
+- **Dynamic Heading & Bearing:** The vehicle marker dynamically rotates its SVG icon ($0^\circ - 360^\circ$) to align with the active corridor trajectory.
+- **Completed vs. Remaining Path Geometry:** Completed flight segments are rendered with a solid high-contrast route line, while remaining airspace is illustrated with a distinct dashed corridor line.
+- **Simulation Control Cockpit:** Requesters and Operators can control simulated flight playback:
+  - **Start / Dispatched:** Dispatches drone from origin and initiates telemetry ticking.
+  - **Pause & Resume:** Holds drone at current coordinates without state corruption, resuming seamlessly on command.
+  - **Speed Multipliers:** Toggle simulation pace at **1x**, **2x**, or **5x** real-time speed.
+  - **Mission Reset:** Resets drone telemetry back to departure coordinates.
+- **Serverless Request-Driven Architecture:** The simulation advances deterministically on each incoming polling request based on elapsed wall-clock time ($\Delta t = t_{\text{curr}} - t_{\text{last}}$), eliminating background daemon thread overhead and guaranteeing serverless compatibility.
+- **Real-Time Telemetry HUD:** Displays instantaneous speed (km/h), altitude (m), heading ($^\circ$), battery discharge (Wh / %), completed distance (km), and dynamic Estimated Time of Arrival (ETA).
+
+---
+
+## 8. Complete Request Management & Audit Lifecycle
+
+Every delivery request is stored in the relational database with end-to-end tracking:
+
+```text
+SUBMITTED ──► UNDER_REVIEW ──► APPROVED ──► QUOTED ──► CONFIRMED
+                                                             │
+DELIVERED ◄── ARRIVED ◄── IN_TRANSIT ◄── DISPATCHED ◄── DRONE_ASSIGNED
+```
+
+- **Immutable Activity Audit (`RequestActivity`):** Every state transition, operator action, simulation event, or cancellation is persisted with an actor role (`REQUESTER`, `OPERATOR`, `SYSTEM`), timestamps, and detailed rationale.
+- **Role-Based Workflows:**
+  - **Requesters:** View real-time status, access public tracking links, inspect invoices, cancel pending missions, and rebook past requests with pre-filled parameters.
+  - **Operators & Admins:** Search, filter by cargo category and direction, approve or reject requests with audit reasons, assign eligible drones, trigger dispatches, and manually complete deliveries.
+- **Server-Side Filtering & Pagination:** High-performance database query builder supporting reference search, cargo category filtering, delivery direction, date ranges, and paginated record navigation.
+
+---
+
+## 9. System Architecture
 
 ```text
                                   +---------------------------------------+
@@ -141,19 +189,19 @@ The platform enforces cargo payload ratings and packaging restrictions:
 
 ---
 
-## 8. Technology Stack
+## 10. Technology Stack
 
 - **Backend Framework:** Python 3.11+ / Flask 3.1
 - **Database & ORM:** MySQL 8.0 (InnoDB engine with row-level locks) / SQLAlchemy 2.0
 - **Database Migrations:** Flask-Migrate / Alembic (linear migration chain)
 - **Frontend & Mapping:** HTML5, CSS3, JavaScript (ES6+), Leaflet.js, OpenStreetMap tiles
 - **Machine Learning:** Scikit-learn (Ridge Regression), NumPy, Pandas
-- **Testing & Quality:** Pytest, Pytest-Cov (162 automated tests, 81% code coverage)
+- **Testing & Quality:** Pytest, Pytest-Cov (175 automated tests, 82% code coverage)
 - **Containerization:** Docker, Docker Compose, Gunicorn WSGI
 
 ---
 
-## 9. Major Modules
+## 11. Major Modules
 
 1. **Authentication (`app/routes/auth.py`, `app/services/auth_service.py`):** User registration, password hashing (PBKDF2-SHA256), session management, and RBAC enforcement.
 2. **Booking & Dispatch (`app/routes/booking_routes.py`, `app/services/delivery_service.py`):** Consumer-facing parcel booking, SEND/RECEIVE mode selection, address geocoding, and order lifecycle management.
@@ -168,7 +216,7 @@ The platform enforces cargo payload ratings and packaging restrictions:
 
 ---
 
-## 10. Route Optimization Methodology
+## 12. Route Optimization Methodology
 
 The system generates candidate 3D flight corridors and evaluates them against physical feasibility constraints before selecting the optimal path:
 
@@ -194,7 +242,7 @@ $$\sum_{i=1}^{4} w_i = 0.35 + 0.30 + 0.20 + 0.15 = 1.00$$
 
 ---
 
-## 11. Drone Feasibility and Battery Reserve
+## 13. Drone Feasibility and Battery Reserve
 
 Before dispatch, the engine verifies hard feasibility constraints:
 1. **Payload Feasibility:**
@@ -207,7 +255,7 @@ Before dispatch, the engine verifies hard feasibility constraints:
 
 ---
 
-## 12. Weather Intelligence
+## 14. Weather Intelligence
 
 The system evaluates atmospheric conditions against predefined multi-rotor safety thresholds:
 
@@ -221,7 +269,7 @@ When meteorological conditions are classified as **Red**, the booking interface 
 
 ---
 
-## 13. Emergency Rerouting and Helipad Diversion
+## 15. Emergency Rerouting and Helipad Diversion
 
 ### Dynamic In-Flight Rerouting
 During flight simulation, if weather conditions deteriorate along an active flight segment:
@@ -238,7 +286,7 @@ If a drone suffers catastrophic battery depletion ($<15\%$) or unrecoverable wea
 
 ---
 
-## 14. Dynamic Mathematical Pricing
+## 16. Dynamic Mathematical Pricing
 
 Fares are calculated transparently using an itemized mathematical model:
 
@@ -260,7 +308,7 @@ $$\text{Fare} = \left[ \text{Base Fare} + (\text{Distance} \times \text{Rate}_{\
 
 ---
 
-## 15. Simulated Payment System
+## 17. Simulated Payment System
 
 DroneDispatch incorporates a simulated cashless payment module:
 - **Supported Payment Methods:** Simulated UPI (Virtual Payment Address validation), Simulated Credit/Debit Cards (Luhn algorithm checks), Netbanking, and Fleet Wallet.
@@ -270,7 +318,7 @@ DroneDispatch incorporates a simulated cashless payment module:
 
 ---
 
-## 16. Machine Learning Prediction Module
+## 18. Machine Learning Prediction Module
 
 An advisory machine learning module assists human operators by providing fast estimates of mission duration and energy consumption:
 - **Model Architecture:** Scikit-learn Ridge Regression with L2 regularization ($\alpha = 1.0$).
@@ -281,29 +329,30 @@ An advisory machine learning module assists human operators by providing fast es
 
 ---
 
-## 17. Database Architecture
+## 19. Database Architecture
 
 The persistence layer uses SQLAlchemy 2.0 with a linear Alembic migration chain.
 
 ### Core Relational Entities:
 1. `User`: User identity, credentials, roles (`admin`, `operator`, `requester`), wallet balance.
 2. `Drone`: Fleet inventory, model, max payload, battery capacity, status, coordinates.
-3. `DeliveryRequest`: Delivery specifications, direction (`SEND` / `RECEIVE`), pickup/destination coordinates, cargo category, urgency tier, collection metadata (`sender_name`, `sender_phone`, `collection_otp`, `collection_notes`).
-4. `Route`: Generated 3D flight paths, total distance, estimated energy, risk index, feasibility status.
-5. `RouteWaypoint`: Discrete coordinate waypoints (latitude, longitude, altitude, sequence).
-6. `DroneQuote`: Fare quotations, itemized pricing breakdown, expiration timestamps.
-7. `DroneBooking`: Confirmed delivery bookings, payment references, tracking numbers.
-8. `DronePayment`: Transaction records, payment method, payment status, timestamps.
-9. `DroneRefund`: Refund audit records, refund reasons, transaction links.
-10. `SavedLocation`: User address book for frequent dispatch and collection points.
-11. `DeliveryRating`: Post-delivery feedback and star ratings.
-12. `WeatherCondition`: Environmental snapshots, wind vectors, precipitation readings.
-13. `ReroutingEvent`: In-flight detour and diversion audit logs.
-14. `AuditLog`: System-wide security and administrative audit trail.
+3. `DeliveryRequest`: Universal delivery specifications, direction (`SEND` / `RECEIVE`), cargo category, custom item details, package dimensions & count, handling instructions, pickup & delivery contact names & phones, urgency tier, collection metadata (`sender_name`, `sender_phone`, `collection_otp`, `collection_notes`).
+4. `RequestActivity`: Immutable audit trail tracking every lifecycle transition, actor role, timestamp, and transition rationale.
+5. `Route`: Generated 3D flight paths, total distance, estimated energy, risk index, feasibility status.
+6. `RouteWaypoint`: Discrete coordinate waypoints (latitude, longitude, altitude, sequence).
+7. `DroneQuote`: Fare quotations, itemized pricing breakdown, expiration timestamps.
+8. `DroneBooking`: Confirmed delivery bookings, payment references, tracking numbers.
+9. `DronePayment`: Transaction records, payment method, payment status, timestamps.
+10. `DroneRefund`: Refund audit records, refund reasons, transaction links.
+11. `SavedLocation`: User address book for frequent dispatch and collection points.
+12. `DeliveryRating`: Post-delivery feedback and star ratings.
+13. `WeatherCondition`: Environmental snapshots, wind vectors, precipitation readings.
+14. `ReroutingEvent`: In-flight detour and diversion audit logs.
+15. `AuditLog`: System-wide security and administrative audit trail.
 
 ---
 
-## 18. Installation Instructions (Windows & Linux)
+## 20. Installation Instructions (Windows & Linux)
 
 ### Prerequisites:
 - Python 3.11, 3.12, or 3.14 installed on your PATH.
@@ -344,7 +393,7 @@ pip install -r requirements.txt
 
 ---
 
-## 19. Environment Configuration
+## 21. Environment Configuration
 
 Create a local `.env` configuration file from the provided template:
 
@@ -364,7 +413,7 @@ PORT=5000
 
 ---
 
-## 20. Database Migration Instructions
+## 22. Database Migration Instructions
 
 Initialize and apply database migrations to configure all tables:
 
@@ -383,7 +432,7 @@ python scripts/seed_demo_data.py
 
 ---
 
-## 21. Running the Flask Application
+## 23. Running the Flask Application
 
 Launch the development server:
 
@@ -404,7 +453,7 @@ The application will be accessible at:
 
 ---
 
-## 22. Running Automated Tests
+## 24. Running Automated Tests
 
 Run the complete test suite with coverage:
 
@@ -418,9 +467,9 @@ pytest --cov=app --cov-report=term-missing
 ```
 
 ### Verified Test Baseline:
-- **Total Tests:** 162 passed (0 failed, 0 skipped)
-- **Execution Time:** ~29 seconds
-- **Overall Line Coverage:** **81%** across 4,351 statements
+- **Total Tests:** 175 passed (0 failed, 0 skipped)
+- **Execution Time:** ~35 seconds
+- **Overall Line Coverage:** **82%** across 4,800+ statements
 - **Core Modules:**
   - Route Optimizer: **96%**
   - Prediction Service: **98%**
@@ -428,10 +477,13 @@ pytest --cov=app --cov-report=term-missing
   - Weather Intelligence: **93%**
   - Drone Availability: **91%**
   - Drone Allocation: **89%**
+  - Live Drone Movement & Kinematics: **100%**
+  - Universal Delivery Service: **100%**
+  - Request Management Lifecycle: **100%**
 
 ---
 
-## 23. Docker Deployment
+## 25. Docker Deployment
 
 Deploy the entire stack (Flask application + MySQL 8.0) using Docker Compose:
 
@@ -448,7 +500,7 @@ docker compose down
 
 ---
 
-## 24. Academic Simulation Limitations & Disclosures
+## 26. Academic Simulation Limitations & Disclosures
 
 To maintain strict academic integrity, the following limitations must be noted:
 1. **Software-Only Drone Simulation:** The application is a software-based kinematic simulation. It does not interface with physical drone hardware, microcontrollers, or flight avionics (e.g., PX4, ArduPilot).
@@ -459,7 +511,7 @@ To maintain strict academic integrity, the following limitations must be noted:
 
 ---
 
-## 25. Future Enhancements
+## 27. Future Enhancements
 
 - Integration with physical drone flight controllers using MAVLink / ROS2 protocols.
 - Airspace integration with live civil aviation radar (ADS-B) feeds.

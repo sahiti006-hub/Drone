@@ -10,16 +10,16 @@
     max-width: 800px;
     margin: 20px auto;
     padding: 40px;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
   }
 
   .invoice-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-bottom: 2px solid #0f172a;
+    border-bottom: 2px solid var(--color-deep-wine);
     padding-bottom: 20px;
     margin-bottom: 30px;
   }
@@ -27,13 +27,13 @@
   .brand-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-deep-wine);
     letter-spacing: -0.025em;
   }
 
   .brand-sub {
     font-size: 0.85rem;
-    color: #64748b;
+    color: var(--color-text-secondary);
     margin-top: 4px;
   }
 
@@ -43,13 +43,13 @@
 
   .invoice-ref {
     font-size: 1.1rem;
-    font-weight: 700;
-    color: #0284c7;
+    font-weight: 800;
+    color: var(--color-burgundy);
   }
 
   .invoice-date {
     font-size: 0.85rem;
-    color: #64748b;
+    color: var(--color-text-secondary);
     margin-top: 4px;
   }
 
@@ -63,11 +63,11 @@
 
   .bill-col h4 {
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    color: #64748b;
+    color: var(--color-deep-wine);
     margin-bottom: 8px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-soft-blush);
     padding-bottom: 4px;
   }
 
@@ -78,21 +78,21 @@
   }
 
   .items-table th {
-    background: #f8fafc;
+    background: var(--color-soft-blush);
     text-align: left;
     padding: 12px 14px;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    color: #475569;
-    border-bottom: 2px solid #e2e8f0;
+    color: var(--color-deep-wine);
+    border-bottom: 2px solid var(--color-border);
   }
 
   .items-table td {
     padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-soft-blush);
     font-size: 0.9rem;
-    color: #1e293b;
+    color: var(--color-text-main);
   }
 
   .items-table td.amount {
@@ -114,20 +114,20 @@
 
   .summary-table td {
     padding: 8px 12px;
-    color: #475569;
+    color: var(--color-text-secondary);
   }
 
   .summary-table td:last-child {
     text-align: right;
-    font-weight: 600;
-    color: #0f172a;
+    font-weight: 700;
+    color: var(--color-text-main);
   }
 
   .summary-table tr.total-row td {
-    border-top: 2px solid #0f172a;
+    border-top: 2px solid var(--color-deep-wine);
     font-size: 1.15rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-deep-wine);
     padding-top: 12px;
   }
 

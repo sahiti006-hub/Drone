@@ -1,24 +1,51 @@
 {% extends "base.html" %}
 
-{% block title %}Request #{{ req.id }} Details{% endblock %}
-{% block page_title %}Delivery Request #{{ req.id }}{% endblock %}
+{% block title %}Request {{ req.request_reference or ('#' ~ req.id) }} Details{% endblock %}
+{% block page_title %}Delivery Request {{ req.request_reference or ('#' ~ req.id) }}{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
   <a href="{{ url_for('delivery.list_requests') }}" class="btn btn-sm" style="background: none; border: 1px solid var(--border-color); color: var(--text-main);">
     &larr; Back to Requests
   </a>
 
-  <div style="display: flex; gap: 10px;">
+  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+    <!-- Rebook Button (Available to requesters or operators) -->
+    <a href="{{ url_for('delivery.rebook_request', request_id=req.id) }}" class="btn btn-secondary btn-sm">
+      🔁 Re-book Request
+    </a>
+
+    <!-- Operator / Admin Workflow Actions -->
+    {% if current_user.role in ['ADMIN', 'OPERATOR'] %}
+      {% if req.status in ['PENDING', 'SUBMITTED', 'UNDER_REVIEW'] %}
+        <form action="{{ url_for('delivery.approve_request', request_id=req.id) }}" method="POST" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-success btn-sm">✅ Approve Request</button>
+        </form>
+
+        <form action="{{ url_for('delivery.reject_request', request_id=req.id) }}" method="POST" style="margin: 0;" onsubmit="const r = prompt('Reason for rejection:'); if (!r) return false; this.rejection_reason.value = r; return true;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="rejection_reason" value="">
+          <button type="submit" class="btn btn-danger btn-sm">❌ Reject Request</button>
+        </form>
+      {% endif %}
+
+      {% if req.status in ['IN_TRANSIT', 'DISPATCHED', 'IN_FLIGHT', 'APPROVED', 'DRONE_ASSIGNED'] %}
+        <form action="{{ url_for('delivery.complete_request', request_id=req.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Mark this delivery request as completed/delivered?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary btn-sm">🏁 Mark Delivered</button>
+        </form>
+      {% endif %}
+    {% endif %}
+
     {% if req.status in ['PENDING', 'ROUTE_CALCULATED'] %}
-      <a href="{{ url_for('delivery.edit_request', request_id=req.id) }}" class="btn btn-primary btn-sm">
+      <a href="{{ url_for('delivery.edit_request', request_id=req.id) }}" class="btn btn-outline btn-sm">
         Edit Request
       </a>
     {% endif %}
 
-    {% if req.status not in ['DELIVERED', 'CANCELLED'] %}
-      <!-- Cancellation Modal / Inline Form -->
-      <form action="{{ url_for('delivery.cancel_request', request_id=req.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this emergency delivery request?');">
+    {% if req.status not in ['DELIVERED', 'COMPLETED', 'CANCELLED', 'REJECTED'] %}
+      <form action="{{ url_for('delivery.cancel_request', request_id=req.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this delivery request?');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="cancellation_reason" value="Cancelled from portal by user">
         <button type="submit" class="btn btn-danger btn-sm">Cancel Request</button>
@@ -30,29 +57,59 @@
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 24px;">
   <!-- Cargo Overview Card -->
   <div class="dashboard-card">
-    <div class="card-header">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
       <h2 class="card-title">Emergency Cargo Specification</h2>
-      <span class="badge badge-{{ req.status.lower() }}">{{ req.status }}</span>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        {% if req.delivery_direction == 'RECEIVE' %}
+        <span class="badge-direction-receive" style="font-size: 0.70rem; padding: 2px 6px;">📥 RECEIVE</span>
+        {% else %}
+        <span class="badge-direction-send" style="font-size: 0.70rem; padding: 2px 6px;">📤 SEND</span>
+        {% endif %}
+        <span class="badge badge-{{ req.status.lower() }}">{{ req.status.replace('_', ' ') }}</span>
+      </div>
     </div>
     <div class="card-body">
       <table class="data-table" style="border: none;">
         <tbody>
           <tr>
-            <td style="font-weight: 600; width: 40%;">Emergency Cargo:</td>
-            <td><strong>{{ req.emergency_type.replace('_', ' ') }}</strong></td>
+            <td style="font-weight: 600; width: 40%;">Reference:</td>
+            <td><strong style="color: var(--color-primary);">{{ req.request_reference or ('REQ-' ~ req.id) }}</strong></td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Cargo Category:</td>
+            <td><strong>{{ (req.cargo_category or req.emergency_type).replace('_', ' ') }}</strong></td>
+          </tr>
+          {% if req.custom_item_name %}
+          <tr>
+            <td style="font-weight: 600;">Item Name:</td>
+            <td><strong style="color: #7e22ce;">📦 {{ req.custom_item_name }}</strong></td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td style="font-weight: 600;">Package Details:</td>
+            <td>
+              {{ req.package_count or 1 }} package(s)
+              {% if req.package_dimensions %}&bull; Dimensions: {{ req.package_dimensions }}{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td style="font-weight: 600;">Payload Weight:</td>
+            <td><strong>{{ req.payload_weight_kg }} kg</strong></td>
           </tr>
           <tr>
             <td style="font-weight: 600;">Priority Level:</td>
             <td><span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span></td>
           </tr>
+          {% if req.handling_instructions %}
           <tr>
-            <td style="font-weight: 600;">Payload Weight:</td>
-            <td>{{ req.payload_weight_kg }} kg</td>
+            <td style="font-weight: 600;">Handling Notes:</td>
+            <td style="color: #92400e; font-weight: 600;">⚠️ {{ req.handling_instructions }}</td>
           </tr>
-          {% if req.description %}
+          {% endif %}
+          {% if req.rejection_reason %}
           <tr>
-            <td style="font-weight: 600;">Clinical Notes:</td>
-            <td>{{ req.description }}</td>
+            <td style="font-weight: 600; color: #dc2626;">Rejection Reason:</td>
+            <td style="color: #dc2626; font-weight: 700;">{{ req.rejection_reason }}</td>
           </tr>
           {% endif %}
           <tr>
@@ -68,36 +125,87 @@
     </div>
   </div>
 
-  <!-- Geospatial Endpoints Card -->
+  <!-- Contacts & Geospatial Endpoints Card -->
   <div class="dashboard-card">
     <div class="card-header">
-      <h2 class="card-title">Geospatial Coordinates</h2>
+      <h2 class="card-title">Pickup, Delivery & Contact Details</h2>
       <span class="badge badge-optimal">WGS84</span>
     </div>
     <div class="card-body">
-      <div style="display: flex; flex-direction: column; gap: 16px;">
-        <div style="padding: 14px; background-color: #f8fafc; border-radius: var(--radius-sm); border-left: 4px solid var(--color-primary);">
-          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Pickup Station</div>
-          <div style="font-size: 0.95rem; font-weight: 700; margin-top: 4px;">
-            Latitude: {{ req.pickup_latitude }}&deg;<br>
-            Longitude: {{ req.pickup_longitude }}&deg;
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="padding: 12px; background-color: #f8fafc; border-radius: var(--radius-sm); border-left: 4px solid var(--color-primary);">
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">
+            {% if req.delivery_direction == 'RECEIVE' %}Collection / Origin Station{% else %}Pickup Origin Station{% endif %}
           </div>
+          <div style="font-size: 0.90rem; font-weight: 700; margin-top: 2px;">
+            {{ req.pickup_latitude }}&deg;, {{ req.pickup_longitude }}&deg;
+          </div>
+          {% if req.pickup_contact_name %}
+          <div style="font-size: 0.78rem; color: #475569; margin-top: 4px;">
+            👤 Contact: <strong>{{ req.pickup_contact_name }}</strong> {% if req.pickup_contact_phone %}(📞 {{ req.pickup_contact_phone }}){% endif %}
+          </div>
+          {% endif %}
         </div>
 
-        <div style="padding: 14px; background-color: #f8fafc; border-radius: var(--radius-sm); border-left: 4px solid var(--color-danger);">
-          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Delivery Destination</div>
-          <div style="font-size: 0.95rem; font-weight: 700; margin-top: 4px;">
-            Latitude: {{ req.destination_latitude }}&deg;<br>
-            Longitude: {{ req.destination_longitude }}&deg;
+        <div style="padding: 12px; background-color: #f8fafc; border-radius: var(--radius-sm); border-left: 4px solid var(--color-danger);">
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">
+            {% if req.delivery_direction == 'RECEIVE' %}Deliver to You (Destination){% else %}Delivery Destination{% endif %}
           </div>
+          <div style="font-size: 0.90rem; font-weight: 700; margin-top: 2px;">
+            {{ req.destination_latitude }}&deg;, {{ req.destination_longitude }}&deg;
+          </div>
+          {% if req.delivery_contact_name %}
+          <div style="font-size: 0.78rem; color: #475569; margin-top: 4px;">
+            👤 Contact: <strong>{{ req.delivery_contact_name }}</strong> {% if req.delivery_contact_phone %}(📞 {{ req.delivery_contact_phone }}){% endif %}
+          </div>
+          {% endif %}
         </div>
+
+        {% if req.special_instructions %}
+        <div style="padding: 10px; background: #fffdf5; border: 1px dashed #fde68a; border-radius: var(--radius-sm); font-size: 0.80rem; color: #78350f;">
+          <strong>Special Instructions:</strong> {{ req.special_instructions }}
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
 
+<!-- Linked On-Demand Drone Booking Card (if exists) -->
+{% set booking = req.booking %}
+{% if booking %}
+<div class="dashboard-card" style="margin-bottom: 24px; border: 1.5px solid var(--color-border); background: var(--color-light-pink);">
+  <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border);">
+    <h2 class="card-title" style="color: var(--color-deep-wine);">🛸 Linked On-Demand Booking: {{ booking.booking_reference }}</h2>
+    <a href="{{ url_for('booking.view_booking', booking_id=booking.id) }}" class="btn btn-primary btn-sm">
+      🚁 Open Mission Cockpit & Live Tracking &rarr;
+    </a>
+  </div>
+  <div class="card-body" style="font-size: 0.85rem; color: var(--color-text-main);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+      <div>
+        <span style="color: var(--color-text-secondary); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">Booking Status</span>
+        <div><span class="badge badge-{{ booking.status.lower() }}">{{ booking.status }}</span></div>
+      </div>
+      <div>
+        <span style="color: var(--color-text-secondary); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">Distance</span>
+        <div style="font-weight: 700; color: var(--color-deep-wine);">{{ "%.2f"|format(booking.flight_distance_km) }} km</div>
+      </div>
+      <div>
+        <span style="color: var(--color-text-secondary); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">Assigned Drone</span>
+        <div style="font-weight: 700; color: var(--color-deep-wine);">{{ booking.drone.model_name if booking.drone else 'Fleet Allocation Pending' }}</div>
+      </div>
+      <div>
+        <span style="color: var(--color-text-secondary); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">Public Tracking Link</span>
+        <div><a href="{{ url_for('booking.public_tracking', reference=booking.booking_reference) }}" target="_blank" style="color: var(--color-burgundy); font-weight: 800;">View Live Flight &rarr;</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <!-- Available Routes & Waypoints -->
-<div class="dashboard-card">
+<div class="dashboard-card" style="margin-bottom: 24px;">
   <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
     <div>
       <h2 class="card-title">Calculated Flight Routes & Corridors</h2>
@@ -149,7 +257,7 @@
             <td colspan="8">
               <div class="empty-state">
                 <div class="empty-state-title">No Routes Calculated Yet</div>
-                <div class="empty-state-desc">Automated route optimization will compute candidate paths for this request in Phase 4.</div>
+                <div class="empty-state-desc">Automated route optimization will compute candidate paths for this request.</div>
               </div>
             </td>
           </tr>
@@ -161,7 +269,7 @@
 </div>
 
 <!-- Assigned Drone Telemetry & Mission History -->
-<div class="dashboard-card">
+<div class="dashboard-card" style="margin-bottom: 24px;">
   <div class="card-header">
     <h2 class="card-title">Drone Mission Execution</h2>
   </div>
@@ -204,6 +312,59 @@
               <div class="empty-state">
                 <div class="empty-state-title">No Drone Assigned</div>
                 <div class="empty-state-desc">This request has not yet been dispatched to an active drone unit.</div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Immutable Request Activity Audit Trail -->
+<div class="dashboard-card">
+  <div class="card-header">
+    <h2 class="card-title">📜 Immutable Activity & Audit Trail</h2>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp (UTC)</th>
+            <th>Action</th>
+            <th>Actor</th>
+            <th>Role</th>
+            <th>Notes & Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for act in req.activities|sort(attribute='created_at', reverse=True) %}
+          <tr>
+            <td style="font-size: 0.80rem; color: #64748b; font-family: monospace;">
+              {{ act.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+            </td>
+            <td>
+              <span class="badge" style="background: #e2e8f0; color: #1e293b; font-weight: 700;">
+                {{ act.action }}
+              </span>
+            </td>
+            <td style="font-size: 0.82rem; font-weight: 600;">
+              {{ act.actor.full_name if act.actor else 'System' }}
+            </td>
+            <td style="font-size: 0.75rem; color: #64748b;">
+              {{ act.actor_role or (act.actor.role if act.actor else 'SYSTEM') }}
+            </td>
+            <td style="font-size: 0.82rem; color: #334155;">
+              {{ act.notes or '-' }}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-state" style="padding: 30px;">
+                <div class="empty-state-title" style="font-size: 0.95rem;">No activity log recorded yet</div>
               </div>
             </td>
           </tr>

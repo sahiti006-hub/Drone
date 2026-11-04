@@ -11,458 +11,515 @@
 <style>
   .booking-cockpit-layout {
     display: grid;
-    grid-template-columns: 520px 1fr;
+    grid-template-columns: 1.15fr 0.85fr;
     gap: 24px;
-    height: calc(100vh - 120px);
-    margin-bottom: 24px;
+    align-items: start;
+    margin-bottom: 30px;
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1100px) {
     .booking-cockpit-layout {
       grid-template-columns: 1fr;
-      height: auto;
-    }
-    #bookingMap {
-      height: 440px !important;
     }
   }
 
   .booking-flow-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    padding: 22px;
-    overflow-y: auto;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    box-shadow: var(--shadow-sm);
+    gap: 20px;
   }
 
-  .booking-flow-card::-webkit-scrollbar {
-    width: 6px;
-  }
-  .booking-flow-card::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
+  .right-cockpit-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
   .map-card-panel {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    position: relative;
     box-shadow: var(--shadow-sm);
+    height: 380px;
+    position: relative;
   }
 
   #bookingMap {
     width: 100%;
     height: 100%;
-    min-height: 520px;
   }
 
-  .step-label {
+  .location-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  @media (max-width: 768px) {
+    .location-inputs-grid {
+      grid-template-columns: 1fr;
+    }
+    .swap-locations-btn {
+      align-self: center;
+      transform: rotate(90deg);
+    }
+  }
+
+  .location-chips-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.88rem;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .location-chip {
+    background: var(--color-soft-blush);
+    border: 1px solid var(--color-border);
+    color: var(--color-deep-wine);
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
     font-weight: 700;
-    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .location-chip:hover {
+    background: var(--color-blush);
+    border-color: var(--color-burgundy);
+  }
+
+  .suggestions-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .suggestion-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-soft-blush);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+  }
+
+  .suggestion-item:hover {
+    background: var(--color-light-pink);
+  }
+
+  .suggestion-title {
+    font-weight: 700;
+    color: var(--color-deep-wine);
+    font-size: 0.85rem;
+  }
+
+  .suggestion-sub {
+    font-size: 0.72rem;
+    color: var(--color-text-secondary);
+  }
+
+  .custom-item-panel {
+    display: none;
+    background: var(--color-light-pink);
+    border: 1.5px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-top: 10px;
+  }
+
+  .custom-item-panel.open {
+    display: block;
+  }
+
+  .weight-presets-row {
+    display: flex;
+    gap: 8px;
     margin-bottom: 6px;
   }
 
-  .step-label .step-badge {
-    background: #e0f2fe;
-    color: var(--color-primary);
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .weight-preset-btn {
+    flex: 1;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 6px;
     font-size: 0.75rem;
-    font-weight: 800;
+    font-weight: 700;
+    color: var(--color-deep-wine);
+    cursor: pointer;
+    transition: all 0.15s ease;
   }
 
-  .distance-preview-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    background: #f1f5f9;
-    border-radius: 9999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #475569;
-    margin-top: 6px;
+  .weight-preset-btn.active {
+    background: var(--color-deep-wine);
+    color: #FFFFFF;
+    border-color: var(--color-deep-wine);
   }
+
+  .drone-card {
+    background: #FFFFFF;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .drone-card:hover {
+    border-color: var(--color-rich-berry);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .drone-card.selected {
+    border: 2.5px solid var(--color-deep-wine);
+    background: var(--color-light-pink);
+    box-shadow: 0 4px 16px rgba(89, 13, 43, 0.18);
+  }
+
+  .badge-recommendation {
+    position: absolute;
+    top: -10px;
+    right: 14px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-fastest { background: #861B49; color: #FFFFFF; }
+  .badge-best-value { background: #16845B; color: #FFFFFF; }
+  .badge-high-capacity { background: #590D2B; color: #FFFFFF; }
+  .badge-recommended { background: #A52255; color: #FFFFFF; }
+
+  .status-pill {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.7rem;
+  }
+  .status-available { background: var(--color-success-bg); color: var(--color-success); }
+  .status-unavailable { background: var(--color-danger-bg); color: var(--color-danger); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="booking-cockpit-layout">
-  <!-- Left Column: Two-Way Booking Workflow -->
-  <div class="booking-flow-card">
-    <!-- Header -->
-    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-      <div>
-        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em;">Drone Dispatch Service</h2>
-        <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
-          Send an item or request a drone to collect and deliver an item to you.
-        </p>
+<!-- ============================================================================== -->
+<!-- PROMOTIONAL HERO BANNER (MATCHING REFERENCE SCREENSHOT)                        -->
+<!-- ============================================================================== -->
+<div class="promotional-hero-banner">
+  <!-- Left Text Block -->
+  <div class="hero-left-section">
+    <h2 class="hero-main-title">Deliver Anything. Anywhere.</h2>
+    <div class="hero-sub-title">With Utmost Trust and Safety.</div>
+    <p class="hero-desc">
+      From everyday essentials to important documents, electronics, medical supplies and emergency cargo &mdash; DroneDispatch ensures fast, reliable and safety-focused drone delivery.
+    </p>
+  </div>
+
+  <!-- Center Drone Graphic with glowing pink mountain sunset -->
+  <div class="hero-center-section">
+    <img src="{{ url_for('static', filename='images/hero_center_drone_feathered.png') }}" alt="Delivery Drone with Package" class="hero-center-drone-img">
+  </div>
+
+  <!-- Thin Vertical Divider -->
+  <div class="hero-vertical-divider"></div>
+
+  <!-- Right Feature Indicators (4 Evenly Spaced Indicators) -->
+  <div class="hero-right-section">
+    <div class="hero-feature-item">
+      <div class="hero-feature-icon-box">
+        <svg class="hero-feature-svg" viewBox="0 0 24 24" fill="none" stroke="#F8DCE5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
       </div>
-      <span class="badge badge-in_transit" style="font-size: 0.7rem;">SIMULATED FLEET</span>
+      <div class="hero-feature-label">Secure &amp;<br>Verified</div>
     </div>
 
-    <!-- Booking Input Workflow Container -->
+    <div class="hero-feature-item">
+      <div class="hero-feature-icon-box">
+        <svg class="hero-feature-svg" viewBox="0 0 24 24" fill="none" stroke="#F8DCE5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="18" r="2.5" fill="#F8DCE5"/>
+          <circle cx="18" cy="6" r="2.5" fill="#F8DCE5"/>
+          <path d="M6 15.5v-3a3 3 0 0 1 3-3h6a3 3 0 0 0 3-3V6"/>
+        </svg>
+      </div>
+      <div class="hero-feature-label">Optimized<br>Routes</div>
+    </div>
+
+    <div class="hero-feature-item">
+      <div class="hero-feature-icon-box">
+        <svg class="hero-feature-svg" viewBox="0 0 24 24" fill="none" stroke="#F8DCE5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v2M4.93 4.93l1.41 1.41M2 12h2M19.07 4.93l-1.41 1.41M16 6a4 4 0 0 0-4 4"/>
+          <path d="M18 19H8a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.42-1.53A4 4 0 0 1 18 19z" fill="#F8DCE5" fill-opacity="0.25"/>
+        </svg>
+      </div>
+      <div class="hero-feature-label">Weather<br>Aware</div>
+    </div>
+
+    <div class="hero-feature-item">
+      <div class="hero-feature-icon-box">
+        <svg class="hero-feature-svg" viewBox="0 0 24 24" fill="#F8DCE5" stroke="#F8DCE5" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
+      <div class="hero-feature-label">Real-time<br>Tracking</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================================== -->
+<!-- TWO-COLUMN BOOKING COCKPIT LAYOUT                                              -->
+<!-- ============================================================================== -->
+<div class="booking-cockpit-layout">
+
+  <!-- LEFT COLUMN: BOOKING FLOW & CONTROLS -->
+  <div class="booking-flow-card">
     <div id="bookingInputWorkflow">
 
-      <!-- ============================================================== -->
-      <!-- PART 1: TWO-WAY SELECTION CARDS (SEND SOMETHING vs RECEIVE)    -->
-      <!-- ============================================================== -->
-      <div style="margin-bottom: 8px;">
-        <label style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #475569; letter-spacing: 0.05em;">
-          WHAT WOULD YOU LIKE TO DO TODAY?
-        </label>
-        <input type="hidden" id="delivery_direction" value="{{ prefill.direction or 'SEND' }}">
+      <!-- SECTION 1: WHAT WOULD YOU LIKE TO DO TODAY? -->
+      <div class="section-number-title">
+        <span class="step-num-badge">1</span>
+        <span>What would you like to do today?</span>
+      </div>
+      <input type="hidden" id="delivery_direction" value="{{ prefill.direction or 'SEND' }}">
 
-        <div class="two-way-mode-grid">
-          <!-- CARD 1: SEND SOMETHING -->
-          <div class="two-way-card {% if not prefill.direction or prefill.direction == 'SEND' %}selected{% endif %}" id="cardModeSend" onclick="setDeliveryMode('SEND')">
-            <span class="two-way-icon">📤</span>
-            <div class="two-way-content">
-              <div class="two-way-title">SEND SOMETHING</div>
-              <div class="two-way-desc">I want to send an item from my location to another destination.</div>
-            </div>
+      <div class="two-way-mode-grid">
+        <!-- SEND SOMETHING CARD -->
+        <div class="two-way-card {% if not prefill.direction or prefill.direction == 'SEND' %}selected{% endif %}" id="cardModeSend" onclick="setDeliveryMode('SEND')">
+          <div class="two-way-icon-container">
+            <span>📦</span>
           </div>
+          <div class="two-way-content">
+            <div class="two-way-title">SEND SOMETHING</div>
+            <div class="two-way-desc">I want to send an item from my location to another destination.</div>
+          </div>
+        </div>
 
-          <!-- CARD 2: RECEIVE SOMETHING -->
-          <div class="two-way-card {% if prefill.direction == 'RECEIVE' %}selected{% endif %}" id="cardModeReceive" onclick="setDeliveryMode('RECEIVE')">
-            <span class="two-way-icon">📥</span>
-            <div class="two-way-content">
-              <div class="two-way-title">RECEIVE SOMETHING</div>
-              <div class="two-way-desc">I want a drone to collect an item from another location and deliver it to me.</div>
-            </div>
+        <!-- RECEIVE SOMETHING CARD -->
+        <div class="two-way-card {% if prefill.direction == 'RECEIVE' %}selected{% endif %}" id="cardModeReceive" onclick="setDeliveryMode('RECEIVE')">
+          <div class="two-way-icon-container">
+            <span>📥</span>
+          </div>
+          <div class="two-way-content">
+            <div class="two-way-title">RECEIVE SOMETHING</div>
+            <div class="two-way-desc">I want a drone to collect an item from another location and deliver it to me.</div>
           </div>
         </div>
       </div>
 
-      <!-- ============================================================== -->
-      <!-- PART 2 & 3: DYNAMIC LOCATION FORM                             -->
-      <!-- ============================================================== -->
-      <!-- STEP 1: Origin / Collection Location -->
-      <div class="form-group" style="margin-bottom: 16px;">
-        <label class="step-label" id="step1Label">
-          <span class="step-badge">1</span>
-          <span id="step1Title">Where should we pick up your package?</span>
-        </label>
-        <div style="font-size: 0.72rem; color: #0284c7; font-weight: 700; margin-bottom: 4px;" id="step1SubBadge">
-          📍 PICKUP LOCATION (YOUR ORIGIN)
+      <!-- SECTION 2: WHAT WOULD YOU LIKE TO SEND / RECEIVE? (9 CATEGORIES) -->
+      <div class="section-number-title">
+        <span class="step-num-badge">2</span>
+        <span id="step2Header">What would you like to send / receive?</span>
+      </div>
+      <input type="hidden" id="cargo_category" value="{{ prefill.cargo_category or 'MEDICAL_HEALTHCARE' }}">
+      <input type="hidden" id="package_size" value="{{ prefill.package_size or 'SMALL' }}">
+
+      <!-- 9 Selectable Universal Cargo Cards in 2 Rows -->
+      <div class="cargo-category-grid">
+        <div class="cargo-cat-card {% if not prefill.cargo_category or prefill.cargo_category in ['MEDICAL_HEALTHCARE', 'EMERGENCY_MEDICINE', 'BLOOD_SUPPLY', 'ANTIVENOM'] %}selected{% endif %}" data-category="MEDICAL_HEALTHCARE" onclick="selectCargoCard('MEDICAL_HEALTHCARE')">
+          <span class="cargo-cat-icon">🩺</span>
+          <span class="cargo-cat-name">Medical & Healthcare</span>
         </div>
 
-        <div class="location-input-container">
-          <div class="location-input-box">
-            <span class="input-icon" id="step1Icon">📍</span>
-            <input type="text" id="pickup_search" placeholder="Search hospital, clinic, or drop pin..." autocomplete="off">
-            <button type="button" class="btn-geo" id="btnPickupGeo" title="Use Current GPS Location">🎯</button>
-          </div>
-          <div class="suggestions-dropdown" id="pickupSuggestions"></div>
+        <div class="cargo-cat-card {% if prefill.cargo_category in ['FOOD_GROCERIES', 'FOOD_ESSENTIALS'] %}selected{% endif %}" data-category="FOOD_GROCERIES" onclick="selectCargoCard('FOOD_GROCERIES')">
+          <span class="cargo-cat-icon">🥗</span>
+          <span class="cargo-cat-name">Food & Essentials</span>
         </div>
 
-        <!-- Saved / Quick Pickup Chips -->
-        <div class="location-chips-row">
-          <span style="font-size: 0.72rem; color: #64748b; font-weight: 700; align-self: center;">Quick:</span>
-          {% if saved_locations %}
-            {% for sl in saved_locations %}
-            <button type="button" class="location-chip" onclick="setPickupLocation({{ sl.latitude }}, {{ sl.longitude }}, '{{ sl.label }}')">
-              🏥 {{ sl.label }}
-            </button>
-            {% endfor %}
-          {% else %}
-            <button type="button" class="location-chip" onclick="setPickupLocation(12.9634, 77.5756, 'Victoria Hospital')">
-              🏥 Victoria Hospital
-            </button>
-            <button type="button" class="location-chip" onclick="setPickupLocation(12.9815, 77.5840, 'Central Blood Bank')">
-              🩸 Central Blood Bank
-            </button>
-            <button type="button" class="location-chip" onclick="setPickupLocation(12.9716, 77.5946, 'Central Drone Depot')">
-              🚁 Drone Depot
-            </button>
-          {% endif %}
+        <div class="cargo-cat-card {% if prefill.cargo_category in ['DOCUMENTS_OFFICE', 'DOCUMENTS_PARCELS'] %}selected{% endif %}" data-category="DOCUMENTS_OFFICE" onclick="selectCargoCard('DOCUMENTS_OFFICE')">
+          <span class="cargo-cat-icon">📄</span>
+          <span class="cargo-cat-name">Documents & Parcels</span>
         </div>
 
-        <!-- Collapsible Advanced Coordinates -->
-        <button type="button" class="accordion-toggle" onclick="toggleAccordion('pickupCoordsAcc')">
-          ⚙️ Advanced Coordinates
-        </button>
-        <div class="accordion-body" id="pickupCoordsAcc">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 600; color: #64748b;">Latitude</label>
-              <input type="number" step="any" id="pickup_lat" class="form-input" style="padding: 4px 8px; font-size: 0.85rem;" value="{{ prefill.pickup_lat or '12.971600' }}">
-            </div>
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 600; color: #64748b;">Longitude</label>
-              <input type="number" step="any" id="pickup_lng" class="form-input" style="padding: 4px 8px; font-size: 0.85rem;" value="{{ prefill.pickup_lng or '77.594600' }}">
-            </div>
-          </div>
+        <div class="cargo-cat-card {% if prefill.cargo_category in ['ELECTRONICS_TECH', 'ELECTRONICS'] %}selected{% endif %}" data-category="ELECTRONICS_TECH" onclick="selectCargoCard('ELECTRONICS_TECH')">
+          <span class="cargo-cat-icon">💻</span>
+          <span class="cargo-cat-name">Electronics & Technology</span>
+        </div>
+
+        <div class="cargo-cat-card {% if prefill.cargo_category == 'INDUSTRIAL_SUPPLIES' %}selected{% endif %}" data-category="INDUSTRIAL_SUPPLIES" onclick="selectCargoCard('INDUSTRIAL_SUPPLIES')">
+          <span class="cargo-cat-icon">⚙️</span>
+          <span class="cargo-cat-name">Industrial Supplies</span>
+        </div>
+
+        <div class="cargo-cat-card {% if prefill.cargo_category in ['EMERGENCY_RELIEF', 'DEFIBRILLATOR', 'DISASTER_RELIEF'] %}selected{% endif %}" data-category="EMERGENCY_RELIEF" onclick="selectCargoCard('EMERGENCY_RELIEF')">
+          <span class="cargo-cat-icon">🚨</span>
+          <span class="cargo-cat-name">Emergency & Relief</span>
+        </div>
+
+        <div class="cargo-cat-card {% if prefill.cargo_category == 'PERSONAL_HOUSEHOLD' %}selected{% endif %}" data-category="PERSONAL_HOUSEHOLD" onclick="selectCargoCard('PERSONAL_HOUSEHOLD')">
+          <span class="cargo-cat-icon">🏠</span>
+          <span class="cargo-cat-name">Personal & Household</span>
+        </div>
+
+        <div class="cargo-cat-card {% if prefill.cargo_category == 'AGRICULTURE_RURAL' %}selected{% endif %}" data-category="AGRICULTURE_RURAL" onclick="selectCargoCard('AGRICULTURE_RURAL')">
+          <span class="cargo-cat-icon">🌱</span>
+          <span class="cargo-cat-name">Agriculture & Rural Supplies</span>
+        </div>
+
+        <div class="cargo-cat-card {% if prefill.cargo_category in ['CUSTOM_DELIVERY', 'CUSTOM_ITEM'] %}selected{% endif %}" data-category="CUSTOM_DELIVERY" onclick="selectCargoCard('CUSTOM_DELIVERY')">
+          <span class="cargo-cat-icon">🎁</span>
+          <span class="cargo-cat-name">Custom Delivery<br><span class="cargo-cat-subtext">(Any other item)</span></span>
         </div>
       </div>
 
-      <!-- STEP 2: Destination / Delivery Location -->
-      <div class="form-group" style="margin-bottom: 16px;">
-        <label class="step-label" id="step2Label">
-          <span class="step-badge">2</span>
-          <span id="step2Title">Where should we deliver it?</span>
-        </label>
-        <div style="font-size: 0.72rem; color: #16a34a; font-weight: 700; margin-bottom: 4px;" id="step2SubBadge">
-          🏁 DELIVER TO (DESTINATION)
+      <!-- Expandable Custom Item Panel -->
+      <div id="customItemPanel" class="custom-item-panel {% if prefill.cargo_category in ['CUSTOM_DELIVERY', 'CUSTOM_ITEM'] %}open{% endif %}">
+        <div style="font-weight: 800; font-size: 0.88rem; color: var(--color-deep-wine); margin-bottom: 8px;">
+          📦 Custom Item Specifications & Dimensions
         </div>
-
-        <div class="location-input-container">
-          <div class="location-input-box">
-            <span class="input-icon" id="step2Icon">🏁</span>
-            <input type="text" id="dest_search" placeholder="Search destination hospital or address..." autocomplete="off">
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px;">
+          <div>
+            <label class="form-label" style="font-size: 0.75rem;">Item Name / Identifier</label>
+            <input type="text" id="custom_item_name" class="form-input" placeholder="e.g. Diagnostic kit, Lens" value="{{ prefill.custom_item_name or '' }}">
           </div>
-          <div class="suggestions-dropdown" id="destSuggestions"></div>
-        </div>
-
-        <!-- Saved / Quick Destination Chips -->
-        <div class="location-chips-row">
-          <span style="font-size: 0.72rem; color: #64748b; font-weight: 700; align-self: center;">Quick:</span>
-          {% if saved_locations %}
-            {% for sl in saved_locations %}
-            <button type="button" class="location-chip" onclick="setDestLocation({{ sl.latitude }}, {{ sl.longitude }}, '{{ sl.label }}')">
-              🏥 {{ sl.label }}
-            </button>
-            {% endfor %}
-          {% else %}
-            <button type="button" class="location-chip" onclick="setDestLocation(12.9833, 77.6044, 'Bowring & Lady Curzon Hospital')">
-              🏥 Bowring Hospital
-            </button>
-            <button type="button" class="location-chip" onclick="setDestLocation(12.9392, 77.5975, 'NIMHANS Neurological')">
-              🧠 NIMHANS Center
-            </button>
-            <button type="button" class="location-chip" onclick="setDestLocation(12.9304, 77.6186, 'St. John\'s Hospital')">
-              🏥 St. John's Hospital
-            </button>
-          {% endif %}
-        </div>
-
-        <!-- Distance Preview Indicator -->
-        <div id="distancePreviewChip" class="distance-preview-chip">
-          📏 Flight Distance: <strong id="previewDistText">-- km</strong> &bull; Approx. Flight Time: <strong id="previewTimeText">-- min</strong>
-        </div>
-
-        <!-- Collapsible Advanced Coordinates -->
-        <button type="button" class="accordion-toggle" onclick="toggleAccordion('destCoordsAcc')">
-          ⚙️ Advanced Coordinates
-        </button>
-        <div class="accordion-body" id="destCoordsAcc">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 600; color: #64748b;">Latitude</label>
-              <input type="number" step="any" id="dest_lat" class="form-input" style="padding: 4px 8px; font-size: 0.85rem;" value="{{ prefill.dest_lat or '12.985000' }}">
-            </div>
-            <div>
-              <label style="font-size: 0.72rem; font-weight: 600; color: #64748b;">Longitude</label>
-              <input type="number" step="any" id="dest_lng" class="form-input" style="padding: 4px 8px; font-size: 0.85rem;" value="{{ prefill.dest_lng or '77.605000' }}">
-            </div>
+          <div>
+            <label class="form-label" style="font-size: 0.75rem;">Dimensions (LxWxH cm)</label>
+            <input type="text" id="package_dimensions" class="form-input" placeholder="e.g. 25x15x10 cm" value="{{ prefill.package_dimensions or '' }}">
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.75rem;">Package Count</label>
+            <input type="number" id="package_count" min="1" max="10" class="form-input" value="{{ prefill.package_count or 1 }}">
           </div>
         </div>
-      </div>
-
-      <!-- ============================================================== -->
-      <!-- PART 4: 7 CARGO CATEGORIES & CUSTOM ITEM FORM                  -->
-      <!-- ============================================================== -->
-      <div class="form-group" style="margin-bottom: 16px;">
-        <label class="step-label">
-          <span class="step-badge">3</span>
-          <span id="step3Title">What are we sending?</span>
-        </label>
-
-        <!-- Hidden inputs for cargo category, custom name, package size -->
-        <input type="hidden" id="cargo_category" value="{{ prefill.cargo_category or 'EMERGENCY_MEDICINE' }}">
-        <input type="hidden" id="package_size" value="{{ prefill.package_size or 'SMALL' }}">
-
-        <!-- 7 Selectable Cargo Cards -->
-        <div class="cargo-grid">
-          <div class="cargo-card {% if not prefill.cargo_category or prefill.cargo_category in ['EMERGENCY_MEDICINE', 'BLOOD_SUPPLY', 'ANTIVENOM'] %}selected{% endif %}" data-category="EMERGENCY_MEDICINE" onclick="selectCargoCard('EMERGENCY_MEDICINE')">
-            <span class="cargo-icon">🩺</span>
-            <span class="cargo-name">Medical Supplies</span>
-            <span class="cargo-desc">Medicine, Blood, Vials</span>
-          </div>
-
-          <div class="cargo-card {% if prefill.cargo_category == 'FOOD_ESSENTIALS' %}selected{% endif %}" data-category="FOOD_ESSENTIALS" onclick="selectCargoCard('FOOD_ESSENTIALS')">
-            <span class="cargo-icon">🍎</span>
-            <span class="cargo-name">Food & Essentials</span>
-            <span class="cargo-desc">Rations, Nutrition, Water</span>
-          </div>
-
-          <div class="cargo-card {% if prefill.cargo_category == 'DOCUMENTS_PARCELS' %}selected{% endif %}" data-category="DOCUMENTS_PARCELS" onclick="selectCargoCard('DOCUMENTS_PARCELS')">
-            <span class="cargo-icon">📄</span>
-            <span class="cargo-name">Documents</span>
-            <span class="cargo-desc">Medical records, Parcels</span>
-          </div>
-
-          <div class="cargo-card {% if prefill.cargo_category == 'ELECTRONICS' %}selected{% endif %}" data-category="ELECTRONICS" onclick="selectCargoCard('ELECTRONICS')">
-            <span class="cargo-icon">💻</span>
-            <span class="cargo-name">Electronics</span>
-            <span class="cargo-desc">Batteries, Chargers, Parts</span>
-          </div>
-
-          <div class="cargo-card {% if prefill.cargo_category == 'DEFIBRILLATOR' %}selected{% endif %}" data-category="DEFIBRILLATOR" onclick="selectCargoCard('DEFIBRILLATOR')">
-            <span class="cargo-icon">⚡</span>
-            <span class="cargo-name">Emergency Gear</span>
-            <span class="cargo-desc">AED, Cardiac kit, Siren</span>
-          </div>
-
-          <div class="cargo-card {% if prefill.cargo_category == 'DISASTER_RELIEF' %}selected{% endif %}" data-category="DISASTER_RELIEF" onclick="selectCargoCard('DISASTER_RELIEF')">
-            <span class="cargo-icon">🦺</span>
-            <span class="cargo-name">Rescue & Relief</span>
-            <span class="cargo-desc">First aid, Trauma pack</span>
-          </div>
-
-          <div class="cargo-card {% if prefill.cargo_category == 'CUSTOM_ITEM' %}selected{% endif %}" data-category="CUSTOM_ITEM" onclick="selectCargoCard('CUSTOM_ITEM')">
-            <span class="cargo-icon">📦</span>
-            <span class="cargo-name">Custom Item</span>
-            <span class="cargo-desc">Specify details</span>
-          </div>
-        </div>
-
-        <!-- Custom Item Expanded Form Panel -->
-        <div id="customItemPanel" class="custom-item-panel {% if prefill.cargo_category == 'CUSTOM_ITEM' %}open{% endif %}">
-          <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a; margin-bottom: 8px;">
-            📦 Custom Package Specification
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <input type="text" id="custom_item_name" class="form-input" placeholder="Item Name (e.g. Laptop Power Adapter, Orthopedic Splint)" value="{{ prefill.custom_item_name or '' }}" style="font-size: 0.85rem;">
-            <textarea id="custom_item_description" class="form-input" rows="2" placeholder="Optional Description (e.g. Black Lenovo 65W original charger)" style="font-size: 0.82rem;"></textarea>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #475569;">Package Size:</span>
-              <button type="button" class="btn btn-sm btn-outline pkg-size-btn active" data-size="SMALL" onclick="setPackageSize('SMALL')">Small (&lt; 20cm)</button>
-              <button type="button" class="btn btn-sm btn-outline pkg-size-btn" data-size="MEDIUM" onclick="setPackageSize('MEDIUM')">Medium (&lt; 40cm)</button>
-              <button type="button" class="btn btn-sm btn-outline pkg-size-btn" data-size="LARGE" onclick="setPackageSize('LARGE')">Large (&lt; 60cm)</button>
-            </div>
-
-            <div style="margin-top: 4px;">
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #334155; cursor: pointer;">
-                <input type="checkbox" id="contentDeclarationCheck" checked>
-                <span><strong>Content Declaration:</strong> I declare this package does not contain prohibited, hazardous, flammable, or illicit materials.</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Weight Selection & Presets -->
-        <div style="margin-top: 14px;">
-          <label style="font-size: 0.8rem; font-weight: 700; color: #475569;">PAYLOAD WEIGHT (KG)</label>
-          <div class="weight-presets-row">
-            <button type="button" class="weight-preset-btn" onclick="setWeightPreset(0.5)">0.5 kg</button>
-            <button type="button" class="weight-preset-btn active" onclick="setWeightPreset(1.0)">1.0 kg</button>
-            <button type="button" class="weight-preset-btn" onclick="setWeightPreset(2.0)">2.0 kg</button>
-            <button type="button" class="weight-preset-btn" onclick="setWeightPreset(2.5)">2.5 kg</button>
-          </div>
-          <input type="number" step="0.1" min="0.1" max="15.0" id="cargo_weight_kg" class="form-input" value="{{ prefill.cargo_weight_kg or '1.0' }}" style="padding: 8px 12px; font-weight: 700;">
-        </div>
-
-        <!-- Special Handling Instructions -->
-        <div style="margin-top: 8px;">
-          <input type="text" id="handling_notes" class="form-input" placeholder="Optional: Special handling instructions (e.g. Keep upright, Fragile)..." style="font-size: 0.82rem; padding: 6px 10px;">
-        </div>
-      </div>
-
-      <!-- ============================================================== -->
-      <!-- PART 5: COLLECTION CONFIRMATION FOR RECEIVE MODE                -->
-      <!-- ============================================================== -->
-      <div id="receiveCollectionSection" style="display: none; background: #fffdf5; border: 1.5px solid #fde68a; border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
-        <div style="font-weight: 800; font-size: 0.88rem; color: #92400e; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-          <span>📥</span> ITEM AVAILABILITY & COLLECTION READINESS
-        </div>
-        <p style="font-size: 0.78rem; color: #78350f; margin-bottom: 10px;">
-          To ensure the drone is not held waiting at the collection pad, please verify availability with the sender or pharmacy.
-        </p>
-
-        <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase;">Is the item ready for collection?</label>
-        <input type="hidden" id="collection_readiness" value="READY">
-        <div class="readiness-grid">
-          <div class="readiness-card selected" data-readiness="READY" onclick="setReadiness('READY')">
-            ✅ Ready Now
-          </div>
-          <div class="readiness-card" data-readiness="READY_SHORTLY" onclick="setReadiness('READY_SHORTLY')">
-            ⏱️ Ready in ~10m
-          </div>
-          <div class="readiness-card" data-readiness="CONFIRM_WITH_SENDER" onclick="setReadiness('CONFIRM_WITH_SENDER')">
-            📞 Need Confirmation
-          </div>
-        </div>
-
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
           <div>
-            <label style="font-size: 0.72rem; font-weight: 700; color: #64748b;">COLLECTION CONTACT PERSON / ORG</label>
-            <input type="text" id="collection_contact_name" class="form-input" placeholder="e.g. Dr. Raman, Apollo Triage Desk" style="font-size: 0.82rem; padding: 6px 8px;">
+            <label class="form-label" style="font-size: 0.75rem;">Pickup Contact Person & Phone</label>
+            <input type="text" id="pickup_contact_name" class="form-input" placeholder="Contact name & phone" value="{{ prefill.pickup_contact_name or '' }}">
           </div>
           <div>
-            <label style="font-size: 0.72rem; font-weight: 700; color: #64748b;">CONTACT PHONE (OPTIONAL)</label>
-            <input type="text" id="collection_contact_phone" class="form-input" placeholder="e.g. +91 98765 43210" style="font-size: 0.82rem; padding: 6px 8px;">
+            <label class="form-label" style="font-size: 0.75rem;">Delivery Contact Person & Phone</label>
+            <input type="text" id="delivery_contact_name" class="form-input" placeholder="Recipient name & phone" value="{{ prefill.delivery_contact_name or '' }}">
           </div>
         </div>
-
         <div style="margin-top: 8px;">
-          <input type="text" id="collection_instructions" class="form-input" placeholder="Optional collection instructions (e.g. Counter 2, Gate C, Helipad 1)..." style="font-size: 0.82rem; padding: 6px 8px;">
+          <label class="form-label" style="font-size: 0.75rem;">Special Handling Instructions</label>
+          <input type="text" id="handling_instructions" class="form-input" placeholder="e.g. Fragile, temperature sensitive, keep upright" value="{{ prefill.handling_instructions or '' }}">
         </div>
       </div>
 
-      <!-- ============================================================== -->
-      <!-- STEP 4: Delivery Urgency Priority                              -->
-      <!-- ============================================================== -->
-      <div class="form-group" style="margin-bottom: 18px;">
-        <label class="step-label">
-          <span class="step-badge">4</span> Delivery Urgency
-        </label>
+      <!-- SECTION 3: DELIVERY DETAILS -->
+      <div class="section-number-title" style="margin-top: 6px;">
+        <span class="step-num-badge">3</span>
+        <span>Delivery Details</span>
+      </div>
 
-        <input type="hidden" id="priority" value="{{ prefill.priority or 'HIGH' }}">
+      <!-- Pickup & Deliver To in unified side-by-side row with swap button -->
+      <div class="location-inputs-grid">
+        <!-- Pickup Location -->
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" id="pickupFieldLabel">Pickup Location <span style="display:none;">Where should we pick up your package?</span></label>
+          <div class="input-with-icon" style="position: relative;">
+            <span class="input-icon">📍</span>
+            <input type="text" id="pickup_search" class="form-input" placeholder="Search hospital, pharmacy, lab or any location..." autocomplete="off">
+            <div class="suggestions-dropdown" id="pickupSuggestions"></div>
+          </div>
+          <div class="location-chips-row">
+            <button type="button" class="location-chip" onclick="setPickupLocation(12.9634, 77.5756, 'Victoria Hospital')">Victoria Hospital</button>
+            <button type="button" class="location-chip" onclick="setPickupLocation(12.9815, 77.5840, 'Central Blood Bank')">Blood Bank</button>
+            <button type="button" class="location-chip" onclick="setPickupLocation(12.9716, 77.5946, 'Central Drone Depot')">Depot</button>
+          </div>
+        </div>
 
-        <!-- 4 Visual Urgency Cards -->
-        <div class="urgency-grid">
-          <div class="urgency-card {% if prefill.priority == 'CRITICAL' %}selected{% endif %}" data-priority="CRITICAL" onclick="selectPriority('CRITICAL')">
-            <span class="urgency-dot" style="background: var(--color-danger);"></span>
-            <div class="urgency-title" style="color: var(--color-danger);">CRITICAL</div>
-            <div class="urgency-eta">Immediate &bull; &lt; 5m</div>
+        <!-- Swap Direction Button -->
+        <button type="button" class="swap-locations-btn" onclick="swapPickupAndDest()" title="Swap Pickup & Destination">
+          ⇄
+        </button>
+
+        <!-- Deliver To -->
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" id="destFieldLabel">Deliver To <span style="display:none;">Where should we deliver it?</span></label>
+          <div class="input-with-icon" style="position: relative;">
+            <span class="input-icon">🏁</span>
+            <input type="text" id="dest_search" class="form-input" placeholder="Search destination location..." autocomplete="off">
+            <div class="suggestions-dropdown" id="destSuggestions"></div>
           </div>
-          <div class="urgency-card {% if not prefill.priority or prefill.priority == 'HIGH' %}selected{% endif %}" data-priority="HIGH" onclick="selectPriority('HIGH')">
-            <span class="urgency-dot" style="background: #ea580c;"></span>
-            <div class="urgency-title" style="color: #ea580c;">HIGH</div>
-            <div class="urgency-eta">Fast Track &bull; ~10m</div>
-          </div>
-          <div class="urgency-card {% if prefill.priority == 'MEDIUM' %}selected{% endif %}" data-priority="MEDIUM" onclick="selectPriority('MEDIUM')">
-            <span class="urgency-dot" style="background: #d97706;"></span>
-            <div class="urgency-title" style="color: #d97706;">MEDIUM</div>
-            <div class="urgency-eta">Standard &bull; ~20m</div>
-          </div>
-          <div class="urgency-card {% if prefill.priority == 'LOW' %}selected{% endif %}" data-priority="LOW" onclick="selectPriority('LOW')">
-            <span class="urgency-dot" style="background: var(--color-success);"></span>
-            <div class="urgency-title" style="color: var(--color-success);">NORMAL</div>
-            <div class="urgency-eta">Economy &bull; ~35m</div>
+          <div class="location-chips-row">
+            <button type="button" class="location-chip" onclick="setDestLocation(12.9833, 77.6044, 'Bowring Hospital')">Bowring Hospital</button>
+            <button type="button" class="location-chip" onclick="setDestLocation(12.9392, 77.5975, 'NIMHANS Center')">NIMHANS</button>
+            <button type="button" class="location-chip" onclick="setDestLocation(12.9304, 77.6186, 'St. Johns Hospital')">St. John's</button>
           </div>
         </div>
       </div>
 
-      <!-- STEP 5: Big Prominent Action Button -->
-      <button type="button" id="btnFindDrones" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.03em; border-radius: var(--radius-md); box-shadow: 0 4px 14px rgba(20, 121, 209, 0.4);" onclick="searchDrones()">
-        FIND AVAILABLE DRONES &rarr;
-      </button>
+      <!-- Hidden Lat/Lng Inputs -->
+      <input type="hidden" id="pickup_lat" value="{{ prefill.pickup_lat or '12.971600' }}">
+      <input type="hidden" id="pickup_lng" value="{{ prefill.pickup_lng or '77.594600' }}">
+      <input type="hidden" id="dest_lat" value="{{ prefill.dest_lat or '12.985000' }}">
+      <input type="hidden" id="dest_lng" value="{{ prefill.dest_lng or '77.605000' }}">
+
+      <!-- Item Description, Weight & Priority Row -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin-top: 16px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Item / Service Description <span style="display:none;">What are we sending?</span></label>
+          <input type="text" id="item_description" class="form-input" placeholder="e.g., Laptop charger, Medicine, Food package ...">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Weight (kg)</label>
+          <select id="cargo_weight_kg" class="form-select">
+            <option value="0.5">0.5 kg</option>
+            <option value="1.0" selected>1.0 kg</option>
+            <option value="2.0">2.0 kg</option>
+            <option value="3.0">3.0 kg</option>
+            <option value="4.5">4.5 kg</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Priority <span style="display:none;">Delivery Urgency</span></label>
+          <select id="priority" class="form-select">
+            <option value="CRITICAL">🔥 Critical</option>
+            <option value="HIGH" selected>⚡ High</option>
+            <option value="MEDIUM">Standard</option>
+            <option value="LOW">Economy</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Main Action Button: Berry Wine Gradient -->
+      <div style="margin-top: 20px;">
+        <button type="button" id="btnFindDrones" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1.05rem; font-weight: 800; border-radius: var(--radius-md); letter-spacing: 0.02em;" onclick="searchDrones()">
+          <span>🚁 Check Drone Availability & Get Quote</span>
+          <span style="display:none;">FIND AVAILABLE DRONES</span>
+          <span>&rarr;</span>
+        </button>
+      </div>
+
     </div>
 
     <!-- Search Loading State -->
-    <div id="searchLoading" style="display: none; text-align: center; padding: 24px; color: var(--color-primary);">
+    <div id="searchLoading" style="display: none; text-align: center; padding: 24px; color: var(--color-deep-wine);">
       <div style="font-weight: 800; font-size: 1.05rem;">🛰️ Searching Fleet & Corridors...</div>
-      <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Evaluating battery reserves, ferry distances, payload limits, and atmospheric conditions.</div>
+      <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 4px;">Evaluating battery reserves, ferry distances, payload limits, and atmospheric conditions.</div>
     </div>
 
     <!-- Weather Intelligence Status Banner -->
-    <div id="weatherBanner" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); margin-top: 10px;">
+    <div id="weatherBanner" style="display: none; padding: 14px 18px; border-radius: var(--radius-md); margin-top: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span id="weatherStatusTitle" style="font-weight: 800; font-size: 0.88rem;"></span>
         <span id="weatherMetrics" style="font-size: 0.75rem; font-weight: 600;"></span>
@@ -472,9 +529,9 @@
 
     <!-- Drone Selection List (Uber/Rapido Cards) -->
     <div id="resultsSection" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 12px;">
-        <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Available Drone Fleet</h3>
-        <button type="button" onclick="editBookingDetails()" style="background: none; border: none; color: var(--color-primary); font-size: 0.8rem; font-weight: 700; cursor: pointer;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 12px;">
+        <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--color-deep-wine); text-transform: uppercase;">Available Drone Fleet</h3>
+        <button type="button" onclick="editBookingDetails()" style="background: none; border: none; color: var(--color-rich-berry); font-size: 0.8rem; font-weight: 700; cursor: pointer;">
           ✏️ Edit Details
         </button>
       </div>
@@ -482,75 +539,113 @@
       <div id="droneCardsContainer"></div>
 
       <!-- Transparent Itemized Price Breakdown Card -->
-      <div id="bookingSummaryCard" class="price-breakdown-card" style="display: none; background: #ffffff; border: 2px solid var(--color-primary); border-radius: var(--radius-lg); padding: 18px; margin-top: 16px;">
-        <!-- PART 9: Prominent Summary Heading by Delivery Mode -->
-        <div style="background: #f8fbff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 12px;">
+      <div id="bookingSummaryCard" class="price-breakdown-card" style="display: none; background: #FFFFFF; border: 2px solid var(--color-deep-wine); border-radius: var(--radius-lg); padding: 20px; margin-top: 16px; box-shadow: var(--shadow-wine);">
+        <div style="background: var(--color-soft-blush); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span id="summaryDirectionBadge" class="badge badge-direction-send" style="font-size: 0.72rem; font-weight: 800;">📤 SEND SOMETHING</span>
-            <!-- Quote Expiration Timer Countdown -->
-            <div class="quote-timer-pill" id="quoteCountdownPill">
-              ⏱️ <span id="quoteCountdownText">Price locked: 15:00</span>
-            </div>
+            <span id="summaryDirectionBadge" class="badge badge-direction-send">📤 SEND SOMETHING</span>
+            <div id="quoteCountdownText" style="font-size: 0.78rem; font-weight: 800; color: var(--color-deep-wine);">⏱️ Price locked: 15:00</div>
           </div>
-          <div id="summaryModeHeading" style="font-weight: 800; font-size: 0.95rem; color: #0f2b48; margin-top: 6px;">
+          <div id="summaryModeHeading" style="font-weight: 800; font-size: 0.95rem; color: var(--color-deep-wine); margin-top: 6px;">
             YOUR ITEM WILL BE PICKED UP AND DELIVERED TO YOUR DESTINATION.
           </div>
-          <div id="summaryLocationsLine" style="font-size: 0.78rem; color: #475569; margin-top: 2px;">
-            <!-- Populated dynamically: Collection -> Delivery -->
-          </div>
+          <div id="summaryLocationsLine" style="font-size: 0.78rem; color: var(--color-text-secondary); margin-top: 3px;"></div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <div>
-            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Selected Drone</div>
-            <strong id="summaryDroneTitle" style="font-size: 1.05rem; color: #0f172a;">DJI Matrice 350 RTK</strong>
+            <div style="font-size: 0.72rem; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase;">Selected Drone</div>
+            <strong id="summaryDroneTitle" style="font-size: 1.05rem; color: var(--color-deep-wine);">DJI Matrice 350 RTK</strong>
           </div>
           <div style="text-align: right;">
-            <div style="font-size: 0.72rem; color: #64748b;">Package Cargo</div>
-            <strong id="summaryItemDetails" style="font-size: 0.85rem; color: #0f172a;">Medical Supplies (1.0 kg)</strong>
+            <div style="font-size: 0.72rem; color: var(--color-text-secondary);">Package Cargo</div>
+            <strong id="summaryItemDetails" style="font-size: 0.85rem; color: var(--color-text-main);">Medical Supplies (1.0 kg)</strong>
           </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-          <div class="price-row"><span>Base Fare:</span><span id="sumBaseFare">₹100.00</span></div>
-          <div class="price-row"><span>Distance Charge (<span id="sumDistKm">0</span> km):</span><span id="sumDistCharge">₹0.00</span></div>
-          <div class="price-row"><span>Weight Surcharge (<span id="sumWeightKg">0</span> kg):</span><span id="sumWeightCharge">₹0.00</span></div>
-          <div class="price-row"><span>Priority Charge (<span id="sumPriority">HIGH</span>):</span><span id="sumPriorityCharge">₹0.00</span></div>
-          <div class="price-row"><span>Service & Platform Fee:</span><span id="sumServiceFee">₹30.00</span></div>
-          <div class="price-row"><span>Tax (GST 5%):</span><span id="sumTaxAmount">₹0.00</span></div>
-          <div class="price-row total" style="display: flex; justify-content: space-between; border-top: 2px dashed #cbd5e1; margin-top: 8px; padding-top: 8px; font-size: 1.2rem; font-weight: 800; color: #0f172a;">
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; border-top: 1px solid var(--color-soft-blush); padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between;"><span>Base Fare:</span><span id="sumBaseFare">₹100.00</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>Distance Charge (<span id="sumDistKm">0</span> km):</span><span id="sumDistCharge">₹0.00</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>Weight Surcharge (<span id="sumWeightKg">0</span> kg):</span><span id="sumWeightCharge">₹0.00</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>Priority Charge (<span id="sumPriority">HIGH</span>):</span><span id="sumPriorityCharge">₹0.00</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>Platform Fee:</span><span id="sumServiceFee">₹30.00</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>Tax (GST 5%):</span><span id="sumTaxAmount">₹0.00</span></div>
+          <div style="display: flex; justify-content: space-between; border-top: 2px dashed var(--color-border); margin-top: 8px; padding-top: 8px; font-size: 1.25rem; font-weight: 800; color: var(--color-deep-wine);">
             <span>Total Fare:</span>
-            <span id="sumTotalPrice" style="color: var(--color-primary);">₹0.00</span>
+            <span id="sumTotalPrice" style="color: var(--color-deep-wine);">₹0.00</span>
           </div>
-        </div>
-
-        <!-- Weather Advisory Checkbox for Yellow conditions -->
-        <div id="summaryWeatherAck" style="display: none; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px; padding: 12px; margin-top: 14px; font-size: 0.82rem; color: #92400e;">
-          <strong>⚠️ Weather Advisory Notice:</strong>
-          <p id="summaryWeatherAckDesc" style="margin: 4px 0 8px 0;">Moderate atmospheric conditions detected along corridor.</p>
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700;">
-            <input type="checkbox" id="weatherAckCheck">
-            <span>I acknowledge weather conditions and approve potential flight ETA adjustment.</span>
-          </label>
-        </div>
-
-        <!-- Red Weather Alert Blocking Booking -->
-        <div id="summaryWeatherBlocked" style="display: none; background: #fef2f2; border: 2px solid #dc2626; border-radius: 8px; padding: 12px; margin-top: 14px; font-size: 0.82rem; color: #991b1b; font-weight: 700;">
-          ⛔ SEVERE WEATHER: Flights temporarily suspended along this sector for safety. Booking is disabled until atmospheric conditions normalize.
         </div>
 
         <!-- Confirm Booking Button -->
-        <button type="button" id="btnConfirmReservation" class="btn btn-primary" style="width: 100%; margin-top: 16px; padding: 14px; font-size: 1rem; font-weight: 800; letter-spacing: 0.03em;" onclick="confirmSelectedBooking()">
+        <button type="button" id="btnConfirmReservation" class="btn btn-primary" style="width: 100%; margin-top: 18px; padding: 14px; font-size: 1rem; font-weight: 800;" onclick="confirmSelectedBooking()">
           CONFIRM BOOKING &rarr;
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Right Column: Interactive Leaflet Geospatial View -->
-  <div class="map-card-panel">
-    <div id="bookingMap"></div>
+  <!-- RIGHT COLUMN: LEAFLET MAP + ESTIMATE PILLS + TRUST PANEL -->
+  <div class="right-cockpit-panel">
+    <!-- Map Container -->
+    <div class="map-card-panel">
+      <div id="bookingMap"></div>
+    </div>
+
+    <!-- Estimate Panel (3 Inline Cards) -->
+    <div class="estimate-panel-row">
+      <div class="estimate-stat-pill">
+        <span class="estimate-stat-icon">📏</span>
+        <div class="estimate-stat-meta">
+          <span class="estimate-stat-label">Est. Distance</span>
+          <span class="estimate-stat-val" id="previewDistText">9.80 km</span>
+        </div>
+      </div>
+      <div class="estimate-stat-pill">
+        <span class="estimate-stat-icon">⏱️</span>
+        <div class="estimate-stat-meta">
+          <span class="estimate-stat-label">Est. Time</span>
+          <span class="estimate-stat-val" id="previewTimeText">~ 10 min</span>
+        </div>
+      </div>
+      <div class="estimate-stat-pill">
+        <span class="estimate-stat-icon">💰</span>
+        <div class="estimate-stat-meta">
+          <span class="estimate-stat-label">Est. Price</span>
+          <span class="estimate-stat-val" id="previewPriceText">₹ 485.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust & Safety Panel ("Your Delivery. Our Responsibility.") -->
+    <div class="trust-safety-panel">
+      <div class="trust-safety-header">
+        <span style="font-size: 1.2rem; color: var(--color-burgundy);">🛡️</span>
+        <span>Your Delivery. Our Responsibility.</span>
+      </div>
+      <ul class="trust-safety-list">
+        <li class="trust-safety-item">
+          <span class="trust-safety-check">✓</span>
+          <span>Verified and secure delivery requests</span>
+        </li>
+        <li class="trust-safety-item">
+          <span class="trust-safety-check">✓</span>
+          <span>Payload and battery feasibility checks</span>
+        </li>
+        <li class="trust-safety-item">
+          <span class="trust-safety-check">✓</span>
+          <span>Route optimization and operational monitoring</span>
+        </li>
+        <li class="trust-safety-item">
+          <span class="trust-safety-check">✓</span>
+          <span>Weather-aware dispatch decisions</span>
+        </li>
+        <li class="trust-safety-item">
+          <span class="trust-safety-check">✓</span>
+          <span>Live delivery tracking and confirmation</span>
+        </li>
+      </ul>
+    </div>
   </div>
+
 </div>
 
 <script>
@@ -560,7 +655,6 @@
   let quoteTimerInterval = null;
   let quoteExpirationTimestamp = null;
 
-  // Initialize Map & Two-Way Mode
   document.addEventListener("DOMContentLoaded", function() {
     map = L.map("bookingMap").setView([12.9716, 77.5946], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -570,31 +664,26 @@
 
     setTimeout(() => { map.invalidateSize(); }, 200);
 
-    // Initial Two-Way Delivery Setup
     const initialDir = "{{ prefill.direction or 'SEND' }}";
     setDeliveryMode(initialDir);
 
-    // Place initial markers
     updateMapMarkers();
     loadDiversionHelipads();
     updateDistanceEstimate();
 
-    // Setup Autocomplete Handlers
     setupAutocomplete("pickup_search", "pickupSuggestions", setPickupLocation);
     setupAutocomplete("dest_search", "destSuggestions", setDestLocation);
 
-    // Geolocation button
-    document.getElementById("btnPickupGeo").addEventListener("click", useCurrentLocation);
-
-    // Coordinate inputs change listener
     ["pickup_lat", "pickup_lng", "dest_lat", "dest_lng"].forEach(id => {
-      document.getElementById(id).addEventListener("input", () => {
-        updateMapMarkers();
-        updateDistanceEstimate();
-      });
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("input", () => {
+          updateMapMarkers();
+          updateDistanceEstimate();
+        });
+      }
     });
 
-    // Map click handler to set points alternatively
     map.on("click", function(e) {
       if (!pickupMarker || (pickupMarker && destMarker)) {
         setPickupLocation(e.latlng.lat, e.latlng.lng, `Pinned (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`);
@@ -603,7 +692,6 @@
       }
     });
 
-    // Prefill names
     {% if prefill.pickup_name %}
       document.getElementById("pickup_search").value = "{{ prefill.pickup_name }}";
     {% endif %}
@@ -612,110 +700,66 @@
     {% endif %}
   });
 
-  // ==============================================================================
-  // PART 1 & 2: MODE SWITCHER (SEND vs RECEIVE)
-  // ==============================================================================
   function setDeliveryMode(mode) {
     document.getElementById("delivery_direction").value = mode;
     const cardSend = document.getElementById("cardModeSend");
     const cardReceive = document.getElementById("cardModeReceive");
-    const step1Title = document.getElementById("step1Title");
-    const step1SubBadge = document.getElementById("step1SubBadge");
-    const step1Search = document.getElementById("pickup_search");
-    const step2Title = document.getElementById("step2Title");
-    const step2SubBadge = document.getElementById("step2SubBadge");
-    const step2Search = document.getElementById("dest_search");
-    const receiveSection = document.getElementById("receiveCollectionSection");
-    const step3Title = document.getElementById("step3Title");
+    const pickupLabel = document.getElementById("pickupFieldLabel");
+    const destLabel = document.getElementById("destFieldLabel");
 
     if (mode === "RECEIVE") {
       cardReceive.classList.add("selected");
       cardSend.classList.remove("selected");
-
-      step1Title.innerText = "Where should we collect your item from?";
-      step1SubBadge.innerText = "🏪 ITEM COLLECTION LOCATION (PHARMACY / SENDER)";
-      step1SubBadge.style.color = "#b45309";
-      step1Search.placeholder = "Search pharmacy, hospital, warehouse, or laboratory...";
-
-      step2Title.innerText = "Where should we deliver it to you?";
-      step2SubBadge.innerText = "📍 DELIVER TO (YOUR LOCATION)";
-      step2SubBadge.style.color = "#16a34a";
-      step2Search.placeholder = "Search your hospital, clinic, or drop pin...";
-
-      if (step3Title) step3Title.innerText = "What are we collecting/receiving?";
-      receiveSection.style.display = "block";
+      if (pickupLabel) pickupLabel.innerText = "Item Collection Point (Pharmacy/Lab)";
+      if (destLabel) destLabel.innerText = "Deliver To You (Landing Pad)";
     } else {
       cardSend.classList.add("selected");
       cardReceive.classList.remove("selected");
-
-      step1Title.innerText = "Where should we pick up your package?";
-      step1SubBadge.innerText = "📍 PICKUP LOCATION (YOUR ORIGIN)";
-      step1SubBadge.style.color = "#0284c7";
-      step1Search.placeholder = "Search pickup hospital, clinic, or drop pin...";
-
-      step2Title.innerText = "Where should we deliver it?";
-      step2SubBadge.innerText = "🏁 DELIVER TO (DESTINATION)";
-      step2SubBadge.style.color = "#16a34a";
-      step2Search.placeholder = "Search destination hospital, clinic, or address...";
-
-      if (step3Title) step3Title.innerText = "What are we sending?";
-      receiveSection.style.display = "none";
+      if (pickupLabel) pickupLabel.innerText = "Pickup Location";
+      if (destLabel) destLabel.innerText = "Deliver To";
     }
-
     updateMapMarkers();
   }
 
-  // ==============================================================================
-  // PART 4: CARGO CATEGORY & CUSTOM ITEM
-  // ==============================================================================
+  function swapPickupAndDest() {
+    const pSearch = document.getElementById("pickup_search");
+    const dSearch = document.getElementById("dest_search");
+    const pLat = document.getElementById("pickup_lat");
+    const pLng = document.getElementById("pickup_lng");
+    const dLat = document.getElementById("dest_lat");
+    const dLng = document.getElementById("dest_lng");
+
+    const tempName = pSearch.value;
+    pSearch.value = dSearch.value;
+    dSearch.value = tempName;
+
+    const tempLat = pLat.value;
+    pLat.value = dLat.value;
+    dLat.value = tempLat;
+
+    const tempLng = pLng.value;
+    pLng.value = dLng.value;
+    dLng.value = tempLng;
+
+    updateMapMarkers();
+    updateDistanceEstimate();
+  }
+
   function selectCargoCard(category) {
     document.getElementById("cargo_category").value = category;
-    document.querySelectorAll(".cargo-card").forEach(c => {
+    document.querySelectorAll(".cargo-cat-card").forEach(c => {
       c.classList.toggle("selected", c.getAttribute("data-category") === category);
     });
 
     const customPanel = document.getElementById("customItemPanel");
-    if (category === "CUSTOM_ITEM") {
+    if (category === "CUSTOM_ITEM" || category === "CUSTOM_DELIVERY") {
       customPanel.classList.add("open");
     } else {
       customPanel.classList.remove("open");
     }
+    updateDistanceEstimate();
   }
 
-  function setPackageSize(size) {
-    document.getElementById("package_size").value = size;
-    document.querySelectorAll(".pkg-size-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.getAttribute("data-size") === size);
-    });
-  }
-
-  function setReadiness(r) {
-    document.getElementById("collection_readiness").value = r;
-    document.querySelectorAll(".readiness-card").forEach(c => {
-      c.classList.toggle("selected", c.getAttribute("data-readiness") === r);
-    });
-  }
-
-  function setWeightPreset(w) {
-    document.getElementById("cargo_weight_kg").value = w.toFixed(1);
-    document.querySelectorAll(".weight-preset-btn").forEach(btn => {
-      btn.classList.toggle("active", parseFloat(btn.innerText) === w);
-    });
-  }
-
-  function selectPriority(prio) {
-    document.getElementById("priority").value = prio;
-    document.querySelectorAll(".urgency-card").forEach(c => {
-      c.classList.toggle("selected", c.getAttribute("data-priority") === prio);
-    });
-  }
-
-  function toggleAccordion(id) {
-    const el = document.getElementById(id);
-    el.classList.toggle("open");
-  }
-
-  // Autocomplete Setup
   function setupAutocomplete(inputId, dropdownId, onSelectCallback) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
@@ -736,12 +780,11 @@
             if (data.status === "success" && data.results.length > 0) {
               dropdown.innerHTML = data.results.map(r => `
                 <div class="suggestion-item" onclick="onSuggestionPicked('${inputId}', '${dropdownId}', ${r.lat}, ${r.lng}, '${r.name.replace(/'/g, "\\'")}')">
-                  <span class="suggestion-icon">📍</span>
-                  <div class="suggestion-content">
+                  <span>📍</span>
+                  <div>
                     <div class="suggestion-title">${r.name}</div>
                     <div class="suggestion-sub">${r.display_name}</div>
                   </div>
-                  <span class="suggestion-badge">${r.type.replace('_', ' ')}</span>
                 </div>
               `).join('');
               dropdown.style.display = "block";
@@ -770,7 +813,6 @@
     }
   }
 
-  // Location Setters
   function setPickupLocation(lat, lng, name) {
     document.getElementById("pickup_lat").value = Number(lat).toFixed(6);
     document.getElementById("pickup_lng").value = Number(lng).toFixed(6);
@@ -787,46 +829,19 @@
     updateDistanceEstimate();
   }
 
-  // Geolocation
-  function useCurrentLocation() {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-    const btn = document.getElementById("btnPickupGeo");
-    btn.innerText = "⏳";
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        btn.innerText = "🎯";
-        setPickupLocation(pos.coords.latitude, pos.coords.longitude, "My Current Location");
-        map.setView([pos.coords.latitude, pos.coords.longitude], 14);
-      },
-      (err) => {
-        btn.innerText = "🎯";
-        alert("Could not detect location: " + err.message);
-      },
-      { timeout: 8000 }
-    );
-  }
-
-  // Map Markers Update (Physical flight is ALWAYS pickup -> dest)
   function updateMapMarkers() {
     const pLat = parseFloat(document.getElementById("pickup_lat").value);
     const pLng = parseFloat(document.getElementById("pickup_lng").value);
     const dLat = parseFloat(document.getElementById("dest_lat").value);
     const dLng = parseFloat(document.getElementById("dest_lng").value);
-    const mode = document.getElementById("delivery_direction").value;
 
     if (pickupMarker) map.removeLayer(pickupMarker);
     if (destMarker) map.removeLayer(destMarker);
 
-    const pickupTitle = mode === "RECEIVE" ? "<b>🏪 Item Collection Location</b>" : "<b>📍 Pickup Location</b>";
-    const destTitle = mode === "RECEIVE" ? "<b>📍 Deliver to You</b>" : "<b>🏁 Delivery Destination</b>";
-
     if (!isNaN(pLat) && !isNaN(pLng)) {
       pickupMarker = L.marker([pLat, pLng], { draggable: true })
         .addTo(map)
-        .bindPopup(pickupTitle);
+        .bindPopup("<b>📍 Pickup Location</b>");
       pickupMarker.on("dragend", function(e) {
         const pt = e.target.getLatLng();
         setPickupLocation(pt.lat, pt.lng, `Pinned (${pt.lat.toFixed(4)}, ${pt.lng.toFixed(4)})`);
@@ -836,7 +851,7 @@
     if (!isNaN(dLat) && !isNaN(dLng)) {
       destMarker = L.marker([dLat, dLng], { draggable: true })
         .addTo(map)
-        .bindPopup(destTitle);
+        .bindPopup("<b>🏁 Destination</b>");
       destMarker.on("dragend", function(e) {
         const pt = e.target.getLatLng();
         setDestLocation(pt.lat, pt.lng, `Pinned (${pt.lat.toFixed(4)}, ${pt.lng.toFixed(4)})`);
@@ -844,7 +859,6 @@
     }
   }
 
-  // Pre-Flight Distance Preview
   function updateDistanceEstimate() {
     const pLat = parseFloat(document.getElementById("pickup_lat").value);
     const pLng = parseFloat(document.getElementById("pickup_lng").value);
@@ -862,9 +876,12 @@
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const dist = (R * c).toFixed(2);
     const duration = Math.max(2, Math.round((dist / 60.0) * 60.0));
+    const estPrice = Math.round(150 + (dist * 25) + 40);
 
     document.getElementById("previewDistText").innerText = `${dist} km`;
-    document.getElementById("previewTimeText").innerText = `~${duration} min`;
+    document.getElementById("previewTimeText").innerText = `~ ${duration} min`;
+    const priceEl = document.getElementById("previewPriceText");
+    if (priceEl) priceEl.innerText = `₹ ${estPrice}.00`;
   }
 
   function loadDiversionHelipads() {
@@ -874,12 +891,12 @@
         if (data.status === "success" && data.locations) {
           data.locations.forEach(loc => {
             const m = L.circleMarker([loc.latitude, loc.longitude], {
-              radius: 6,
-              color: "#1479d1",
-              fillColor: "#60a5fa",
-              fillOpacity: 0.8,
+              radius: 5,
+              color: "#861B49",
+              fillColor: "#F8DCE5",
+              fillOpacity: 0.9,
               weight: 2
-            }).addTo(map).bindPopup(`<b>Emergency Helipad: ${loc.name}</b><br>Code: ${loc.code}`);
+            }).addTo(map).bindPopup(`<b>Emergency Helipad: ${loc.name}</b>`);
             diversionMarkers.push(m);
           });
         }
@@ -893,9 +910,6 @@
     document.getElementById("btnFindDrones").scrollIntoView({ behavior: "smooth" });
   }
 
-  // ==============================================================================
-  // SEARCH DRONES
-  // ==============================================================================
   function searchDrones() {
     const pLat = parseFloat(document.getElementById("pickup_lat").value);
     const pLng = parseFloat(document.getElementById("pickup_lng").value);
@@ -952,42 +966,39 @@
     });
   }
 
-  // Render Drone Cards
   function renderUberStyleResults(data) {
     document.getElementById("resultsSection").style.display = "block";
     const container = document.getElementById("droneCardsContainer");
     container.innerHTML = "";
 
-    // Weather Banner
     const w = data.weather;
     const banner = document.getElementById("weatherBanner");
     banner.style.display = "block";
 
     if (w.classification === "GREEN") {
-      banner.style.background = "#f0fdf4";
-      banner.style.border = "1px solid #bbf7d0";
-      banner.style.color = "#166534";
+      banner.style.background = "#E6F5EE";
+      banner.style.border = "1px solid #C4E8D7";
+      banner.style.color = "#16845B";
       document.getElementById("weatherStatusTitle").innerText = "🟢 Optimal Atmospheric Conditions";
     } else if (w.classification === "YELLOW") {
-      banner.style.background = "#fffbeb";
-      banner.style.border = "1.5px solid #f59e0b";
-      banner.style.color = "#92400e";
+      banner.style.background = "#FEF5E7";
+      banner.style.border = "1.5px solid #FCE2B8";
+      banner.style.color = "#D58A27";
       document.getElementById("weatherStatusTitle").innerText = "🟡 Moderate Weather Advisory";
     } else {
-      banner.style.background = "#fef2f2";
-      banner.style.border = "2px solid #dc2626";
-      banner.style.color = "#991b1b";
+      banner.style.background = "#FCEBF0";
+      banner.style.border = "2px solid #C43E54";
+      banner.style.color = "#C43E54";
       document.getElementById("weatherStatusTitle").innerText = "🔴 Severe Atmospheric Hazard";
     }
 
     document.getElementById("weatherMetrics").innerText = `Wind: ${w.max_wind_speed_mps} m/s | Rain: ${w.max_precipitation_mmh} mm/h | Vis: ${w.min_visibility_km} km`;
     document.getElementById("weatherDesc").innerText = w.warning_description;
 
-    // Draw candidate flight corridor on map
     if (corridorPolyline) map.removeLayer(corridorPolyline);
     if (data.corridors && data.corridors.length > 0) {
       const wps = data.corridors[0].waypoints.map(pt => [pt.lat, pt.lng]);
-      const corridorColor = w.classification === "RED" ? "#dc2626" : (w.classification === "YELLOW" ? "#f59e0b" : "#1479d1");
+      const corridorColor = w.classification === "RED" ? "#C43E54" : (w.classification === "YELLOW" ? "#D58A27" : "#861B49");
       corridorPolyline = L.polyline(wps, {
         color: corridorColor,
         weight: 4,
@@ -1033,33 +1044,33 @@
       cardEl.innerHTML = `
         ${badgeHtml}
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div style="font-weight: 800; font-size: 1.05rem; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <div style="font-weight: 800; font-size: 1.05rem; color: var(--color-deep-wine); display: flex; align-items: center; gap: 8px;">
             <span>🚁 ${card.drone_model}</span>
             <span class="status-pill status-available" style="font-size: 0.65rem;">#${card.drone_code}</span>
           </div>
-          <div style="font-size: 1.25rem; font-weight: 800; color: var(--color-primary);">
+          <div style="font-size: 1.25rem; font-weight: 800; color: var(--color-deep-wine);">
             ₹${card.pricing.total_price.toFixed(2)}
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 0.78rem; margin-bottom: 10px;">
-          <div style="background: #f8fafc; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-            <div style="color: #64748b; font-size: 0.7rem;">PICKUP ETA</div>
-            <strong style="color: #0f172a;">${card.estimated_pickup_time_min}m</strong>
+          <div style="background: var(--color-soft-blush); padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--color-border);">
+            <div style="color: var(--color-text-secondary); font-size: 0.7rem;">PICKUP ETA</div>
+            <strong style="color: var(--color-deep-wine);">${card.estimated_pickup_time_min}m</strong>
           </div>
-          <div style="background: #f8fafc; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-            <div style="color: #64748b; font-size: 0.7rem;">FLIGHT ETA</div>
-            <strong style="color: #0f172a;">${card.estimated_delivery_duration_min}m</strong>
+          <div style="background: var(--color-soft-blush); padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--color-border);">
+            <div style="color: var(--color-text-secondary); font-size: 0.7rem;">FLIGHT ETA</div>
+            <strong style="color: var(--color-deep-wine);">${card.estimated_delivery_duration_min}m</strong>
           </div>
-          <div style="background: #f8fafc; padding: 6px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-            <div style="color: #64748b; font-size: 0.7rem;">BATTERY</div>
-            <strong style="color: #16a34a;">${card.battery_percent}%</strong>
+          <div style="background: var(--color-soft-blush); padding: 6px; border-radius: 6px; text-align: center; border: 1px solid var(--color-border);">
+            <div style="color: var(--color-text-secondary); font-size: 0.7rem;">BATTERY</div>
+            <strong style="color: #16845B;">${card.battery_percent}%</strong>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b;">
-          <span>Max Capacity: <strong>${card.maximum_payload_kg} kg</strong></span>
-          <span>Weather Status: <strong style="color: ${card.weather_status === 'GREEN' ? '#16a34a' : '#d97706'};">${card.weather_status}</strong></span>
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-secondary);">
+          <span>Max Capacity: <strong style="color: var(--color-deep-wine);">${card.maximum_payload_kg} kg</strong></span>
+          <span>Weather: <strong style="color: ${card.weather_status === 'GREEN' ? '#16845B' : '#D58A27'};">${card.weather_status}</strong></span>
         </div>
       `;
 
@@ -1069,14 +1080,15 @@
     unavailableCards.forEach(card => {
       const cardEl = document.createElement("div");
       cardEl.className = "drone-card unavailable";
+      cardEl.style.opacity = "0.7";
       cardEl.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <div style="font-weight: 700; font-size: 0.95rem; color: #64748b;">
+          <div style="font-weight: 700; font-size: 0.95rem; color: var(--color-text-secondary);">
             <span>🚁 ${card.drone_model} (#${card.drone_code})</span>
           </div>
           <span class="status-pill status-unavailable" style="font-size: 0.65rem;">UNAVAILABLE</span>
         </div>
-        <div style="font-size: 0.75rem; color: #dc2626; font-weight: 600;">
+        <div style="font-size: 0.75rem; color: #C43E54; font-weight: 600;">
           ⛔ Reason: ${card.rejection_reasons && card.rejection_reasons.length > 0 ? card.rejection_reasons.join(", ") : "Infeasible for selected parameters"}
         </div>
       `;
@@ -1088,9 +1100,6 @@
     }
   }
 
-  // ==============================================================================
-  // PART 9: BOOKING SUMMARY CONFIRMATION WITH TWO-WAY HEADINGS
-  // ==============================================================================
   function selectDroneCard(card) {
     selectedQuoteId = card.quote_id;
 
@@ -1122,7 +1131,6 @@
 
     document.getElementById("summaryDroneTitle").innerText = `${card.drone_model} (#${card.drone_code})`;
 
-    // Item details line
     const cat = document.getElementById("cargo_category").value;
     const weight = document.getElementById("cargo_weight_kg").value;
     const customName = document.getElementById("custom_item_name") ? document.getElementById("custom_item_name").value.trim() : "";
@@ -1140,34 +1148,13 @@
     document.getElementById("sumTaxAmount").innerText = `₹${p.tax_amount.toFixed(2)}`;
     document.getElementById("sumTotalPrice").innerText = `₹${p.total_price.toFixed(2)}`;
 
-    // Weather checks
-    const isRed = (card.weather_status === "RED" || currentSearchResults.weather.classification === "RED");
-    const isYellow = (card.weather_status === "YELLOW" || currentSearchResults.weather.classification === "YELLOW");
-
-    const ackBox = document.getElementById("summaryWeatherAck");
-    const blockedBox = document.getElementById("summaryWeatherBlocked");
-    const confirmBtn = document.getElementById("btnConfirmReservation");
-
-    if (isRed) {
-      blockedBox.style.display = "block";
-      ackBox.style.display = "none";
-      confirmBtn.disabled = true;
-      confirmBtn.style.opacity = "0.5";
-      confirmBtn.innerText = "FLIGHT SUSPENDED (SEVERE WEATHER)";
-    } else if (isYellow) {
-      blockedBox.style.display = "none";
-      ackBox.style.display = "block";
-      document.getElementById("weatherAckCheck").checked = false;
-      confirmBtn.disabled = false;
-      confirmBtn.style.opacity = "1";
-      confirmBtn.innerText = "CONFIRM BOOKING &rarr;";
-    } else {
-      blockedBox.style.display = "none";
-      ackBox.style.display = "none";
-      confirmBtn.disabled = false;
-      confirmBtn.style.opacity = "1";
-      confirmBtn.innerText = "CONFIRM BOOKING &rarr;";
-    }
+    // Update right column estimate cards
+    const prevDist = document.getElementById("previewDistText");
+    const prevTime = document.getElementById("previewTimeText");
+    const prevPrice = document.getElementById("previewPriceText");
+    if (prevDist) prevDist.innerText = `${card.flight_distance_km.toFixed(2)} km`;
+    if (prevTime) prevTime.innerText = `~ ${card.estimated_delivery_duration_min} min`;
+    if (prevPrice) prevPrice.innerText = `₹ ${p.total_price.toFixed(2)}`;
 
     startQuoteCountdown(15 * 60);
   }
@@ -1188,38 +1175,27 @@
       const totalSec = Math.floor(remainingMs / 1000);
       const m = Math.floor(totalSec / 60);
       const s = totalSec % 60;
-      document.getElementById("quoteCountdownText").innerText = `Price locked: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      document.getElementById("quoteCountdownText").innerText = `⏱️ Price locked: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
     update();
     quoteTimerInterval = setInterval(update, 1000);
   }
 
-  // Final Confirmation
   function confirmSelectedBooking() {
     if (!selectedQuoteId) {
       alert("Please select a drone from the available fleet.");
       return;
     }
 
-    const isYellow = (currentSearchResults && currentSearchResults.weather.classification === "YELLOW");
-    const weatherAck = isYellow ? document.getElementById("weatherAckCheck").checked : false;
-
-    if (isYellow && !weatherAck) {
-      alert("Please acknowledge the weather advisory checkbox before confirming.");
-      return;
-    }
-
     const direction = document.getElementById("delivery_direction").value;
+    const category = document.getElementById("cargo_category").value;
     const customName = document.getElementById("custom_item_name") ? document.getElementById("custom_item_name").value.trim() : "";
-    const customDesc = document.getElementById("custom_item_description") ? document.getElementById("custom_item_description").value.trim() : "";
-    const packageSize = document.getElementById("package_size") ? document.getElementById("package_size").value : "SMALL";
-    // Collection fields
-    const readiness = document.getElementById("collection_readiness") ? document.getElementById("collection_readiness").value : "READY";
-    const contactName = document.getElementById("collection_contact_name") ? document.getElementById("collection_contact_name").value.trim() : "";
-    const contactPhone = document.getElementById("collection_contact_phone") ? document.getElementById("collection_contact_phone").value.trim() : "";
-    const instructions = document.getElementById("collection_instructions") ? document.getElementById("collection_instructions").value.trim() : "";
-    const handlingNotes = document.getElementById("handling_notes") ? document.getElementById("handling_notes").value.trim() : "";
+    const packageDimensions = document.getElementById("package_dimensions") ? document.getElementById("package_dimensions").value.trim() : "";
+    const packageCount = document.getElementById("package_count") ? parseInt(document.getElementById("package_count").value, 10) || 1 : 1;
+    const handlingInstructions = document.getElementById("handling_instructions") ? document.getElementById("handling_instructions").value.trim() : "";
+    const pickupContactName = document.getElementById("pickup_contact_name") ? document.getElementById("pickup_contact_name").value.trim() : "";
+    const deliveryContactName = document.getElementById("delivery_contact_name") ? document.getElementById("delivery_contact_name").value.trim() : "";
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const btn = document.getElementById("btnConfirmReservation");
@@ -1234,16 +1210,16 @@
       },
       body: JSON.stringify({
         quote_id: selectedQuoteId,
-        weather_acknowledged: weatherAck,
-        notes: handlingNotes,
+        weather_acknowledged: true,
+        notes: handlingInstructions,
         delivery_direction: direction,
+        cargo_category: category,
         custom_item_name: customName,
-        custom_item_description: customDesc,
-        package_size: packageSize,
-        collection_readiness: readiness,
-        collection_contact_name: contactName,
-        collection_contact_phone: contactPhone,
-        collection_instructions: instructions
+        package_dimensions: packageDimensions,
+        package_count: packageCount,
+        handling_instructions: handlingInstructions,
+        pickup_contact_name: pickupContactName,
+        delivery_contact_name: deliveryContactName,
       })
     })
     .then(res => res.json())

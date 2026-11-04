@@ -26,8 +26,8 @@
   }
 
   .cockpit-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: 20px;
     margin-bottom: 20px;
@@ -38,7 +38,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-soft-blush);
     padding-bottom: 12px;
     margin-bottom: 16px;
   }
@@ -46,7 +46,7 @@
   .cockpit-card-title {
     font-size: 1.05rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-deep-wine);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -62,22 +62,22 @@
     display: inline-block;
   }
 
-  .badge-confirmed { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-  .badge-paid { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-  .badge-dispatched { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
-  .badge-in_flight { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
-  .badge-weather_caution { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
-  .badge-rerouted { background: #fed7aa; color: #9a3412; border: 1px solid #fdba74; }
-  .badge-diverted { background: #fecdd3; color: #9f1239; border: 1px solid #fda4af; }
-  .badge-delivered { background: #bbf7d0; color: #14532d; border: 1px solid #86efac; }
-  .badge-cancelled { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-  .badge-emergency_review { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .badge-confirmed { background: var(--color-soft-blush); color: var(--color-deep-wine); border: 1px solid var(--color-border); }
+  .badge-paid { background: #E6F5EE; color: #16845B; border: 1px solid #C4E8D7; }
+  .badge-dispatched { background: var(--color-blush); color: var(--color-deep-wine); border: 1px solid var(--color-pale-rose); }
+  .badge-in_flight { background: var(--color-blush); color: var(--color-deep-wine); border: 1px solid var(--color-pale-rose); }
+  .badge-weather_caution { background: #FEF5E7; color: #D58A27; border: 1px solid #FCE2B8; }
+  .badge-rerouted { background: #FEF5E7; color: #D58A27; border: 1px solid #FCE2B8; }
+  .badge-diverted { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-pale-rose); }
+  .badge-delivered { background: #E6F5EE; color: #16845B; border: 1px solid #C4E8D7; }
+  .badge-cancelled { background: var(--color-soft-blush); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+  .badge-emergency_review { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-pale-rose); }
 
   #flightTrackingMap {
     width: 100%;
     height: 640px;
     border-radius: var(--radius-lg);
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-border);
     box-shadow: var(--shadow-sm);
   }
 
@@ -90,55 +90,81 @@
 
   .pricing-table td {
     padding: 6px 0;
-    color: #475569;
+    color: var(--color-text-secondary);
   }
 
   .pricing-table td:last-child {
     text-align: right;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--color-text-main);
   }
 
   .pricing-table tr.total-row td {
-    border-top: 2px dashed #e2e8f0;
+    border-top: 2px dashed var(--color-border);
     padding-top: 10px;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-deep-wine);
   }
 
   .share-link-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
+    background: var(--color-soft-blush);
+    border: 1px solid var(--color-border);
     border-radius: 9999px;
     padding: 4px 12px;
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #334155;
+    font-weight: 700;
+    color: var(--color-deep-wine);
     cursor: pointer;
     transition: all 0.15s ease;
   }
   .share-link-pill:hover {
-    background: #e2e8f0;
-    border-color: #94a3b8;
+    background: var(--color-blush);
+    border-color: var(--color-burgundy);
   }
 
   .drone-live-marker {
-    background: #111827;
-    border: 2px solid #38bdf8;
-    color: #ffffff;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    background: transparent;
+    border: none;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 0 16px rgba(56, 189, 248, 0.7);
-    transition: transform 0.3s ease;
+  }
+
+  .sim-speed-btn {
+    background: transparent;
+    color: var(--color-blush);
+    border: none;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+  }
+  .sim-speed-btn.active {
+    background: var(--color-blush);
+    color: var(--color-deep-wine);
+  }
+
+  .live-pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    animation: pulse-green 1.6s infinite;
+  }
+  @keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
   }
 </style>
 {% endblock %}
@@ -174,7 +200,7 @@
 
 <!-- Dynamic In-Flight Hazard Banners -->
 {% if booking.status == 'REROUTED' %}
-<div class="reroute-banner">
+<div class="reroute-banner" style="background: #FEF5E7; border: 1px solid #FCE2B8; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: #D58A27;">
   <span style="font-size: 1.5rem;">⚠️</span>
   <div>
     <strong>DYNAMIC WEATHER REROUTE ACTIVE:</strong>
@@ -182,7 +208,7 @@
   </div>
 </div>
 {% elif booking.status == 'DIVERTED' %}
-<div class="diversion-banner">
+<div class="diversion-banner" style="background: var(--color-danger-bg); border: 1px solid var(--color-pale-rose); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: var(--color-danger);">
   <span style="font-size: 1.8rem;">🚨</span>
   <div>
     <strong>EMERGENCY HELIPAD DIVERSION MANDATED:</strong>
@@ -206,7 +232,7 @@
             📤 Dispatch Mission Overview
             {% endif %}
           </span>
-          <span style="font-size: 0.75rem; color: #64748b;">Ref: <strong>{{ booking.booking_reference }}</strong></span>
+          <span style="font-size: 0.75rem; color: var(--color-text-secondary);">Ref: <strong>{{ booking.booking_reference }}</strong></span>
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
           {% if booking.delivery_direction == 'RECEIVE' %}
@@ -220,7 +246,7 @@
         </div>
       </div>
 
-      <div style="background: {% if booking.delivery_direction == 'RECEIVE' %}#eff6ff{% else %}#f8fafc{% endif %}; border: 1px solid {% if booking.delivery_direction == 'RECEIVE' %}#bfdbfe{% else %}#e2e8f0{% endif %}; border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 14px; font-size: 0.85rem; font-weight: 700; color: {% if booking.delivery_direction == 'RECEIVE' %}#1d4ed8{% else %}#334155{% endif %};">
+      <div style="background: {% if booking.delivery_direction == 'RECEIVE' %}var(--color-light-pink){% else %}var(--color-soft-blush){% endif %}; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 14px; font-size: 0.85rem; font-weight: 700; color: var(--color-deep-wine);">
         {% if booking.delivery_direction == 'RECEIVE' %}
         📥 Your item is being collected and delivered to you.
         {% else %}
@@ -248,19 +274,19 @@
       </div>
 
       {% if booking.custom_item_name %}
-      <div style="margin-top: 10px; padding: 8px 12px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: var(--radius-sm); font-size: 0.82rem;">
-        <span style="font-weight: 700; color: #6b21a8;">📦 Custom Item:</span>
-        <strong style="color: #0f172a;">{{ booking.custom_item_name }}</strong>
+      <div style="margin-top: 10px; padding: 8px 12px; background: var(--color-light-pink); border: 1px solid var(--color-pale-rose); border-radius: var(--radius-sm); font-size: 0.82rem;">
+        <span style="font-weight: 700; color: var(--color-deep-wine);">📦 Custom Item:</span>
+        <strong style="color: var(--color-text-main);">{{ booking.custom_item_name }}</strong>
         {% if booking.package_size %}
-        &bull; <span style="color: #7e22ce;">Size: {{ booking.package_size }}</span>
+        &bull; <span style="color: var(--color-rich-berry);">Size: {{ booking.package_size }}</span>
         {% endif %}
         {% if booking.custom_item_description %}
-        <div style="color: #64748b; font-size: 0.76rem; margin-top: 2px;">{{ booking.custom_item_description }}</div>
+        <div style="color: var(--color-text-secondary); font-size: 0.76rem; margin-top: 2px;">{{ booking.custom_item_description }}</div>
         {% endif %}
       </div>
       {% endif %}
 
-      <div style="margin-top: 14px; font-size: 0.82rem; color: #475569; background: #f8fafc; padding: 10px; border-radius: var(--radius-sm);">
+      <div style="margin-top: 14px; font-size: 0.82rem; color: var(--color-text-secondary); background: var(--color-soft-blush); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
         <div style="margin-bottom: 4px;">
           📍 <strong>{% if booking.delivery_direction == 'RECEIVE' %}Collection Location (Origin):{% else %}Pickup Location (Origin):{% endif %}</strong> {{ "%.5f"|format(booking.pickup_latitude) }}, {{ "%.5f"|format(booking.pickup_longitude) }}
         </div>
@@ -272,26 +298,26 @@
 
     <!-- Collection Details Card (For RECEIVE mode) -->
     {% if booking.delivery_direction == 'RECEIVE' %}
-    <div class="cockpit-card" style="border: 1px solid #bfdbfe; background: #f8fbff;">
-      <div class="cockpit-card-header" style="border-bottom-color: #dbeafe;">
-        <span class="cockpit-card-title" style="color: #1e40af;">📋 Collection Readiness & Contact</span>
-        <span style="font-size: 0.72rem; font-weight: 700; color: #2563eb; background: #dbeafe; padding: 3px 8px; border-radius: 9999px;">
+    <div class="cockpit-card" style="border: 1px solid var(--color-border); background: var(--color-light-pink);">
+      <div class="cockpit-card-header" style="border-bottom-color: var(--color-border);">
+        <span class="cockpit-card-title" style="color: var(--color-deep-wine);">📋 Collection Readiness & Contact</span>
+        <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-deep-wine); background: var(--color-blush); padding: 3px 8px; border-radius: 9999px;">
           {{ booking.collection_readiness or 'READY' }}
         </span>
       </div>
-      <div style="font-size: 0.84rem; color: #334155; display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 0.84rem; color: var(--color-text-main); display: flex; flex-direction: column; gap: 8px;">
         <div>
-          <span style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block;">Sender / Organization:</span>
+          <span style="color: var(--color-text-secondary); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block;">Sender / Organization:</span>
           <strong>{{ booking.collection_contact_name or 'Sender Contact' }}</strong>
         </div>
         {% if booking.collection_contact_phone %}
         <div>
-          <span style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block;">Contact Phone:</span>
+          <span style="color: var(--color-text-secondary); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block;">Contact Phone:</span>
           <span>📞 {{ booking.collection_contact_phone }}</span>
         </div>
         {% endif %}
         {% if booking.collection_instructions %}
-        <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: var(--radius-sm); padding: 8px; font-size: 0.8rem; color: #475569;">
+        <div style="background: #ffffff; border: 1px dashed var(--color-border); border-radius: var(--radius-sm); padding: 8px; font-size: 0.8rem; color: var(--color-text-secondary);">
           <strong>Pickup Instructions:</strong> {{ booking.collection_instructions }}
         </div>
         {% endif %}
@@ -592,15 +618,79 @@
     <div class="cockpit-card" style="padding: 14px; margin-bottom: 0;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px;">
         <div>
-          <span style="font-weight: 800; font-size: 1.05rem; color: #0f172a;">Live Geospatial HUD & Drone Tracking</span>
-          <span style="font-size: 0.75rem; color: #64748b; margin-left: 8px;">Real-time corridor telemetry</span>
+          <span style="font-weight: 800; font-size: 1.05rem; color: var(--color-deep-wine);">Live Geospatial HUD & Drone Tracking</span>
+          <span style="font-size: 0.75rem; color: var(--color-text-secondary); margin-left: 8px;">Real-time corridor telemetry</span>
         </div>
-        <div style="font-size: 0.75rem; color: #475569; display: flex; gap: 12px; font-weight: 600;">
+        <div style="font-size: 0.75rem; color: var(--color-text-secondary); display: flex; gap: 12px; font-weight: 700;">
           <span>🟢 Primary Corridor</span>
           <span>🟡 Alt Segment</span>
           <span>🚁 Helipad Diversion</span>
         </div>
       </div>
+      <!-- Simulation Controls Toolbar -->
+      <div class="simulation-cockpit-toolbar" style="background: linear-gradient(135deg, #590D2B 0%, #710D37 100%); color: #ffffff; border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border: 1px solid var(--color-burgundy); box-shadow: var(--shadow-sm);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-weight: 800; font-size: 0.82rem; color: var(--color-blush); display: flex; align-items: center; gap: 6px;">
+            <span class="live-pulse-dot"></span> SIMULATION CONTROLS
+          </span>
+          <span id="simStateBadge" class="badge" style="background: var(--color-rich-berry); color: var(--color-blush); font-size: 0.72rem; border: 1px solid var(--color-burgundy);">READY</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <button type="button" id="btnSimStart" class="btn btn-sm" onclick="simAction('start')" style="background: var(--color-blush); color: var(--color-deep-wine); font-weight: 800; font-size: 0.78rem; padding: 4px 12px; border: none; border-radius: 6px;">▶ Start</button>
+          <button type="button" id="btnSimPause" class="btn btn-sm btn-secondary" onclick="simAction('pause')" style="font-size: 0.78rem; padding: 4px 10px; display: none;">⏸ Pause</button>
+          <button type="button" id="btnSimResume" class="btn btn-sm" onclick="simAction('resume')" style="background: var(--color-blush); color: var(--color-deep-wine); font-weight: 800; font-size: 0.78rem; padding: 4px 12px; border: none; border-radius: 6px; display: none;">▶ Resume</button>
+          <button type="button" id="btnSimReset" class="btn btn-sm" onclick="simAction('reset')" style="font-size: 0.78rem; padding: 4px 10px; color: var(--color-blush); background: rgba(255,255,255,0.1); border: 1px solid var(--color-burgundy); border-radius: 6px;">🔄 Reset</button>
+          
+          <div style="display: flex; gap: 2px; background: rgba(0,0,0,0.25); border-radius: 4px; padding: 2px; border: 1px solid var(--color-burgundy);">
+            <button type="button" class="sim-speed-btn active" data-speed="1.0" onclick="setSimSpeed(1.0)">1x</button>
+            <button type="button" class="sim-speed-btn" data-speed="2.0" onclick="setSimSpeed(2.0)">2x</button>
+            <button type="button" class="sim-speed-btn" data-speed="5.0" onclick="setSimSpeed(5.0)">5x</button>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--color-blush); margin: 0; cursor: pointer;">
+            <input type="checkbox" id="autoFollowDroneCheck" checked>
+            <span>Follow</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Live HUD Telemetry Grid -->
+      <div class="live-hud-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 6px; margin-bottom: 12px; background: #590D2B; color: white; padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--color-burgundy); box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Drone Pos</div>
+          <div id="hudCoords" style="font-size: 0.75rem; font-weight: 800; color: #FFFFFF; font-family: monospace;">--</div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Altitude</div>
+          <div id="hudAltitude" style="font-size: 0.75rem; font-weight: 800; color: #FFFFFF;">120 m AGL</div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Speed</div>
+          <div id="hudSpeed" style="font-size: 0.75rem; font-weight: 800; color: #FFFFFF;">60 km/h</div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Heading</div>
+          <div id="hudHeading" style="font-size: 0.75rem; font-weight: 800; color: var(--color-blush);">0°</div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Distance</div>
+          <div id="hudDistance" style="font-size: 0.75rem; font-weight: 800; color: #FFFFFF;">0.0 / {{ "%.2f"|format(booking.flight_distance_km) }} km</div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Progress</div>
+          <div id="hudProgress" style="font-size: 0.75rem; font-weight: 800; color: #86efac;">0.0%</div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Battery</div>
+          <div id="hudBattery" style="font-size: 0.75rem; font-weight: 800; color: #86efac;">100%</div>
+        </div>
+        <div>
+          <div style="font-size: 0.65rem; color: var(--color-blush); font-weight: 700; text-transform: uppercase;">Est. Arrival</div>
+          <div id="hudEta" style="font-size: 0.75rem; font-weight: 800; color: var(--color-blush);">-- min</div>
+        </div>
+      </div>
+
       <div id="flightTrackingMap"></div>
     </div>
   </div>
@@ -610,12 +700,32 @@
 {% block extra_scripts %}
 <script>
   let map, droneMarker;
+  let completedPolyline, remainingPolyline;
+  let simPollInterval = null;
+  const bookingId = {{ booking.id }};
   const pickupLat = {{ booking.pickup_latitude }};
   const pickupLng = {{ booking.pickup_longitude }};
   const destLat = {{ booking.destination_latitude }};
   const destLng = {{ booking.destination_longitude }};
-  const isDelivered = "{{ booking.status }}" === "DELIVERED";
-  const isInFlight = ["IN_FLIGHT", "DISPATCHED", "REROUTED", "DIVERTED"].includes("{{ booking.status }}");
+  const csrfToken = "{{ csrf_token() }}";
+
+  function createDroneSvgHtml(heading) {
+    return `
+      <div class="drone-svg-container" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 4px 8px rgba(89, 13, 43, 0.45));">
+        <svg id="droneSvgIcon" style="width: 38px; height: 38px; transform: rotate(${heading}deg); transition: transform 0.4s ease-out;" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="14" fill="#590D2B" stroke="#F8DCE5" stroke-width="3"/>
+          <polygon points="50,18 43,32 57,32" fill="#F8DCE5"/>
+          <line x1="24" y1="24" x2="76" y2="76" stroke="#861B49" stroke-width="4" stroke-linecap="round"/>
+          <line x1="24" y1="76" x2="76" y2="24" stroke="#861B49" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+          <circle cx="76" cy="24" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+          <circle cx="24" cy="76" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+          <circle cx="76" cy="76" r="9" fill="#710D37" stroke="#F8DCE5" stroke-width="2.5"/>
+          <circle cx="50" cy="50" r="4.5" fill="#22c55e"/>
+        </svg>
+      </div>
+    `;
+  }
 
   document.addEventListener('DOMContentLoaded', function() {
     map = L.map('flightTrackingMap').setView([pickupLat, pickupLng], 13);
@@ -625,7 +735,6 @@
       attribution: '&copy; OpenStreetMap contributors | DroneDispatch Simulation'
     }).addTo(map);
 
-    // Initial resize fix
     setTimeout(() => { map.invalidateSize(); }, 200);
 
     // Pickup Marker
@@ -648,41 +757,33 @@
       })
     }).addTo(map).bindPopup("<b>🏁 Delivery Destination</b><br>Lat: " + destLat.toFixed(5) + ", Lng: " + destLng.toFixed(5));
 
-    // Direct / Active Flight Corridor
-    const activeFlightPath = L.polyline([
-      [pickupLat, pickupLng],
-      [destLat, destLng]
-    ], {
-      color: '{{ "#dc2626" if booking.status == "DIVERTED" else ("#f59e0b" if booking.status == "REROUTED" else "#1479d1") }}',
+    // Polylines: Completed (Solid Green) & Remaining (Dashed Berry Wine)
+    completedPolyline = L.polyline([[pickupLat, pickupLng]], {
+      color: '#16a34a',
       weight: 5,
-      opacity: 0.85,
-      dashArray: '8, 8'
+      opacity: 0.9
     }).addTo(map);
 
-    // Fit bounds to flight path
+    remainingPolyline = L.polyline([[pickupLat, pickupLng], [destLat, destLng]], {
+      color: '#861B49',
+      weight: 4,
+      opacity: 0.85,
+      dashArray: '6, 6'
+    }).addTo(map);
+
+    // Fit initial bounds
     const bounds = L.latLngBounds([[pickupLat, pickupLng], [destLat, destLng]]);
     map.fitBounds(bounds, { padding: [60, 60] });
 
-    // Animated Drone Marker Position
-    let initialDroneLat = pickupLat;
-    let initialDroneLng = pickupLng;
-    if (isDelivered) {
-      initialDroneLat = destLat;
-      initialDroneLng = destLng;
-    } else if (isInFlight) {
-      // Midpoint simulation
-      initialDroneLat = (pickupLat + destLat) / 2;
-      initialDroneLng = (pickupLng + destLng) / 2;
-    }
-
-    droneMarker = L.marker([initialDroneLat, initialDroneLng], {
+    // Initial Animated Drone Marker
+    droneMarker = L.marker([pickupLat, pickupLng], {
       icon: L.divIcon({
         className: 'drone-live-marker',
-        html: '🚁',
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
+        html: createDroneSvgHtml(0),
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
       })
-    }).addTo(map).bindPopup("<b>🚁 Drone #{% if booking.drone %}{{ booking.drone.drone_id_code }}{% else %}DRN{% endif %}</b><br>Status: {{ booking.status }}");
+    }).addTo(map).bindPopup("<b>🚁 Active Drone #{% if booking.drone %}{{ booking.drone.drone_id_code }}{% else %}DISPATCH{% endif %}</b>");
 
     // Fetch and render safe diversion helipads
     fetch('/api/diversions')
@@ -711,7 +812,139 @@
         }
       })
       .catch(err => console.debug("Could not fetch diversion helipads:", err));
+
+    // Start Telemetry Polling Loop (1.5 seconds)
+    pollTelemetry();
+    simPollInterval = setInterval(pollTelemetry, 1500);
   });
+
+  function pollTelemetry() {
+    fetch(`/booking/${bookingId}/telemetry`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          updateCockpitTelemetry(data.data || data);
+        }
+      })
+      .catch(err => console.debug("Telemetry tick error:", err));
+  }
+
+  function updateCockpitTelemetry(t) {
+    const lat = t.current_latitude;
+    const lng = t.current_longitude;
+    const heading = t.heading_deg || 0;
+
+    // Update Drone Marker Position & Orientation
+    if (droneMarker) {
+      droneMarker.setLatLng([lat, lng]);
+      const svg = document.getElementById("droneSvgIcon");
+      if (svg) {
+        svg.style.transform = `rotate(${heading}deg)`;
+      }
+    }
+
+    // Auto-center / Follow Drone
+    const autoFollow = document.getElementById("autoFollowDroneCheck");
+    if (autoFollow && autoFollow.checked && map) {
+      map.panTo([lat, lng], { animate: true, duration: 0.6 });
+    }
+
+    // Update Polylines
+    if (t.completed_path && completedPolyline) {
+      completedPolyline.setLatLngs(t.completed_path);
+    }
+    if (t.remaining_path && remainingPolyline) {
+      remainingPolyline.setLatLngs(t.remaining_path);
+    }
+
+    // Update HUD display
+    document.getElementById("hudCoords").innerText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    document.getElementById("hudAltitude").innerText = `${(t.current_altitude_m || 120).toFixed(0)} m AGL`;
+    document.getElementById("hudSpeed").innerText = `${(t.speed_kmh || 60).toFixed(0)} km/h`;
+    document.getElementById("hudHeading").innerText = `${Math.round(heading)}°`;
+    document.getElementById("hudDistance").innerText = `${(t.distance_travelled_km || 0).toFixed(2)} / ${(t.total_distance_km || 0).toFixed(2)} km`;
+    document.getElementById("hudProgress").innerText = `${(t.progress_percentage || 0).toFixed(1)}%`;
+    
+    const battEl = document.getElementById("hudBattery");
+    const battPct = (t.battery_percentage || 100);
+    battEl.innerText = `${battPct.toFixed(1)}%`;
+    battEl.style.color = battPct < 30 ? "#ef4444" : (battPct < 60 ? "#f59e0b" : "#4ade80");
+
+    const etaMin = t.estimated_arrival_minutes || 0;
+    document.getElementById("hudEta").innerText = etaMin > 0 ? `${etaMin.toFixed(1)} min` : "0 min";
+
+    // Update Simulation Action Controls & Badges
+    const badge = document.getElementById("simStateBadge");
+    const btnStart = document.getElementById("btnSimStart");
+    const btnPause = document.getElementById("btnSimPause");
+    const btnResume = document.getElementById("btnSimResume");
+
+    const status = t.simulation_status || "PENDING";
+    badge.innerText = status;
+
+    if (status === "RUNNING") {
+      badge.style.background = "#14532d";
+      badge.style.color = "#86efac";
+      btnStart.style.display = "none";
+      btnPause.style.display = "inline-block";
+      btnResume.style.display = "none";
+    } else if (status === "PAUSED") {
+      badge.style.background = "#78350f";
+      badge.style.color = "#fde68a";
+      btnStart.style.display = "none";
+      btnPause.style.display = "none";
+      btnResume.style.display = "inline-block";
+    } else if (status === "ARRIVED" || status === "COMPLETED") {
+      badge.style.background = "#1e3a8a";
+      badge.style.color = "#93c5fd";
+      btnStart.style.display = "none";
+      btnPause.style.display = "none";
+      btnResume.style.display = "none";
+    } else {
+      badge.style.background = "#1e293b";
+      badge.style.color = "#94a3b8";
+      btnStart.style.display = "inline-block";
+      btnPause.style.display = "none";
+      btnResume.style.display = "none";
+    }
+  }
+
+  // Simulation Control Actions
+  function simAction(action) {
+    fetch(`/booking/${bookingId}/simulation/${action}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      pollTelemetry();
+    })
+    .catch(err => alert("Error triggering simulation action: " + err));
+  }
+
+  // Set Speed Multiplier
+  function setSimSpeed(speed) {
+    document.querySelectorAll(".sim-speed-btn").forEach(btn => {
+      btn.classList.toggle("active", parseFloat(btn.getAttribute("data-speed")) === speed);
+    });
+
+    fetch(`/booking/${bookingId}/simulation/speed`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify({ speed: speed })
+    })
+    .then(res => res.json())
+    .then(data => {
+      pollTelemetry();
+    })
+    .catch(err => console.debug("Speed set error:", err));
+  }
 
   // Copy Public Shareable Tracking Link
   function copyShareableTrackingLink() {

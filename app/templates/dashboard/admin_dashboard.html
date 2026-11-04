@@ -1,71 +1,95 @@
 {% extends "base.html" %}
 
 {% block title %}System Administration{% endblock %}
-{% block page_title %}Fleet & System Administration{% endblock %}
+{% block page_title %}🛡️ Fleet & System Administration{% endblock %}
 
 {% block content %}
-<!-- Real Database Statistics Grid -->
-<div class="stats-grid">
-  <div class="stat-card">
-    <span class="stat-title">Fleet Deployment</span>
-    <span class="stat-value">{{ stats.total_drones }}</span>
-    <span class="stat-meta">{{ stats.available_drones }} Available &bull; {{ stats.in_transit_drones }} In Flight</span>
+<!-- Fleet Deployment & Mission Statistics -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Fleet Deployment</span>
+      <span class="kpi-value">{{ stats.total_drones }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">{{ stats.available_drones }} Available &bull; {{ stats.in_transit_drones }} In Flight</span>
+    </div>
+    <div class="kpi-icon-container">🚁</div>
   </div>
 
-  <div class="stat-card">
-    <span class="stat-title">Active Missions</span>
-    <span class="stat-value" style="color: var(--color-primary);">{{ stats.active_assignments }}</span>
-    <span class="stat-meta">Dispatched & tracking</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Active Missions</span>
+      <span class="kpi-value" style="color: var(--color-deep-wine);">{{ stats.active_assignments }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Dispatched & tracking</span>
+    </div>
+    <div class="kpi-icon-container">📡</div>
   </div>
 
-  <div class="stat-card">
-    <span class="stat-title">Emergency Requests</span>
-    <span class="stat-value">{{ stats.total_requests }}</span>
-    <span class="stat-meta">{{ stats.pending_requests }} Pending &bull; {{ stats.delivered_requests }} Delivered</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Delivery Requests</span>
+      <span class="kpi-value">{{ stats.total_requests }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">{{ stats.pending_requests }} Pending &bull; {{ stats.delivered_requests }} Delivered</span>
+    </div>
+    <div class="kpi-icon-container">📦</div>
   </div>
 
-  <div class="stat-card">
-    <span class="stat-title">Fleet Maintenance</span>
-    <span class="stat-value" style="color: var(--color-warning);">{{ stats.charging_drones + stats.maintenance_drones }}</span>
-    <span class="stat-meta">{{ stats.charging_drones }} Charging &bull; {{ stats.maintenance_drones }} Service</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Fleet Maintenance</span>
+      <span class="kpi-value" style="color: var(--color-warning);">{{ stats.charging_drones + stats.maintenance_drones }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">{{ stats.charging_drones }} Charging &bull; {{ stats.maintenance_drones }} Service</span>
+    </div>
+    <div class="kpi-icon-container" style="color: var(--color-warning);">⚡</div>
   </div>
 </div>
 
-<!-- Uber-Style Booking & Billing Financial Performance Grid -->
-<div class="stats-grid" style="margin-top: 16px;">
-  <div class="stat-card" style="border-left: 4px solid #059669;">
-    <span class="stat-title">Simulated Revenue (Settled)</span>
-    <span class="stat-value" style="color: #059669;">₹{{ "%.2f"|format(stats.actual_revenue) }}</span>
-    <span class="stat-meta">{{ stats.total_bookings }} Total Bookings Created</span>
+<!-- Booking & Billing Financial Performance Grid -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Simulated Revenue</span>
+      <span class="kpi-value" style="color: #16845B;">₹{{ "%.2f"|format(stats.actual_revenue) }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">{{ stats.total_bookings }} Total Bookings Created</span>
+    </div>
+    <div class="kpi-icon-container" style="color: #16845B;">💰</div>
   </div>
 
-  <div class="stat-card" style="border-left: 4px solid #dc2626;">
-    <span class="stat-title">Refund Settlements</span>
-    <span class="stat-value" style="color: #dc2626;">₹{{ "%.2f"|format(stats.total_refunds) }}</span>
-    <span class="stat-meta">Weather & cancellation refunds</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Refund Settlements</span>
+      <span class="kpi-value" style="color: #C43E54;">₹{{ "%.2f"|format(stats.total_refunds) }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Weather & cancellation refunds</span>
+    </div>
+    <div class="kpi-icon-container" style="color: #C43E54;">🔄</div>
   </div>
 
-  <div class="stat-card" style="border-left: 4px solid #d97706;">
-    <span class="stat-title">Payment Audit Pipeline</span>
-    <span class="stat-value" style="color: #d97706;">{{ stats.pending_payments_count }}</span>
-    <span class="stat-meta">Pending &bull; {{ stats.failed_payments_count }} Failed attempts</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Payment Pipeline</span>
+      <span class="kpi-value" style="color: var(--color-deep-wine);">{{ stats.pending_payments_count }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Pending &bull; {{ stats.failed_payments_count }} Failed</span>
+    </div>
+    <div class="kpi-icon-container">💳</div>
   </div>
 
-  <div class="stat-card" style="border-left: 4px solid #0284c7;">
-    <span class="stat-title">Weather Disruptions</span>
-    <span class="stat-value" style="color: #0284c7;">{{ stats.rerouted_count + stats.weather_blocked_count }}</span>
-    <span class="stat-meta">{{ stats.rerouted_count }} Rerouted &bull; {{ stats.weather_blocked_count }} Blocked</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Weather Disruptions</span>
+      <span class="kpi-value" style="color: var(--color-rich-berry);">{{ stats.rerouted_count + stats.weather_blocked_count }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">{{ stats.rerouted_count }} Rerouted &bull; {{ stats.weather_blocked_count }} Blocked</span>
+    </div>
+    <div class="kpi-icon-container" style="color: var(--color-rich-berry);">🌦️</div>
   </div>
 </div>
 
 <!-- Fleet Status Table -->
-<div class="dashboard-card">
+<div class="dashboard-card" style="margin-bottom: 24px;">
   <div class="card-header">
     <h2 class="card-title">Drone Fleet Overview</h2>
-    <span class="badge badge-healthy">Online</span>
+    <span class="badge badge-success">Online</span>
   </div>
   <div class="card-body" style="padding: 0;">
-    <div class="table-responsive">
+    <div class="data-table-container" style="border: none; border-radius: 0;">
       <table class="data-table">
         <thead>
           <tr>
@@ -80,13 +104,13 @@
         <tbody>
           {% for drone in recent_drones %}
           <tr>
-            <td><strong>{{ drone.drone_code }}</strong></td>
+            <td><strong style="color: var(--color-deep-wine);">{{ drone.drone_code }}</strong></td>
             <td>{{ drone.model_name }}</td>
             <td>{{ drone.maximum_payload_kg }} kg</td>
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="flex: 1; background-color: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
-                  <div style="width: {{ drone.battery_percentage }}%; background-color: {% if drone.battery_percentage < 25 %}var(--color-danger){% elif drone.battery_percentage < 50 %}var(--color-warning){% else %}var(--color-success){% endif %}; height: 100%;"></div>
+                <div style="flex: 1; background-color: var(--color-soft-blush); height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
+                  <div style="width: {{ drone.battery_percentage }}%; background-color: {% if drone.battery_percentage < 25 %}#C43E54{% elif drone.battery_percentage < 50 %}#D58A27{% else %}#16845B{% endif %}; height: 100%;"></div>
                 </div>
                 <span style="font-size: 0.78rem; font-weight: 700;">{{ drone.battery_percentage }}%</span>
               </div>
@@ -98,12 +122,8 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="6">
-              <div class="empty-state">
-                <div class="empty-state-icon">🚁</div>
-                <div class="empty-state-title">No Drones Found</div>
-                <div class="empty-state-desc">No drone units have been added to the database yet.</div>
-              </div>
+            <td colspan="6" style="text-align: center; color: var(--color-text-secondary); padding: 24px;">
+              No drone units found in fleet database.
             </td>
           </tr>
           {% endfor %}
@@ -114,20 +134,20 @@
 </div>
 
 <!-- Recent Delivery Requests & Simulation Audits -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 24px;">
   <!-- Requests Card -->
   <div class="dashboard-card">
     <div class="card-header">
       <h2 class="card-title">Recent Delivery Requests</h2>
-      <a href="{{ url_for('dashboard.operator_dashboard') }}" class="btn btn-sm" style="color: var(--color-primary);">Dispatch &rarr;</a>
+      <a href="{{ url_for('delivery.list_requests') }}" class="btn btn-sm btn-outline">View All &rarr;</a>
     </div>
     <div class="card-body" style="padding: 0;">
-      <div class="table-responsive">
+      <div class="data-table-container" style="border: none; border-radius: 0;">
         <table class="data-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Emergency Type</th>
+              <th>Cargo Type</th>
               <th>Priority</th>
               <th>Weight</th>
               <th>Status</th>
@@ -136,7 +156,7 @@
           <tbody>
             {% for req in recent_requests %}
             <tr>
-              <td><a href="{{ url_for('delivery.view_detail', request_id=req.id) }}" style="color: var(--color-primary); font-weight: 700;">#{{ req.id }}</a></td>
+              <td><a href="{{ url_for('delivery.view_detail', request_id=req.id) }}" style="color: var(--color-deep-wine); font-weight: 800;">#{{ req.id }}</a></td>
               <td>{{ req.emergency_type.replace('_', ' ') }}</td>
               <td>
                 <span class="badge badge-{{ req.priority.lower() }}">{{ req.priority }}</span>
@@ -148,11 +168,8 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="5">
-                <div class="empty-state">
-                  <div class="empty-state-title">No Requests Yet</div>
-                  <div class="empty-state-desc">No incoming emergency delivery requests logged.</div>
-                </div>
+              <td colspan="5" style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
+                No incoming delivery requests logged.
               </td>
             </tr>
             {% endfor %}
@@ -166,10 +183,10 @@
   <div class="dashboard-card">
     <div class="card-header">
       <h2 class="card-title">Recent Simulation Runs</h2>
-      <span class="badge badge-optimal">Evaluated</span>
+      <span class="badge badge-primary">Evaluated</span>
     </div>
     <div class="card-body" style="padding: 0;">
-      <div class="table-responsive">
+      <div class="data-table-container" style="border: none; border-radius: 0;">
         <table class="data-table">
           <thead>
             <tr>
@@ -182,25 +199,22 @@
           <tbody>
             {% for sim in recent_simulations %}
             <tr>
-              <td><strong>{{ sim.run_code }}</strong></td>
+              <td><strong style="color: var(--color-deep-wine);">{{ sim.run_code }}</strong></td>
               <td><span class="badge badge-{{ sim.status.lower() }}">{{ sim.status }}</span></td>
-              <td style="font-size: 0.8rem; color: #64748b;">{{ sim.created_at.strftime('%Y-%m-%d %H:%M') if sim.created_at else '-' }}</td>
+              <td style="font-size: 0.8rem; color: var(--color-text-secondary);">{{ sim.created_at.strftime('%Y-%m-%d %H:%M') if sim.created_at else '-' }}</td>
               <td>
                 {% set metrics = sim.get_summary_metrics() %}
                 {% if metrics %}
-                  <span style="font-size: 0.8rem; color: #0f172a; font-weight: 600;">Success: {{ metrics.get('success_rate_percent', metrics.get('successful_deliveries', '100%')) }}</span>
+                  <span style="font-size: 0.8rem; color: var(--color-deep-wine); font-weight: 700;">Success: {{ metrics.get('success_rate_percent', metrics.get('successful_deliveries', '100%')) }}</span>
                 {% else %}
-                  <span style="color: #94a3b8; font-size: 0.8rem;">Pending metrics</span>
+                  <span style="color: var(--color-text-secondary); font-size: 0.8rem;">Pending metrics</span>
                 {% endif %}
               </td>
             </tr>
             {% else %}
             <tr>
-              <td colspan="4">
-                <div class="empty-state">
-                  <div class="empty-state-title">No Simulation Runs</div>
-                  <div class="empty-state-desc">Simulation metrics will appear after batch executions.</div>
-                </div>
+              <td colspan="4" style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
+                Simulation metrics will appear after batch executions.
               </td>
             </tr>
             {% endfor %}
@@ -212,15 +226,15 @@
 </div>
 
 <!-- Recent Smart Drone Bookings & Weather Intelligence Alerts -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-top: 24px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px;">
   <!-- Bookings Card -->
   <div class="dashboard-card">
     <div class="card-header">
-      <h2 class="card-title">Recent Smart Drone Bookings</h2>
-      <a href="{{ url_for('booking.new_booking') }}" class="btn btn-sm" style="color: var(--color-primary);">+ Book Drone</a>
+      <h2 class="card-title">Recent Drone Bookings</h2>
+      <a href="{{ url_for('booking.new_booking') }}" class="btn btn-sm btn-primary">+ Book Drone</a>
     </div>
     <div class="card-body" style="padding: 0;">
-      <div class="table-responsive">
+      <div class="data-table-container" style="border: none; border-radius: 0;">
         <table class="data-table">
           <thead>
             <tr>
@@ -234,19 +248,16 @@
           <tbody>
             {% for b in recent_bookings %}
             <tr>
-              <td><strong>{{ b.booking_reference }}</strong></td>
+              <td><strong style="color: var(--color-deep-wine);">{{ b.booking_reference }}</strong></td>
               <td>{{ b.cargo_category.replace('_', ' ') }} ({{ b.cargo_weight_kg }}kg)</td>
               <td><span class="badge badge-{{ b.status.lower() }}">{{ b.status }}</span></td>
-              <td>₹{{ "%.2f"|format(b.quote.total_price if b.quote else 0) }}</td>
+              <td><strong>₹{{ "%.2f"|format(b.quote.total_price if b.quote else 0) }}</strong></td>
               <td><a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" class="btn btn-sm btn-outline">View</a></td>
             </tr>
             {% else %}
             <tr>
-              <td colspan="5">
-                <div class="empty-state">
-                  <div class="empty-state-title">No Drone Bookings</div>
-                  <div class="empty-state-desc">On-demand flight bookings will appear here.</div>
-                </div>
+              <td colspan="5" style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
+                On-demand flight bookings will appear here.
               </td>
             </tr>
             {% endfor %}
@@ -260,10 +271,10 @@
   <div class="dashboard-card">
     <div class="card-header">
       <h2 class="card-title">Atmospheric Safety Alerts</h2>
-      <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="btn btn-sm" style="color: var(--color-primary);">Console &rarr;</a>
+      <a href="{{ url_for('api_ext.manage_weather_scenario') }}" class="btn btn-sm btn-outline">Console &rarr;</a>
     </div>
     <div class="card-body" style="padding: 0;">
-      <div class="table-responsive">
+      <div class="data-table-container" style="border: none; border-radius: 0;">
         <table class="data-table">
           <thead>
             <tr>
@@ -277,17 +288,14 @@
             {% for a in recent_weather_alerts %}
             <tr>
               <td><span class="badge badge-{{ a.severity.lower() }}">{{ a.severity }}</span></td>
-              <td><strong>{{ a.alert_type }}</strong></td>
-              <td style="font-size: 0.8rem; color: #475569;">{{ a.message }}</td>
-              <td style="font-size: 0.75rem; color: #94a3b8;">{{ a.created_at.strftime('%H:%M:%S') if a.created_at else '-' }}</td>
+              <td><strong style="color: var(--color-deep-wine);">{{ a.alert_type }}</strong></td>
+              <td style="font-size: 0.8rem; color: var(--color-text-main);">{{ a.message }}</td>
+              <td style="font-size: 0.75rem; color: var(--color-text-secondary);">{{ a.created_at.strftime('%H:%M:%S') if a.created_at else '-' }}</td>
             </tr>
             {% else %}
             <tr>
-              <td colspan="4">
-                <div class="empty-state">
-                  <div class="empty-state-title">Nominal Atmosphere</div>
-                  <div class="empty-state-desc">No active weather hazards or reroute events recorded.</div>
-                </div>
+              <td colspan="4" style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
+                No active weather hazards or reroute events recorded.
               </td>
             </tr>
             {% endfor %}

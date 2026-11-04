@@ -16,10 +16,10 @@
 
   .table-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    box-shadow: var(--shadow-sm);
   }
 
   .custom-table {
@@ -29,47 +29,47 @@
   }
 
   .custom-table th {
-    background: #f8fafc;
+    background: var(--color-soft-blush);
     padding: 12px 16px;
     text-align: left;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 0.78rem;
-    color: #475569;
+    color: var(--color-deep-wine);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .custom-table td {
     padding: 14px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
+    border-bottom: 1px solid var(--color-soft-blush);
+    color: var(--color-text-main);
     vertical-align: middle;
   }
 
   .custom-table tr:hover {
-    background: #f8fafc;
+    background: var(--color-light-pink);
   }
 
   .status-pill {
     padding: 4px 10px;
-    border-radius: 12px;
+    border-radius: 9999px;
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
     display: inline-block;
   }
 
-  .pill-confirmed { background: #fef3c7; color: #92400e; }
-  .pill-paid { background: #dcfce7; color: #166534; }
-  .pill-dispatched { background: #e0f2fe; color: #075985; }
-  .pill-in_flight { background: #dbeafe; color: #1e40af; }
-  .pill-weather_caution { background: #fef08a; color: #854d0e; }
-  .pill-rerouted { background: #fed7aa; color: #9a3412; }
-  .pill-diverted { background: #fecdd3; color: #9f1239; }
-  .pill-delivered { background: #bbf7d0; color: #14532d; }
-  .pill-cancelled { background: #f1f5f9; color: #64748b; }
-  .pill-emergency_review { background: #fee2e2; color: #991b1b; }
+  .pill-confirmed { background: var(--color-soft-blush); color: var(--color-deep-wine); border: 1px solid var(--color-border); }
+  .pill-paid { background: #E6F5EE; color: #16845B; border: 1px solid #C4E8D7; }
+  .pill-dispatched { background: var(--color-blush); color: var(--color-deep-wine); border: 1px solid var(--color-pale-rose); }
+  .pill-in_flight { background: var(--color-blush); color: var(--color-deep-wine); border: 1px solid var(--color-pale-rose); }
+  .pill-weather_caution { background: #FEF5E7; color: #D58A27; border: 1px solid #FCE2B8; }
+  .pill-rerouted { background: #FEF5E7; color: #D58A27; border: 1px solid #FCE2B8; }
+  .pill-diverted { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-pale-rose); }
+  .pill-delivered { background: #E6F5EE; color: #16845B; border: 1px solid #C4E8D7; }
+  .pill-cancelled { background: var(--color-soft-blush); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+  .pill-emergency_review { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-pale-rose); }
 
   .empty-state {
     text-align: center;
@@ -83,14 +83,14 @@
 
   .empty-title {
     font-size: 1.15rem;
-    font-weight: 700;
-    color: #0f172a;
+    font-weight: 800;
+    color: var(--color-deep-wine);
     margin-bottom: 6px;
   }
 
   .empty-sub {
     font-size: 0.88rem;
-    color: #64748b;
+    color: var(--color-text-secondary);
     margin-bottom: 20px;
   }
 </style>
@@ -99,8 +99,8 @@
 {% block content %}
 <div class="history-header">
   <div>
-    <h2 style="font-size: 1.3rem; font-weight: 700; color: #0f172a; margin: 0;">On-Demand Flight Bookings</h2>
-    <p style="font-size: 0.82rem; color: #64748b; margin: 4px 0 0 0;">View your simulated autonomous emergency drone dispatch missions, collection tasks, and billing receipts.</p>
+    <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--color-deep-wine); margin: 0;">On-Demand Flight Bookings</h2>
+    <p style="font-size: 0.82rem; color: var(--color-text-secondary); margin: 4px 0 0 0;">View your simulated autonomous emergency drone dispatch missions, collection tasks, and billing receipts.</p>
   </div>
   <div style="display: flex; gap: 8px;">
     <a href="{{ url_for('booking.new_booking', direction='SEND') }}" class="btn btn-primary" style="font-size: 0.85rem;">
@@ -112,28 +112,66 @@
   </div>
 </div>
 
+<!-- Filter Bar -->
+<div class="table-card" style="margin-bottom: 16px; padding: 14px 18px;">
+  <form method="GET" action="{{ url_for('booking.booking_history') }}" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+    <input type="hidden" name="direction" value="{{ direction_filter }}">
+    <input type="hidden" name="status" value="{{ status_filter }}">
+
+    <div style="flex: 2; min-width: 180px;">
+      <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">SEARCH BOOKING REF / ITEM</label>
+      <input type="text" name="q" class="form-input" placeholder="Search BK- ref, custom item, etc..." value="{{ search_query or '' }}" style="font-size: 0.85rem; padding: 6px 10px;">
+    </div>
+
+    <div style="flex: 1; min-width: 140px;">
+      <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">CARGO CATEGORY</label>
+      <select name="category" class="form-select" style="font-size: 0.85rem; padding: 6px 10px;">
+        <option value="ALL">All Categories</option>
+        {% for cat_key, cat_meta in cargo_categories.items() %}
+          <option value="{{ cat_key }}" {% if category_filter == cat_key %}selected{% endif %}>{{ cat_meta.icon }} {{ cat_meta.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 130px;">
+      <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">FROM DATE</label>
+      <input type="date" name="start_date" class="form-input" value="{{ start_date or '' }}" style="font-size: 0.85rem; padding: 6px 8px;">
+    </div>
+
+    <div style="flex: 1; min-width: 130px;">
+      <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">TO DATE</label>
+      <input type="date" name="end_date" class="form-input" value="{{ end_date or '' }}" style="font-size: 0.85rem; padding: 6px 8px;">
+    </div>
+
+    <div style="display: flex; gap: 6px;">
+      <button type="submit" class="btn btn-primary btn-sm" style="padding: 6px 14px;">Filter</button>
+      <a href="{{ url_for('booking.booking_history') }}" class="btn btn-sm btn-outline" style="padding: 6px 10px;">Reset</a>
+    </div>
+  </form>
+</div>
+
 <!-- Filter Pills -->
 <div class="filter-pills-row" style="margin-bottom: 16px;">
-  <a href="{{ url_for('booking.booking_history') }}" class="filter-pill {% if direction_filter == 'ALL' and status_filter == 'ALL' %}active{% endif %}">
+  <a href="{{ url_for('booking.booking_history', direction='ALL', status='ALL', category=category_filter, q=search_query) }}" class="filter-pill {% if direction_filter == 'ALL' and status_filter == 'ALL' %}active{% endif %}">
     All Missions
   </a>
-  <a href="{{ url_for('booking.booking_history', direction='SEND', status=status_filter) }}" class="filter-pill {% if direction_filter == 'SEND' %}active{% endif %}">
+  <a href="{{ url_for('booking.booking_history', direction='SEND', status=status_filter, category=category_filter, q=search_query) }}" class="filter-pill {% if direction_filter == 'SEND' %}active{% endif %}">
     📤 Send Missions
   </a>
-  <a href="{{ url_for('booking.booking_history', direction='RECEIVE', status=status_filter) }}" class="filter-pill {% if direction_filter == 'RECEIVE' %}active{% endif %}">
+  <a href="{{ url_for('booking.booking_history', direction='RECEIVE', status=status_filter, category=category_filter, q=search_query) }}" class="filter-pill {% if direction_filter == 'RECEIVE' %}active{% endif %}">
     📥 Receive Missions
   </a>
   <span style="color: #cbd5e1; align-self: center;">|</span>
-  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='ACTIVE') }}" class="filter-pill {% if status_filter == 'ACTIVE' %}active{% endif %}">
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='ACTIVE', category=category_filter, q=search_query) }}" class="filter-pill {% if status_filter == 'ACTIVE' %}active{% endif %}">
     Active
   </a>
-  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='COMPLETED') }}" class="filter-pill {% if status_filter == 'COMPLETED' %}active{% endif %}">
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='COMPLETED', category=category_filter, q=search_query) }}" class="filter-pill {% if status_filter == 'COMPLETED' %}active{% endif %}">
     Completed
   </a>
-  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='DIVERTED') }}" class="filter-pill {% if status_filter == 'DIVERTED' %}active{% endif %}">
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='DIVERTED', category=category_filter, q=search_query) }}" class="filter-pill {% if status_filter == 'DIVERTED' %}active{% endif %}">
     Diverted
   </a>
-  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='CANCELLED') }}" class="filter-pill {% if status_filter == 'CANCELLED' %}active{% endif %}">
+  <a href="{{ url_for('booking.booking_history', direction=direction_filter, status='CANCELLED', category=category_filter, q=search_query) }}" class="filter-pill {% if status_filter == 'CANCELLED' %}active{% endif %}">
     Cancelled
   </a>
 </div>
@@ -226,6 +264,27 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <!-- History Pagination Controls -->
+  {% if pagination and pagination.pages > 1 %}
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid #e2e8f0; font-size: 0.82rem; color: #64748b; background: #ffffff;">
+    <div>
+      Page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong> (Total: {{ pagination.total }} bookings)
+    </div>
+    <div style="display: flex; gap: 6px;">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('booking.booking_history', page=pagination.prev_num, direction=direction_filter, status=status_filter, category=category_filter, q=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-outline">
+        &larr; Prev
+      </a>
+      {% endif %}
+      {% if pagination.has_next %}
+      <a href="{{ url_for('booking.booking_history', page=pagination.next_num, direction=direction_filter, status=status_filter, category=category_filter, q=search_query, start_date=start_date, end_date=end_date) }}" class="btn btn-sm btn-outline">
+        Next &rarr;
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
   {% else %}
   <div class="empty-state">
     <div class="empty-icon">🚁</div>

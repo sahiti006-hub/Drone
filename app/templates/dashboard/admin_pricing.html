@@ -19,18 +19,18 @@
 
   .config-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     padding: 24px;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 24px;
   }
 
   .config-card-title {
     font-size: 1.1rem;
-    font-weight: 700;
-    color: #0f172a;
-    border-bottom: 1px solid #f1f5f9;
+    font-weight: 800;
+    color: var(--color-deep-wine);
+    border-bottom: 1px solid var(--color-soft-blush);
     padding-bottom: 12px;
     margin-bottom: 18px;
     display: flex;
@@ -61,8 +61,8 @@
   .form-label {
     display: block;
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #475569;
+    font-weight: 700;
+    color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 6px;
@@ -71,34 +71,35 @@
   .form-input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     font-size: 0.95rem;
-    color: #0f172a;
+    color: var(--color-text-main);
     box-sizing: border-box;
   }
 
   .form-input:focus {
-    border-color: #0284c7;
+    border-color: var(--color-rich-berry);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    box-shadow: 0 0 0 3px rgba(134, 27, 73, 0.15);
   }
 
   .formula-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    background: var(--color-light-pink);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     padding: 16px;
     font-size: 0.85rem;
-    color: #334155;
+    color: var(--color-text-main);
     line-height: 1.6;
   }
 
   .formula-code {
-    background: #0f172a;
-    color: #38bdf8;
+    background: #590D2B;
+    color: var(--color-blush);
     padding: 10px 14px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-burgundy);
     font-family: monospace;
     font-size: 0.82rem;
     margin-top: 10px;

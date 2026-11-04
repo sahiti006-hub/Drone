@@ -182,7 +182,7 @@ def capture_all_release_screenshots():
     server_thread.start()
     time.sleep(2.5)
 
-    print(f"[*] Capturing 14 Release Screenshots from {BASE_URL}...")
+    print(f"[*] Capturing 14 Release Screenshots from {BASE_URL}...", flush=True)
 
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="msedge", headless=True)
@@ -192,14 +192,14 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 1: Login Page
         # ----------------------------------------------------------------------
-        print("[1/14] Capturing 01_login_page.png...")
+        print("[1/14] Capturing 01_login_page.png...", flush=True)
         page.goto(f"{BASE_URL}/login")
         page.wait_for_load_state("networkidle")
         time.sleep(0.5)
         page.screenshot(path=str(OUTPUT_DIR / "01_login_page.png"))
 
         # Log in as Requester
-        print("[*] Logging in as Requester (requester@hospital.org)...")
+        print("[*] Logging in as Requester (requester@hospital.org)...", flush=True)
         page.fill('input[name="email"]', "requester@hospital.org")
         page.fill('input[name="password"]', "RequesterSecurePassword123!")
         page.click('button[type="submit"]')
@@ -209,7 +209,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 2: Requester Dashboard
         # ----------------------------------------------------------------------
-        print("[2/14] Capturing 02_requester_dashboard.png...")
+        print("[2/14] Capturing 02_requester_dashboard.png...", flush=True)
         page.goto(f"{BASE_URL}/requester/dashboard")
         page.wait_for_load_state("networkidle")
         time.sleep(0.8)
@@ -218,7 +218,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 3: SEND Booking Mode
         # ----------------------------------------------------------------------
-        print("[3/14] Capturing 03_send_booking.png...")
+        print("[3/14] Capturing 03_send_booking.png...", flush=True)
         page.goto(f"{BASE_URL}/booking/new?direction=SEND")
         page.wait_for_load_state("networkidle")
         time.sleep(1.0)
@@ -227,7 +227,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 4: RECEIVE Booking Mode
         # ----------------------------------------------------------------------
-        print("[4/14] Capturing 04_receive_booking.png...")
+        print("[4/14] Capturing 04_receive_booking.png...", flush=True)
         page.goto(f"{BASE_URL}/booking/new?direction=RECEIVE")
         page.wait_for_load_state("networkidle")
         time.sleep(1.0)
@@ -236,28 +236,28 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 5: Universal Cargo Selection
         # ----------------------------------------------------------------------
-        print("[5/14] Capturing 05_universal_cargo_selection.png...")
+        print("[5/14] Capturing 05_universal_cargo_selection.png...", flush=True)
         # Scroll to cargo grid
-        page.evaluate("document.querySelector('.cargo-grid').scrollIntoView({behavior: 'instant', block: 'center'});")
+        page.evaluate("const g = document.querySelector('.cargo-categories-grid') || document.querySelector('.cargo-grid'); if (g) g.scrollIntoView({behavior: 'instant', block: 'center'});")
         time.sleep(0.5)
         page.screenshot(path=str(OUTPUT_DIR / "05_universal_cargo_selection.png"))
 
         # ----------------------------------------------------------------------
         # Screen 6: Custom Item Form
         # ----------------------------------------------------------------------
-        print("[6/14] Capturing 06_custom_item_form.png...")
-        page.click('.cargo-card[data-category="CUSTOM_ITEM"]')
+        print("[6/14] Capturing 06_custom_item_form.png...", flush=True)
+        page.evaluate("const c = document.querySelector('[data-category=\"CUSTOM_DELIVERY\"]') || document.querySelector('[data-category=\"CUSTOM_ITEM\"]'); if (c) c.click();")
         time.sleep(0.5)
         page.fill('#custom_item_name', "Titanium Surgical Fracture Plates")
-        page.fill('#custom_item_description', "Sterile cold-chain bone fixation implants for trauma surgery.")
-        page.evaluate("document.getElementById('customItemPanel').scrollIntoView({behavior: 'instant', block: 'center'});")
+        page.fill('#package_dimensions', "25x15x10 cm")
+        page.evaluate("const p = document.getElementById('customItemPanel'); if (p) p.scrollIntoView({behavior: 'instant', block: 'center'});")
         time.sleep(0.5)
         page.screenshot(path=str(OUTPUT_DIR / "06_custom_item_form.png"))
 
         # ----------------------------------------------------------------------
         # Screen 7: Drone Availability Search Results
         # ----------------------------------------------------------------------
-        print("[7/14] Capturing 07_drone_availability.png...")
+        print("[7/14] Capturing 07_drone_availability.png...", flush=True)
         page.click('#btnFindDrones')
         time.sleep(2.5)  # Wait for AJAX search response and card animation
         page.evaluate("const el = document.getElementById('resultsSection') || document.getElementById('step5Section'); if (el) el.scrollIntoView({behavior: 'instant', block: 'start'});")
@@ -267,9 +267,9 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 8: Pricing Confirmation & Cockpit Review
         # ----------------------------------------------------------------------
-        print("[8/14] Capturing 08_pricing_confirmation.png...")
+        print("[8/14] Capturing 08_pricing_confirmation.png...", flush=True)
         # Click on first drone card to reveal booking summary and price breakdown
-        page.evaluate("const firstCard = document.querySelector('.drone-option-card'); if (firstCard) firstCard.click();")
+        page.evaluate("const firstCard = document.querySelector('.drone-card') || document.querySelector('.drone-option-card'); if (firstCard) firstCard.click();")
         time.sleep(1.0)
         page.evaluate("const sumCard = document.getElementById('bookingSummaryCard'); if (sumCard) sumCard.scrollIntoView({behavior: 'instant', block: 'center'});")
         time.sleep(0.5)
@@ -278,7 +278,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 9: Live Tracking Cockpit
         # ----------------------------------------------------------------------
-        print("[9/14] Capturing 09_live_tracking.png...")
+        print("[9/14] Capturing 09_live_tracking.png...", flush=True)
         page.goto(f"{BASE_URL}/booking/{send_id}")
         page.wait_for_load_state("networkidle")
         time.sleep(2.0)  # Wait for Leaflet map tiles and drone icon
@@ -287,7 +287,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 10: Weather Rerouting View
         # ----------------------------------------------------------------------
-        print("[10/14] Capturing 10_weather_rerouting.png...")
+        print("[10/14] Capturing 10_weather_rerouting.png...", flush=True)
         page.goto(f"{BASE_URL}/booking/{reroute_id}")
         page.wait_for_load_state("networkidle")
         time.sleep(1.5)
@@ -296,7 +296,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 11: Booking History with Two-Way Filters
         # ----------------------------------------------------------------------
-        print("[11/14] Capturing 11_booking_history.png...")
+        print("[11/14] Capturing 11_booking_history.png...", flush=True)
         page.goto(f"{BASE_URL}/booking/history")
         page.wait_for_load_state("networkidle")
         time.sleep(0.8)
@@ -305,7 +305,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 12: Admin Dashboard
         # ----------------------------------------------------------------------
-        print("[12/14] Capturing 12_admin_dashboard.png...")
+        print("[12/14] Capturing 12_admin_dashboard.png...", flush=True)
         page.goto(f"{BASE_URL}/logout")
         page.wait_for_load_state("networkidle")
         page.goto(f"{BASE_URL}/login")
@@ -323,7 +323,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 13: Operator Dashboard
         # ----------------------------------------------------------------------
-        print("[13/14] Capturing 13_operator_dashboard.png...")
+        print("[13/14] Capturing 13_operator_dashboard.png...", flush=True)
         page.goto(f"{BASE_URL}/logout")
         page.wait_for_load_state("networkidle")
         page.goto(f"{BASE_URL}/login")
@@ -341,7 +341,7 @@ def capture_all_release_screenshots():
         # ----------------------------------------------------------------------
         # Screen 14: Payment Invoice
         # ----------------------------------------------------------------------
-        print("[14/14] Capturing 14_payment_invoice.png...")
+        print("[14/14] Capturing 14_payment_invoice.png...", flush=True)
         page.goto(f"{BASE_URL}/booking/{recv_id}/invoice")
         page.wait_for_load_state("networkidle")
         time.sleep(1.0)
@@ -349,7 +349,7 @@ def capture_all_release_screenshots():
 
         browser.close()
 
-    print(f"\n[+] All 14 release screenshots successfully captured and saved to {OUTPUT_DIR}!")
+    print(f"\n[+] All 14 release screenshots successfully captured and saved to {OUTPUT_DIR}!", flush=True)
 
 
 if __name__ == "__main__":

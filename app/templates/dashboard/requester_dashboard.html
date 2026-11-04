@@ -1,48 +1,48 @@
 {% extends "base.html" %}
 
 {% block title %}Requester Dashboard - DroneDispatch{% endblock %}
-{% block page_title %}🏥 Medical Requester Portal{% endblock %}
+{% block page_title %}🏥 Requester Operations Portal{% endblock %}
 
 {% block content %}
 <!-- Active Mission Alert Banner (if in flight or confirmed) -->
 {% if active_booking %}
-<div style="background: linear-gradient(90deg, #1e3a8a, #1479d1); border-radius: var(--radius-lg); padding: 18px 24px; margin-bottom: 24px; color: #ffffff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 4px 14px rgba(20, 121, 209, 0.3);">
+<div style="background: linear-gradient(135deg, #590D2B 0%, #710D37 50%, #861B49 100%); border-radius: var(--radius-lg); padding: 20px 26px; margin-bottom: 24px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: var(--shadow-wine);">
   <div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span class="live-pulse-dot" style="background: #38bdf8;"></span>
-      <span style="font-weight: 800; font-size: 1.05rem; letter-spacing: 0.02em;">ACTIVE FLIGHT MISSION IN PROGRESS</span>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #F8DCE5; box-shadow: 0 0 10px #F8DCE5;"></span>
+      <span style="font-weight: 800; font-size: 1.05rem; letter-spacing: 0.02em; color: #FFFFFF;">ACTIVE FLIGHT MISSION IN PROGRESS</span>
     </div>
-    <div style="font-size: 0.88rem; color: #bfdbfe; margin-top: 4px;">
-      Ref: <strong>{{ active_booking.booking_reference }}</strong> &bull;
-      Status: <strong style="color: #ffffff;">{{ active_booking.status.replace('_', ' ') }}</strong> &bull;
+    <div style="font-size: 0.88rem; color: #FCEBF0; margin-top: 4px;">
+      Ref: <strong style="color: #FFFFFF;">{{ active_booking.booking_reference }}</strong> &bull;
+      Status: <strong style="color: #FFFFFF;">{{ active_booking.status.replace('_', ' ') }}</strong> &bull;
       Cargo: {{ active_booking.cargo_category.replace('_', ' ') }} ({{ active_booking.cargo_weight_kg }}kg)
     </div>
   </div>
-  <a href="{{ url_for('booking.view_booking', booking_id=active_booking.id) }}" class="btn" style="background: #ffffff; color: #1e3a8a; font-weight: 800; padding: 10px 18px; border-radius: var(--radius-md); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+  <a href="{{ url_for('booking.view_booking', booking_id=active_booking.id) }}" class="btn" style="background: #FFFFFF; color: #590D2B; font-weight: 800; padding: 10px 20px; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
     Open Live Cockpit &rarr;
   </a>
 </div>
 {% endif %}
 
 <!-- Quick Book Drone Hero Banner -->
-<div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: var(--shadow-sm);">
+<div style="background: #FFFFFF; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: var(--shadow-sm);">
   <div style="max-width: 580px;">
-    <div style="display: inline-block; background: #e0f2fe; color: var(--color-primary); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 3px 10px; border-radius: 9999px; margin-bottom: 8px;">
-      TWO-WAY ON-DEMAND EMERGENCY AIRWAYS
+    <div style="display: inline-block; background: var(--color-soft-blush); color: var(--color-deep-wine); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 9999px; margin-bottom: 8px; border: 1px solid var(--color-border);">
+      TWO-WAY ON-DEMAND AUTONOMOUS AIRWAYS
     </div>
-    <h2 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.01em;">
-      Send or Receive Critical Emergency Cargo
+    <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--color-deep-wine); margin-bottom: 6px; letter-spacing: -0.01em;">
+      Send or Receive Critical Deliveries
     </h2>
-    <p style="font-size: 0.9rem; color: #64748b; line-height: 1.4; margin: 0;">
-      Book autonomous drone dispatch in under 30 seconds. Dispatch cargo from your facility, or request a drone to collect essential items from pharmacies, labs, or depots and deliver them to your landing pad.
+    <p style="font-size: 0.88rem; color: var(--color-text-secondary); line-height: 1.45; margin: 0;">
+      Book autonomous drone dispatch in under 30 seconds. Dispatch cargo from your facility, or request a drone to collect essential items from suppliers, pharmacies, or depots and deliver them directly to you.
     </p>
   </div>
   <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-    <a href="{{ url_for('booking.new_booking', direction='SEND') }}" class="btn btn-primary" style="padding: 12px 20px; font-size: 0.95rem; font-weight: 800; border-radius: var(--radius-md); box-shadow: 0 4px 14px rgba(20, 121, 209, 0.4); display: flex; align-items: center; gap: 8px;">
+    <a href="{{ url_for('booking.new_booking', direction='SEND') }}" class="btn btn-primary" style="padding: 12px 22px; font-size: 0.95rem; font-weight: 800; border-radius: var(--radius-md); box-shadow: var(--shadow-wine); display: flex; align-items: center; gap: 8px;">
       <span>📤</span>
       <span>SEND AN ITEM</span>
     </a>
-    <a href="{{ url_for('booking.new_booking', direction='RECEIVE') }}" class="btn btn-secondary" style="padding: 12px 20px; font-size: 0.95rem; font-weight: 800; border-radius: var(--radius-md); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15); display: flex; align-items: center; gap: 8px;">
+    <a href="{{ url_for('booking.new_booking', direction='RECEIVE') }}" class="btn btn-secondary" style="padding: 12px 22px; font-size: 0.95rem; font-weight: 800; border-radius: var(--radius-md); display: flex; align-items: center; gap: 8px;">
       <span>📥</span>
       <span>RECEIVE AN ITEM</span>
     </a>
@@ -53,46 +53,46 @@
 <div class="dashboard-card" style="margin-bottom: 24px;">
   <div class="card-header">
     <h3 class="card-title">📖 How Two-Way Drone Delivery Works</h3>
-    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">SIMPLE 4-STEP PROCESS</span>
+    <span style="font-size: 0.75rem; color: var(--color-text-secondary); font-weight: 700;">SIMPLE 4-STEP PROCESS</span>
   </div>
   <div class="card-body">
-    <div class="how-it-works-grid">
-      <div class="how-it-works-step">
-        <div style="display: flex; align-items: center; gap: 8px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+      <div style="background: var(--color-light-pink); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
           <span class="step-num-badge">1</span>
-          <strong style="font-size: 0.9rem; color: #0f172a;">Choose Mode & Location</strong>
+          <strong style="font-size: 0.9rem; color: var(--color-deep-wine);">Choose Mode & Location</strong>
         </div>
-        <p style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
+        <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0;">
           Select Send or Receive. Set collection point and destination on interactive map.
         </p>
       </div>
 
-      <div class="how-it-works-step">
-        <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="background: var(--color-light-pink); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
           <span class="step-num-badge">2</span>
-          <strong style="font-size: 0.9rem; color: #0f172a;">Select Cargo & Urgency</strong>
+          <strong style="font-size: 0.9rem; color: var(--color-deep-wine);">Select Cargo & Urgency</strong>
         </div>
-        <p style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
-          Pick from 7 cargo categories (including Custom Item), enter payload weight, and set priority.
+        <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0;">
+          Pick from 9 cargo categories (or Custom), declare weight, and set delivery priority.
         </p>
       </div>
 
-      <div class="how-it-works-step">
-        <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="background: var(--color-light-pink); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
           <span class="step-num-badge">3</span>
-          <strong style="font-size: 0.9rem; color: #0f172a;">Pick Drone & Lock Price</strong>
+          <strong style="font-size: 0.9rem; color: var(--color-deep-wine);">Pick Drone & Lock Price</strong>
         </div>
-        <p style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
+        <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0;">
           Review suitable drones with recommendation badges, transparent fares, and clear corridor routes.
         </p>
       </div>
 
-      <div class="how-it-works-step">
-        <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="background: var(--color-light-pink); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
           <span class="step-num-badge">4</span>
-          <strong style="font-size: 0.9rem; color: #0f172a;">Live Tracking & Handoff</strong>
+          <strong style="font-size: 0.9rem; color: var(--color-deep-wine);">Live Tracking & Handoff</strong>
         </div>
-        <p style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
+        <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0;">
           Track drone position in real time along 3D airway corridors, share public tracking links, and rate delivery.
         </p>
       </div>
@@ -100,36 +100,51 @@
   </div>
 </div>
 
-<!-- Requester Key Metrics Overview -->
-<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-  <div class="stat-card">
-    <span class="stat-title">In Flight / Active</span>
-    <span class="stat-value" style="color: var(--color-primary);">{{ in_transit_count }}</span>
-    <span class="stat-meta">Active drone transit missions</span>
+<!-- Requester Key Metrics Overview (Berry Wine & Blush Pink KPI Cards) -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">In Flight / Active</span>
+      <span class="kpi-value" style="color: var(--color-deep-wine);">{{ in_transit_count }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Active flight missions</span>
+    </div>
+    <div class="kpi-icon-container">🚁</div>
   </div>
 
-  <div class="stat-card">
-    <span class="stat-title">Successfully Delivered</span>
-    <span class="stat-value" style="color: var(--color-success);">{{ delivered_count }}</span>
-    <span class="stat-meta">Completed medical handoffs</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Successfully Delivered</span>
+      <span class="kpi-value" style="color: #16845B;">{{ delivered_count }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Completed deliveries</span>
+    </div>
+    <div class="kpi-icon-container" style="color: #16845B;">✅</div>
   </div>
 
-  <div class="stat-card">
-    <span class="stat-title">Items Sent</span>
-    <span class="stat-value" style="color: #0284c7;">{{ items_sent_count }}</span>
-    <span class="stat-meta">Dispatched outbound</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Items Sent</span>
+      <span class="kpi-value" style="color: var(--color-deep-wine);">{{ items_sent_count }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Dispatched outbound</span>
+    </div>
+    <div class="kpi-icon-container">📤</div>
   </div>
 
-  <div class="stat-card">
-    <span class="stat-title">Items Received</span>
-    <span class="stat-value" style="color: #7c3aed;">{{ items_received_count }}</span>
-    <span class="stat-meta">Collected & delivered to you</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Items Received</span>
+      <span class="kpi-value" style="color: var(--color-rich-berry);">{{ items_received_count }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Collected inbound</span>
+    </div>
+    <div class="kpi-icon-container" style="color: var(--color-rich-berry);">📥</div>
   </div>
 
-  <div class="stat-card">
-    <span class="stat-title">Total Requests</span>
-    <span class="stat-value">{{ total_count }}</span>
-    <span class="stat-meta">Lifetime orders tracked</span>
+  <div class="kpi-card">
+    <div class="kpi-meta">
+      <span class="kpi-label">Total Requests</span>
+      <span class="kpi-value" style="color: var(--color-text-main);">{{ total_count }}</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Lifetime orders</span>
+    </div>
+    <div class="kpi-icon-container">📋</div>
   </div>
 </div>
 
@@ -139,15 +154,15 @@
   <!-- Saved Locations Manager -->
   <div class="dashboard-card">
     <div class="card-header">
-      <h3 class="card-title">📍 My Saved Medical Locations</h3>
+      <h3 class="card-title">📍 My Saved Locations</h3>
       <button type="button" class="btn btn-outline btn-sm" onclick="toggleAddLocationForm()">
         + Add Location
       </button>
     </div>
     <div class="card-body">
       <!-- Add Location Form (Collapsible) -->
-      <div id="addLocationBox" style="display: none; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
-        <h4 style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Save New Medical Landing Site</h4>
+      <div id="addLocationBox" style="display: none; background: var(--color-light-pink); border: 1.5px dashed var(--color-border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+        <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-deep-wine); margin-bottom: 8px;">Save New Delivery Site</h4>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <input type="text" id="newLocLabel" class="form-input" placeholder="Location Name (e.g. St. Philomena Hospital)" style="font-size: 0.85rem;">
           <input type="text" id="newLocAddress" class="form-input" placeholder="Street Address / Ward" style="font-size: 0.85rem;">
@@ -156,7 +171,7 @@
             <input type="number" step="any" id="newLocLng" class="form-input" placeholder="Longitude (e.g. 77.5756)" style="font-size: 0.85rem;">
           </div>
           <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
-            <button type="button" class="btn btn-sm" onclick="toggleAddLocationForm()">Cancel</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="toggleAddLocationForm()">Cancel</button>
             <button type="button" class="btn btn-primary btn-sm" onclick="saveNewLocation()">Save Location</button>
           </div>
         </div>
@@ -166,24 +181,24 @@
       <div id="savedLocationsList" style="display: flex; flex-direction: column; gap: 10px;">
         {% if current_user.saved_locations.all() %}
           {% for loc in current_user.saved_locations.all() %}
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);" id="loc_item_{{ loc.id }}">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);" id="loc_item_{{ loc.id }}">
             <div>
-              <strong style="font-size: 0.88rem; color: #0f172a;">🏥 {{ loc.label }}</strong>
-              <div style="font-size: 0.75rem; color: #64748b;">{{ loc.address or 'Medical Center' }} &bull; ({{ "%.4f"|format(loc.latitude) }}, {{ "%.4f"|format(loc.longitude) }})</div>
+              <strong style="font-size: 0.88rem; color: var(--color-deep-wine);">📍 {{ loc.label }}</strong>
+              <div style="font-size: 0.75rem; color: var(--color-text-secondary);">{{ loc.address or 'Operational Site' }} &bull; ({{ "%.4f"|format(loc.latitude) }}, {{ "%.4f"|format(loc.longitude) }})</div>
             </div>
             <div style="display: flex; gap: 6px;">
               <a href="{{ url_for('booking.new_booking', pickup_lat=loc.latitude, pickup_lng=loc.longitude, pickup_name=loc.label) }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">
-                Dispatch From Here
+                Dispatch
               </a>
-              <button type="button" onclick="deleteSavedLocation({{ loc.id }})" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.8rem; padding: 4px;">
+              <button type="button" onclick="deleteSavedLocation({{ loc.id }})" style="background: none; border: none; color: #C43E54; cursor: pointer; font-size: 0.85rem; padding: 4px;">
                 🗑️
               </button>
             </div>
           </div>
           {% endfor %}
         {% else %}
-          <div style="text-align: center; color: #64748b; font-size: 0.82rem; padding: 14px 0;">
-            No custom saved locations yet. Standard regional hospitals will load automatically.
+          <div style="text-align: center; color: var(--color-text-secondary); font-size: 0.82rem; padding: 14px 0;">
+            No custom saved locations yet. Standard regional dispatch centers will load automatically.
           </div>
         {% endif %}
       </div>
@@ -194,10 +209,10 @@
   <div class="dashboard-card">
     <div class="card-header">
       <h3 class="card-title">📋 Recent Drone Bookings</h3>
-      <a href="{{ url_for('booking.booking_history') }}" style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700; text-decoration: none;">View All &rarr;</a>
+      <a href="{{ url_for('booking.booking_history') }}" style="font-size: 0.8rem; color: var(--color-rich-berry); font-weight: 700; text-decoration: none;">View All &rarr;</a>
     </div>
     <div class="card-body" style="padding: 0;">
-      <div class="table-responsive">
+      <div class="data-table-container" style="border: none; border-radius: 0;">
         <table class="data-table">
           <thead>
             <tr>
@@ -213,20 +228,20 @@
               <td>
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
                   {% if b.delivery_direction == 'RECEIVE' %}
-                  <span class="badge-direction-receive" style="font-size: 0.65rem; padding: 2px 6px;">📥 RECEIVE</span>
+                  <span class="badge badge-direction-receive" style="font-size: 0.65rem; padding: 2px 6px;">📥 RECEIVE</span>
                   {% else %}
-                  <span class="badge-direction-send" style="font-size: 0.65rem; padding: 2px 6px;">📤 SEND</span>
+                  <span class="badge badge-direction-send" style="font-size: 0.65rem; padding: 2px 6px;">📤 SEND</span>
                   {% endif %}
                 </div>
-                <strong style="color: #0f172a;">{{ b.booking_reference }}</strong>
-                <div style="font-size: 0.72rem; color: #64748b;">{{ "%.1f"|format(b.flight_distance_km) }} km &bull; ₹{{ "%.2f"|format(b.quote.total_price if b.quote else 0) }}</div>
+                <strong style="color: var(--color-deep-wine);">{{ b.booking_reference }}</strong>
+                <div style="font-size: 0.72rem; color: var(--color-text-secondary);">{{ "%.1f"|format(b.flight_distance_km) }} km &bull; ₹{{ "%.2f"|format(b.quote.total_price if b.quote else 0) }}</div>
               </td>
               <td>
-                <span style="font-size: 0.8rem; font-weight: 600;">{{ b.cargo_category.replace('_', ' ') }}</span>
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-text-main);">{{ b.cargo_category.replace('_', ' ') }}</span>
                 {% if b.custom_item_name %}
-                <div style="font-size: 0.72rem; color: #7e22ce; font-weight: 700;">📦 {{ b.custom_item_name }}</div>
+                <div style="font-size: 0.72rem; color: var(--color-burgundy); font-weight: 700;">📦 {{ b.custom_item_name }}</div>
                 {% endif %}
-                <div style="font-size: 0.72rem; color: #64748b;">{{ b.cargo_weight_kg }} kg</div>
+                <div style="font-size: 0.72rem; color: var(--color-text-secondary);">{{ b.cargo_weight_kg }} kg</div>
               </td>
               <td>
                 <span class="badge badge-{{ b.status.lower() }}">{{ b.status }}</span>
@@ -236,7 +251,6 @@
                   <a href="{{ url_for('booking.view_booking', booking_id=b.id) }}" class="btn btn-sm btn-outline" style="font-size: 0.75rem; padding: 4px 8px;">
                     Track
                   </a>
-                  <!-- Uber-style "Book Again" Button -->
                   <a href="{{ url_for('booking.new_booking', direction=b.delivery_direction or 'SEND', pickup_lat=b.pickup_latitude, pickup_lng=b.pickup_longitude, dest_lat=b.destination_latitude, dest_lng=b.destination_longitude, cargo_category=b.cargo_category, cargo_weight_kg=b.cargo_weight_kg, priority=b.priority, custom_item_name=b.custom_item_name or '', package_size=b.package_size or '') }}" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 4px 8px;" title="Re-order this delivery with identical parameters">
                     Book Again
                   </a>
@@ -245,8 +259,8 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">
-                No bookings recorded yet. Use the "Book Drone Dispatch" button above to get started.
+              <td colspan="4" style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
+                No bookings recorded yet. Use the "Book Drone" button above to get started.
               </td>
             </tr>
             {% endfor %}
@@ -256,95 +270,10 @@
     </div>
   </div>
 </div>
-
-<!-- Secondary: Legacy Request Submission Form (Collapsible) -->
-<div class="dashboard-card">
-  <div class="card-header" style="cursor: pointer;" onclick="document.getElementById('legacyOrderFormBody').classList.toggle('open')">
-    <div>
-      <h3 class="card-title">📝 Submit Academic Batch Request</h3>
-      <div style="font-size: 0.75rem; color: #64748b;">Alternative manual submission form for academic benchmark evaluators</div>
-    </div>
-    <span style="font-size: 0.85rem; color: var(--color-primary); font-weight: 700;">⚙️ Toggle Form</span>
-  </div>
-  <div id="legacyOrderFormBody" class="accordion-body" style="padding: 20px; display: none;">
-    <form action="{{ url_for('dashboard.create_delivery_request') }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="emergency_type" class="form-label">Emergency Cargo Type</label>
-          <select name="emergency_type" id="emergency_type" class="form-select" required>
-            {% for et in emergency_types %}
-              <option value="{{ et }}">{{ et.replace('_', ' ') }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="priority" class="form-label">Urgency Priority</label>
-          <select name="priority" id="priority" class="form-select" required>
-            {% for p in priorities %}
-              <option value="{{ p }}" {% if p == 'CRITICAL' %}selected{% endif %}>{{ p }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="payload_weight_kg" class="form-label">Payload Weight (kg)</label>
-          <input type="number" step="0.05" min="0.1" max="10.0" name="payload_weight_kg" id="payload_weight_kg" class="form-input" value="1.50" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Presets / Quick-fill</label>
-          <button type="button" class="btn btn-sm" style="background-color: #f1f5f9; color: #334155;" onclick="quickfillHospitalRoute()">
-            Fill Sample Hospital Coordinates
-          </button>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="pickup_latitude" class="form-label">Pickup Latitude (&deg;)</label>
-          <input type="number" step="0.0000001" min="-90" max="90" name="pickup_latitude" id="pickup_latitude" class="form-input" value="12.9716000" required>
-        </div>
-
-        <div class="form-group">
-          <label for="pickup_longitude" class="form-label">Pickup Longitude (&deg;)</label>
-          <input type="number" step="0.0000001" min="-180" max="180" name="pickup_longitude" id="pickup_longitude" class="form-input" value="77.5946000" required>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="destination_latitude" class="form-label">Destination Latitude (&deg;)</label>
-          <input type="number" step="0.0000001" min="-90" max="90" name="destination_latitude" id="destination_latitude" class="form-input" value="12.9352000" required>
-        </div>
-
-        <div class="form-group">
-          <label for="destination_longitude" class="form-label">Destination Longitude (&deg;)</label>
-          <input type="number" step="0.0000001" min="-180" max="180" name="destination_longitude" id="destination_longitude" class="form-input" value="77.6245000" required>
-        </div>
-      </div>
-
-      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-        Submit Emergency Dispatch Order
-      </button>
-    </form>
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-function quickfillHospitalRoute() {
-  document.getElementById('pickup_latitude').value = "12.9716000";
-  document.getElementById('pickup_longitude').value = "77.5946000";
-  document.getElementById('destination_latitude').value = "12.9352000";
-  document.getElementById('destination_longitude').value = "77.6245000";
-}
-
 function toggleAddLocationForm() {
   const box = document.getElementById("addLocationBox");
   box.style.display = box.style.display === "none" ? "block" : "none";

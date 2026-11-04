@@ -336,6 +336,14 @@ class DroneAvailabilityService:
         custom_item_name: Optional[str] = None,
         custom_item_description: Optional[str] = None,
         package_size: Optional[str] = None,
+        package_dimensions: Optional[str] = None,
+        package_count: Optional[int] = 1,
+        handling_instructions: Optional[str] = None,
+        pickup_contact_name: Optional[str] = None,
+        pickup_contact_phone: Optional[str] = None,
+        delivery_contact_name: Optional[str] = None,
+        delivery_contact_phone: Optional[str] = None,
+        special_instructions: Optional[str] = None,
     ) -> DroneBooking:
         """Atomically confirm booking, lock drone, and instantiate delivery request.
 
@@ -414,6 +422,7 @@ class DroneAvailabilityService:
 
             # 4. Create and link DeliveryRequest
             from app.models.delivery_request import DeliveryRequest, RequestStatus, RequestPriority
+            from app.models.request_activity import RequestActivity
             delivery_req = DeliveryRequest(
                 requester_id=requester_id,
                 emergency_type=quote.cargo_category,
@@ -425,10 +434,29 @@ class DroneAvailabilityService:
                 priority=quote.priority,
                 delivery_direction=eff_direction,
                 description=notes or f"Smart Drone Booking [{quote.quote_reference}]",
+                custom_item_name=eff_item_name,
+                package_dimensions=package_dimensions,
+                package_count=package_count or 1,
+                handling_instructions=handling_instructions,
+                pickup_contact_name=pickup_contact_name,
+                pickup_contact_phone=pickup_contact_phone,
+                delivery_contact_name=delivery_contact_name or collection_contact_name,
+                delivery_contact_phone=delivery_contact_phone or collection_contact_phone,
+                special_instructions=special_instructions or collection_instructions,
             )
             delivery_req.status = RequestStatus.ROUTE_CALCULATED.value
             db.session.add(delivery_req)
             db.session.flush()
+
+            db.session.add(RequestActivity(
+                delivery_request_id=delivery_req.id,
+                actor_id=requester_id,
+                actor_role="REQUESTER",
+                from_status=None,
+                to_status=RequestStatus.CONFIRMED.value,
+                action="BOOKING_RESERVED",
+                reason=f"Booking confirmed against Quote #{quote.quote_reference}.",
+            ))
 
             # Persist candidate 3D flight routes and waypoints for dispatch execution
             candidate_corridors = CandidateRouteGenerator.generate_candidates(

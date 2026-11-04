@@ -7,20 +7,45 @@
 <!-- Filter Toolbar -->
 <div class="dashboard-card" style="margin-bottom: 20px;">
   <div class="card-body" style="padding: 16px 20px;">
-    <form method="GET" action="{{ url_for('delivery.list_requests') }}" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
-      <div style="flex: 1; min-width: 140px;">
-        <label for="status" class="form-label">Status</label>
-        <select name="status" id="status" class="form-select">
+    <form method="GET" action="{{ url_for('delivery.list_requests') }}" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+      <div style="flex: 2; min-width: 180px;">
+        <label for="q" class="form-label" style="font-size: 0.75rem; font-weight: 700;">Search Reference / Item</label>
+        <input type="text" name="q" id="q" class="form-input" placeholder="Search REQ ref or item name..." value="{{ filters.q or '' }}" style="font-size: 0.85rem; padding: 6px 10px;">
+      </div>
+
+      <div style="flex: 1; min-width: 130px;">
+        <label for="status" class="form-label" style="font-size: 0.75rem; font-weight: 700;">Status</label>
+        <select name="status" id="status" class="form-select" style="font-size: 0.85rem; padding: 6px 10px;">
           <option value="">All Statuses</option>
           {% for s in statuses %}
-            <option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s }}</option>
+            <option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s.replace('_', ' ') }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="flex: 1; min-width: 130px;">
+        <label for="direction" class="form-label" style="font-size: 0.75rem; font-weight: 700;">Direction</label>
+        <select name="direction" id="direction" class="form-select" style="font-size: 0.85rem; padding: 6px 10px;">
+          <option value="">All Directions</option>
+          {% for d in directions %}
+            <option value="{{ d }}" {% if filters.direction == d %}selected{% endif %}>{{ d }}</option>
           {% endfor %}
         </select>
       </div>
 
       <div style="flex: 1; min-width: 140px;">
-        <label for="priority" class="form-label">Priority</label>
-        <select name="priority" id="priority" class="form-select">
+        <label for="category" class="form-label" style="font-size: 0.75rem; font-weight: 700;">Category</label>
+        <select name="category" id="category" class="form-select" style="font-size: 0.85rem; padding: 6px 10px;">
+          <option value="">All Categories</option>
+          {% for c in categories %}
+            <option value="{{ c }}" {% if filters.category == c %}selected{% endif %}>{{ c.replace('_', ' ') }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="flex: 1; min-width: 120px;">
+        <label for="priority" class="form-label" style="font-size: 0.75rem; font-weight: 700;">Priority</label>
+        <select name="priority" id="priority" class="form-select" style="font-size: 0.85rem; padding: 6px 10px;">
           <option value="">All Priorities</option>
           {% for p in priorities %}
             <option value="{{ p }}" {% if filters.priority == p %}selected{% endif %}>{{ p }}</option>
@@ -28,29 +53,19 @@
         </select>
       </div>
 
-      <div style="flex: 1; min-width: 160px;">
-        <label for="emergency_type" class="form-label">Emergency Type</label>
-        <select name="emergency_type" id="emergency_type" class="form-select">
-          <option value="">All Types</option>
-          {% for et in emergency_types %}
-            <option value="{{ et }}" {% if filters.emergency_type == et %}selected{% endif %}>{{ et.replace('_', ' ') }}</option>
-          {% endfor %}
-        </select>
+      <div style="flex: 1; min-width: 125px;">
+        <label for="start_date" class="form-label" style="font-size: 0.75rem; font-weight: 700;">From Date</label>
+        <input type="date" name="start_date" id="start_date" class="form-input" value="{{ filters.start_date or '' }}" style="font-size: 0.85rem; padding: 6px 8px;">
       </div>
 
-      <div style="flex: 1; min-width: 140px;">
-        <label for="start_date" class="form-label">From Date</label>
-        <input type="date" name="start_date" id="start_date" class="form-input" value="{{ filters.start_date or '' }}">
-      </div>
-
-      <div style="flex: 1; min-width: 140px;">
-        <label for="end_date" class="form-label">To Date</label>
-        <input type="date" name="end_date" id="end_date" class="form-input" value="{{ filters.end_date or '' }}">
+      <div style="flex: 1; min-width: 125px;">
+        <label for="end_date" class="form-label" style="font-size: 0.75rem; font-weight: 700;">To Date</label>
+        <input type="date" name="end_date" id="end_date" class="form-input" value="{{ filters.end_date or '' }}" style="font-size: 0.85rem; padding: 6px 8px;">
       </div>
 
       <div style="display: flex; gap: 8px;">
-        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-        <a href="{{ url_for('delivery.list_requests') }}" class="btn btn-sm" style="background-color: #f1f5f9; color: #475569;">Reset</a>
+        <button type="submit" class="btn btn-primary btn-sm" style="padding: 6px 14px;">Filter</button>
+        <a href="{{ url_for('delivery.list_requests') }}" class="btn btn-sm" style="background-color: #f1f5f9; color: #475569; padding: 6px 12px;">Reset</a>
       </div>
     </form>
   </div>
@@ -69,8 +84,9 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Emergency Type</th>
+            <th>Reference</th>
+            <th>Direction</th>
+            <th>Cargo Category & Item</th>
             <th>Priority</th>
             <th>Weight</th>
             <th>Status</th>
@@ -78,16 +94,29 @@
               <th>Requester</th>
             {% endif %}
             <th>Created At</th>
-            <th>Action</th>
+            <th style="text-align: right;">Action</th>
           </tr>
         </thead>
         <tbody>
           {% for req in requests %}
           <tr>
-            <td><strong>#{{ req.id }}</strong></td>
             <td>
-              <strong>{{ req.emergency_type.replace('_', ' ') }}</strong>
-              {% if req.description %}
+              <a href="{{ url_for('delivery.view_detail', request_id=req.id) }}" style="font-weight: 800; color: var(--color-primary); text-decoration: none;">
+                {{ req.request_reference or ('REQ-' ~ req.id) }}
+              </a>
+            </td>
+            <td>
+              {% if req.delivery_direction == 'RECEIVE' %}
+              <span class="badge-direction-receive" style="font-size: 0.70rem; padding: 2px 6px;">📥 RECEIVE</span>
+              {% else %}
+              <span class="badge-direction-send" style="font-size: 0.70rem; padding: 2px 6px;">📤 SEND</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ (req.cargo_category or req.emergency_type).replace('_', ' ') }}</strong>
+              {% if req.custom_item_name %}
+                <div style="font-size: 0.75rem; color: #7e22ce; font-weight: 700;">📦 {{ req.custom_item_name }}</div>
+              {% elif req.description %}
                 <div style="font-size: 0.75rem; color: #64748b;">{{ req.description[:35] }}{% if req.description|length > 35 %}...{% endif %}</div>
               {% endif %}
             </td>
@@ -98,15 +127,20 @@
               <td style="font-size: 0.82rem;">{{ req.requester.full_name }}</td>
             {% endif %}
             <td style="font-size: 0.8rem; color: #64748b;">{{ req.created_at.strftime('%Y-%m-%d %H:%M') if req.created_at else '-' }}</td>
-            <td>
-              <a href="{{ url_for('delivery.view_detail', request_id=req.id) }}" class="btn btn-sm" style="border: 1px solid var(--border-color); color: var(--color-primary);">
-                View &rarr;
-              </a>
+            <td style="text-align: right;">
+              <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                <a href="{{ url_for('delivery.view_detail', request_id=req.id) }}" class="btn btn-sm btn-outline" style="font-size: 0.75rem; padding: 3px 8px;">
+                  View &rarr;
+                </a>
+                <a href="{{ url_for('delivery.rebook_request', request_id=req.id) }}" class="btn btn-sm btn-secondary" style="font-size: 0.75rem; padding: 3px 8px;" title="Rebook Request">
+                  Re-book
+                </a>
+              </div>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="{% if current_user.role != 'REQUESTER' %}8{% else %}7{% endif %}">
+            <td colspan="{% if current_user.role != 'REQUESTER' %}9{% else %}8{% endif %}">
               <div class="empty-state">
                 <div class="empty-state-icon">📦</div>
                 <div class="empty-state-title">No Delivery Requests Found</div>
@@ -118,6 +152,27 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if pagination and pagination.pages > 1 %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid #e2e8f0; font-size: 0.82rem; color: #64748b;">
+      <div>
+        Showing page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong> (Total: {{ pagination.total }} requests)
+      </div>
+      <div style="display: flex; gap: 6px;">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('delivery.list_requests', page=pagination.prev_num, q=filters.q, status=filters.status, direction=filters.direction, category=filters.category, priority=filters.priority, start_date=filters.start_date, end_date=filters.end_date) }}" class="btn btn-sm btn-outline">
+          &larr; Prev
+        </a>
+        {% endif %}
+        {% if pagination.has_next %}
+        <a href="{{ url_for('delivery.list_requests', page=pagination.next_num, q=filters.q, status=filters.status, direction=filters.direction, category=filters.category, priority=filters.priority, start_date=filters.start_date, end_date=filters.end_date) }}" class="btn btn-sm btn-outline">
+          Next &rarr;
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
