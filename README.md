@@ -1,4 +1,4 @@
-# DroneDispatch
+# DroneDispatch (Drone)
 ## Smart Multipurpose Emergency Drone Delivery and Route Optimization System
 
 [![Automated Tests](https://img.shields.io/badge/pytest-162%20passed-success)](tests/)
