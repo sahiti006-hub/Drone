@@ -11,21 +11,40 @@ class VercelServerlessMiddleware:
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        matched_path = environ.get("HTTP_X_MATCHED_PATH")
-        request_uri = environ.get("REQUEST_URI", "")
-        path_info = environ.get("PATH_INFO", "")
+        import urllib.parse
 
-        # If PATH_INFO is the script name (/api/index.py, /api/index, /wsgi.py, etc.)
-        # restore the original requested path from x-matched-path or request_uri
-        if path_info in ("/api/index.py", "/api/index", "/api", "/wsgi.py", "/wsgi") or path_info.startswith("/api/index.py/"):
-            if matched_path and not matched_path.startswith("/api/index") and not matched_path.startswith("/wsgi"):
+        # 1. Check if route was forwarded by Vercel rewrite (__route query parameter)
+        query_string = environ.get("QUERY_STRING", "")
+        if "__route=" in query_string:
+            parsed_params = urllib.parse.parse_qs(query_string, keep_blank_values=True)
+            if "__route" in parsed_params:
+                raw_route = parsed_params.pop("__route")[0]
+                if not raw_route.startswith("/"):
+                    raw_route = "/" + raw_route
+
+                # Handle if raw_route embedded query parameters
+                if "?" in raw_route:
+                    route_path, route_qs = raw_route.split("?", 1)
+                    environ["PATH_INFO"] = route_path
+                    embedded = urllib.parse.parse_qs(route_qs, keep_blank_values=True)
+                    for k, vals in embedded.items():
+                        parsed_params.setdefault(k, []).extend(vals)
+                else:
+                    environ["PATH_INFO"] = raw_route
+
+                environ["QUERY_STRING"] = urllib.parse.urlencode(parsed_params, doseq=True)
+
+        # 2. Check for Vercel edge matched path or request URI fallback
+        elif environ.get("HTTP_X_MATCHED_PATH"):
+            matched_path = environ["HTTP_X_MATCHED_PATH"]
+            if not matched_path.startswith("/api/index") and not matched_path.startswith("/wsgi"):
                 environ["PATH_INFO"] = matched_path.split("?")[0]
-            elif request_uri and not request_uri.startswith("/api/index") and not request_uri.startswith("/wsgi"):
+        elif environ.get("REQUEST_URI"):
+            request_uri = environ["REQUEST_URI"]
+            if not request_uri.startswith("/api/index") and not request_uri.startswith("/wsgi"):
                 environ["PATH_INFO"] = request_uri.split("?")[0]
-            else:
-                environ["PATH_INFO"] = "/"
 
-        # Ensure trailing query string is stripped from PATH_INFO
+        # 3. Clean up any trailing query strings in PATH_INFO
         if "?" in environ.get("PATH_INFO", ""):
             parts = environ["PATH_INFO"].split("?", 1)
             environ["PATH_INFO"] = parts[0]

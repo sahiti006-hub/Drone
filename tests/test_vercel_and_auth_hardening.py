@@ -90,3 +90,19 @@ def test_successful_login_and_role_redirect(client):
     )
     assert res.status_code == 302
     assert "/dashboard" in res.headers["Location"]
+
+
+def test_vercel_middleware_route_rewrites(client):
+    """Verify that VercelServerlessMiddleware unpacks __route query parameters accurately."""
+    # Simulation of Vercel serverless request rewritten to /api/index.py?__route=/api/health
+    res = client.get("/api/index.py?__route=/api/health")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["status"] == "healthy"
+
+    # Simulation of Vercel serverless request rewritten to /api/index.py?__route=/login&next=%2Fdashboard
+    res = client.get("/api/index.py?__route=/login&next=%2Fdashboard")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert 'name="next" value="/dashboard"' in html
+
