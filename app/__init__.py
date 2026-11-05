@@ -126,6 +126,8 @@ def create_app(config_name=None):
             "login": "/login",
             "environment": flask_app.config["ENV"],
             "database_configured": bool(flask_app.config.get("SQLALCHEMY_DATABASE_URI")),
+            "debug_headers": {k: v for k, v in request.headers.items()},
+            "debug_environ": {k: str(v) for k, v in request.environ.items() if k.startswith(("HTTP_", "PATH_", "REQUEST_", "RAW_", "VERCEL_"))},
         }, 200
 
     @flask_app.route("/api/debug-vercel", methods=["GET"])
