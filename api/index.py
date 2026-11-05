@@ -13,7 +13,7 @@ if str(ROOT_DIR) not in sys.path:
 # Ensure VERCEL environment flag is recognized
 os.environ.setdefault("VERCEL", "1")
 
-from wsgi import app
+from wsgi import app as flask_app
 
 
 class VercelPathNormalizer:
@@ -23,8 +23,12 @@ class VercelPathNormalizer:
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        matched_path = environ.get("HTTP_X_MATCHED_PATH")
+        req_uri = environ.get("REQUEST_URI", "").split("?")[0]
+
         # Diagnostic debug endpoint
-        if environ.get("PATH_INFO") == "/debug-vercel" or environ.get("HTTP_X_MATCHED_PATH") == "/debug-vercel":
+        if path in ("/debug-vercel", "/api/debug-vercel") or matched_path in ("/debug-vercel", "/api/debug-vercel") or req_uri in ("/debug-vercel", "/api/debug-vercel"):
             debug_info = {
                 k: v for k, v in environ.items()
                 if k.startswith(("HTTP_", "PATH_", "REQUEST_", "RAW_", "VERCEL", "SCRIPT_"))
@@ -39,20 +43,22 @@ class VercelPathNormalizer:
         # In Vercel Python runtime with rewrites to /api/index.py:
         # Vercel provides the true client request path in HTTP_X_MATCHED_PATH or REQUEST_URI.
         # If PATH_INFO is overwritten with /api/index.py or /api, restore the real path.
-        matched_path = environ.get("HTTP_X_MATCHED_PATH")
+        target_path = None
         if matched_path and not matched_path.startswith("/api/index"):
-            # Strip query parameters if present in matched_path
-            real_path = matched_path.split("?")[0]
-            environ["PATH_INFO"] = real_path
-        elif environ.get("PATH_INFO") in ("/api/index.py", "/api/index", "/api"):
-            req_uri = environ.get("REQUEST_URI", "").split("?")[0]
-            if req_uri and not req_uri.startswith("/api/index"):
-                environ["PATH_INFO"] = req_uri
-            else:
-                environ["PATH_INFO"] = "/"
+            target_path = matched_path.split("?")[0]
+        elif req_uri and not req_uri.startswith("/api/index"):
+            target_path = req_uri
+        elif path and not path.startswith("/api/index"):
+            target_path = path
+
+        if target_path:
+            environ["PATH_INFO"] = target_path
+        elif path in ("/api/index.py", "/api/index", "/api"):
+            environ["PATH_INFO"] = "/"
 
         return self.wsgi_app(environ, start_response)
 
 
-# Expose normalized handler
-handler = VercelPathNormalizer(app)
+# Expose normalized WSGI application as BOTH `app` and `handler`
+app = VercelPathNormalizer(flask_app)
+handler = app
