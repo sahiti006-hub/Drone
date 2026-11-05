@@ -166,4 +166,34 @@ def create_app(config_name=None):
             }), 500
         return render_template("errors/500.html", error=error), 500
 
+    # Auto-initialize database schema & required demo accounts on startup (production & development)
+    if config_name != "testing":
+        try:
+            from sqlalchemy import inspect
+            with flask_app.app_context():
+                inspector = inspect(db.engine)
+                existing_tables = inspector.get_table_names()
+                if "users" not in existing_tables:
+                    flask_app.logger.info("Initializing database schema on startup...")
+                    db.create_all()
+                    try:
+                        from flask_migrate import stamp
+                        stamp(revision="head")
+                    except Exception:
+                        pass
+
+                # Ensure baseline demonstration accounts are provisioned if database is fresh
+                from app.models.user import User, UserRole
+                initial_users = [
+                    ("Dr. Elena Rostova (Admin)", "admin@emergencydrone.org", os.getenv("ADMIN_INITIAL_PASSWORD", "AdminSecurePassword123!"), UserRole.ADMIN.value),
+                    ("Marcus Vance (Fleet Operator)", "operator@emergencydrone.org", os.getenv("OPERATOR_INITIAL_PASSWORD", "OperatorSecurePassword123!"), UserRole.OPERATOR.value),
+                    ("Dr. Sarah Lin (City Hospital Requester)", "requester@hospital.org", os.getenv("REQUESTER_INITIAL_PASSWORD", "RequesterSecurePassword123!"), UserRole.REQUESTER.value),
+                ]
+                for full_name, email, pwd, role in initial_users:
+                    if not User.query.filter_by(email=email).first():
+                        db.session.add(User(full_name=full_name, email=email, password=pwd, role=role))
+                db.session.commit()
+        except Exception as startup_err:
+            flask_app.logger.warning(f"Database startup verification deferred: {startup_err}")
+
     return flask_app

@@ -31,6 +31,7 @@
 
       <form action="{{ url_for('auth.login', next=request.args.get('next')) }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
 
         <div class="form-group" style="margin-bottom: 16px;">
           <label for="email" class="form-label">Authorized Account Email</label>
@@ -68,12 +69,8 @@
         <button type="submit" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 1rem;">Sign In to Console &rarr;</button>
       </form>
 
-      <!-- Pre-seeded Demo Credentials Reference -->
-      <div class="demo-credentials-box">
-        <div style="font-weight: 800; margin-bottom: 6px; color: var(--color-deep-wine);">Demonstration User Accounts:</div>
-        <div>• <strong>Admin:</strong> <code>admin@emergencydrone.org</code> / <code>AdminSecurePassword123!</code></div>
-        <div>• <strong>Operator:</strong> <code>operator@emergencydrone.org</code> / <code>OperatorSecurePassword123!</code></div>
-        <div>• <strong>Requester:</strong> <code>requester@hospital.org</code> / <code>RequesterSecurePassword123!</code></div>
+      <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--color-border); text-align: center; font-size: 0.8rem; color: var(--color-text-secondary);">
+        🔒 Authenticated Enterprise Access &bull; DroneDispatch Operations Console
       </div>
     </div>
   </div>

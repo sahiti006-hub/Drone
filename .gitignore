@@ -82,3 +82,4 @@ $RECYCLE.BIN/
 # Logs and runtime artifacts
 logs/
 *.log
+scripts/probe_*.py

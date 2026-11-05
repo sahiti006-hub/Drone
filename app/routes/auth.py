@@ -43,7 +43,14 @@ def login():
             return render_template("auth/login.html", email=email), 429
 
         # Verify credentials
-        user = UserService.authenticate(email, password)
+        try:
+            user = UserService.authenticate(email, password)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).error(f"Authentication database connectivity error: {exc}", exc_info=True)
+            flash("Authentication service is temporarily unavailable. Database connection could not be established.", "danger")
+            return render_template("auth/login.html", email=email), 503
+
         if not user:
             AuthService.record_login_failure(email)
             flash("Invalid email or password. Please verify your credentials.", "danger")
