@@ -4,6 +4,37 @@ from app.config import config_by_name
 from app.extensions import db, migrate, csrf
 
 
+class VercelServerlessMiddleware:
+    """WSGI middleware ensuring correct PATH_INFO under Vercel serverless rewrites and proxies."""
+
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        matched_path = environ.get("HTTP_X_MATCHED_PATH")
+        request_uri = environ.get("REQUEST_URI", "")
+        path_info = environ.get("PATH_INFO", "")
+
+        # If PATH_INFO is the script name (/api/index.py, /api/index, /wsgi.py, etc.)
+        # restore the original requested path from x-matched-path or request_uri
+        if path_info in ("/api/index.py", "/api/index", "/api", "/wsgi.py", "/wsgi") or path_info.startswith("/api/index.py/"):
+            if matched_path and not matched_path.startswith("/api/index") and not matched_path.startswith("/wsgi"):
+                environ["PATH_INFO"] = matched_path.split("?")[0]
+            elif request_uri and not request_uri.startswith("/api/index") and not request_uri.startswith("/wsgi"):
+                environ["PATH_INFO"] = request_uri.split("?")[0]
+            else:
+                environ["PATH_INFO"] = "/"
+
+        # Ensure trailing query string is stripped from PATH_INFO
+        if "?" in environ.get("PATH_INFO", ""):
+            parts = environ["PATH_INFO"].split("?", 1)
+            environ["PATH_INFO"] = parts[0]
+            if not environ.get("QUERY_STRING"):
+                environ["QUERY_STRING"] = parts[1]
+
+        return self.wsgi_app(environ, start_response)
+
+
 def create_app(config_name=None):
     """Application factory for the Flask application.
 
@@ -19,6 +50,9 @@ def create_app(config_name=None):
         config_name = os.getenv("FLASK_ENV", "development").lower()
 
     flask_app = Flask(__name__, instance_relative_config=True)
+
+    # Wrap WSGI app with VercelServerlessMiddleware for serverless rewrites
+    flask_app.wsgi_app = VercelServerlessMiddleware(flask_app.wsgi_app)
 
     # Ensure instance directory exists for local runtime databases or logs
     try:
@@ -93,6 +127,20 @@ def create_app(config_name=None):
             "environment": flask_app.config["ENV"],
             "database_configured": bool(flask_app.config.get("SQLALCHEMY_DATABASE_URI")),
         }, 200
+
+    @flask_app.route("/api/debug-vercel", methods=["GET"])
+    @flask_app.route("/debug-vercel", methods=["GET"])
+    def debug_vercel():
+        from flask import request, jsonify
+        return jsonify({
+            "path": request.path,
+            "url": request.url,
+            "query_string": request.query_string.decode("utf-8", errors="ignore"),
+            "environ": {
+                k: str(v) for k, v in request.environ.items()
+                if k.startswith(("HTTP_", "PATH_", "REQUEST_", "RAW_", "VERCEL_", "SCRIPT_"))
+            }
+        }), 200
 
     # Register context processors to ensure current_user is unconditionally available to all templates
     @flask_app.context_processor
