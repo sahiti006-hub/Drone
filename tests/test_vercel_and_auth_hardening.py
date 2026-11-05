@@ -37,14 +37,18 @@ def test_database_engine_options():
 
 
 def test_health_check_endpoint(client):
-    """Verify /api/health returns database connectivity diagnostics."""
+    """Verify /api/health returns minimal public health status without leaking database details."""
     res = client.get("/api/health")
     assert res.status_code == 200
     data = res.get_json()
     assert data["status"] == "healthy"
-    assert "database" in data
-    assert data["database"]["connected"] is True
-    assert data["database"]["engine_dialect"] == "sqlite"
+    assert "service" in data
+    assert "version" in data
+    # Public health check must NOT leak database internals
+    assert "database" not in data
+    assert "host" not in data
+    assert "tables" not in data
+    assert "user_count" not in data
 
 
 def test_login_page_no_publicly_exposed_credentials(client):

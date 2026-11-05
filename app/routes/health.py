@@ -6,16 +6,61 @@ health_bp = Blueprint("health", __name__)
 
 @health_bp.route("/health", methods=["GET"])
 def health_check():
-    """Health check endpoint to verify server status, operational readiness, and database connectivity."""
-    db_info = {
-        "configured": bool(current_app.config.get("SQLALCHEMY_DATABASE_URI")),
+    """Minimal public health check verifying service status and operational readiness.
+    
+    Returns high-level status only ('healthy' or 'degraded'). Raw database exceptions,
+    connection parameters, hostnames, and internal table structures are strictly withheld.
+    """
+    is_healthy = True
+    try:
+        from app.extensions import db
+        from sqlalchemy import text
+
+        with db.engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as exc:
+        is_healthy = False
+        current_app.logger.error(f"Public health check: database connectivity failure: {exc}", exc_info=True)
+
+    return jsonify(
+        {
+            "status": "healthy" if is_healthy else "degraded",
+            "service": "Smart Multipurpose Emergency Drone Delivery System",
+            "version": "1.0.0-phase32",
+            "environment": current_app.config.get("ENV", "development"),
+            "simulation_mode": True,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    ), (200 if is_healthy else 503)
+
+
+@health_bp.route("/health/db", methods=["GET"])
+def db_health_check():
+    """Detailed database diagnostic endpoint restricted strictly to authenticated administrators."""
+    from app.services.auth_service import AuthService
+    from app.models.user import UserRole
+
+    current_user = AuthService.get_current_user()
+    if not current_user:
+        return jsonify({
+            "success": False,
+            "error": "Authentication required to access system diagnostics."
+        }), 401
+
+    if current_user.role != UserRole.ADMIN.value:
+        return jsonify({
+            "success": False,
+            "error": "Forbidden: Administrator privileges required."
+        }), 403
+
+    diag = {
         "connected": False,
         "engine_dialect": None,
-        "host": None,
         "database_name": None,
-        "error": None,
+        "table_count": 0,
         "tables": [],
         "user_count": None,
+        "status": "degraded",
     }
 
     try:
@@ -24,38 +69,27 @@ def health_check():
         from app.models.user import User
 
         engine = db.engine
-        db_info["engine_dialect"] = engine.dialect.name
-        db_info["host"] = engine.url.host
-        db_info["database_name"] = engine.url.database
+        diag["engine_dialect"] = engine.dialect.name
+        diag["database_name"] = engine.url.database or "in-memory"
 
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-            db_info["connected"] = True
+            diag["connected"] = True
 
         inspector = inspect(engine)
-        db_info["tables"] = inspector.get_table_names()
-        if "users" in db_info["tables"]:
-            db_info["user_count"] = User.query.count()
+        tables = inspector.get_table_names()
+        diag["tables"] = tables
+        diag["table_count"] = len(tables)
+        if "users" in tables:
+            diag["user_count"] = User.query.count()
+        diag["status"] = "healthy"
     except Exception as exc:
-        db_info["connected"] = False
-        db_info["error"] = str(exc)
-        current_app.logger.warning(f"Database health check warning: {exc}")
+        diag["connected"] = False
+        diag["status"] = "degraded"
+        current_app.logger.error(f"Admin database diagnostics error: {exc}", exc_info=True)
 
-    is_healthy = db_info["connected"]
-    return jsonify(
-        {
-            "status": "healthy" if is_healthy else "degraded",
-            "service": "Smart Multipurpose Emergency Drone Delivery System",
-            "version": "1.0.0-phase31",
-            "environment": current_app.config.get("ENV", "development"),
-            "simulation_mode": True,
-            "database": db_info,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-    ), (200 if is_healthy else 503)
-
-
-@health_bp.route("/health/db", methods=["GET"])
-def db_health_check():
-    """Targeted database diagnostic endpoint."""
-    return health_check()
+    return jsonify({
+        "success": True,
+        "diagnostics": diag,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }), (200 if diag["connected"] else 503)

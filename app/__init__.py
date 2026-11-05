@@ -81,6 +81,9 @@ def create_app(config_name=None):
 
     # Load configuration
     config_class = config_by_name.get(config_name, config_by_name["default"])
+    if config_name == "production" or (isinstance(config_class, type) and issubclass(config_class, config_by_name["production"])):
+        from app.config import validate_production_environment
+        validate_production_environment(config_class)
     flask_app.config.from_object(config_class)
     flask_app.config["ENV"] = config_name
 
@@ -127,7 +130,7 @@ def create_app(config_name=None):
     flask_app.register_blueprint(booking_bp)
     flask_app.register_blueprint(api_ext_bp)
 
-    # Root route: if browser request direct to dashboard/login, else API JSON metadata
+    # Root route: if browser request direct to dashboard/login, else safe API JSON metadata
     @flask_app.route("/", methods=["GET"])
     def root():
         from flask import request
@@ -143,25 +146,9 @@ def create_app(config_name=None):
             "documentation": "/api/health",
             "dashboard": "/dashboard",
             "login": "/login",
-            "environment": flask_app.config["ENV"],
-            "database_configured": bool(flask_app.config.get("SQLALCHEMY_DATABASE_URI")),
-            "debug_headers": {k: v for k, v in request.headers.items()},
-            "debug_environ": {k: str(v) for k, v in request.environ.items() if k.startswith(("HTTP_", "PATH_", "REQUEST_", "RAW_", "VERCEL_"))},
+            "status": "online",
+            "version": "1.0.0-phase32",
         }, 200
-
-    @flask_app.route("/api/debug-vercel", methods=["GET"])
-    @flask_app.route("/debug-vercel", methods=["GET"])
-    def debug_vercel():
-        from flask import request, jsonify
-        return jsonify({
-            "path": request.path,
-            "url": request.url,
-            "query_string": request.query_string.decode("utf-8", errors="ignore"),
-            "environ": {
-                k: str(v) for k, v in request.environ.items()
-                if k.startswith(("HTTP_", "PATH_", "REQUEST_", "RAW_", "VERCEL_", "SCRIPT_"))
-            }
-        }), 200
 
     # Register context processors to ensure current_user is unconditionally available to all templates
     @flask_app.context_processor
@@ -234,35 +221,5 @@ def create_app(config_name=None):
                 "status": 500,
             }), 500
         return render_template("errors/500.html", error=error), 500
-
-    # Auto-initialize database schema & required demo accounts on startup (production & development)
-    if config_name != "testing":
-        try:
-            from sqlalchemy import inspect
-            with flask_app.app_context():
-                inspector = inspect(db.engine)
-                existing_tables = inspector.get_table_names()
-                if "users" not in existing_tables:
-                    flask_app.logger.info("Initializing database schema on startup...")
-                    db.create_all()
-                    try:
-                        from flask_migrate import stamp
-                        stamp(revision="head")
-                    except Exception:
-                        pass
-
-                # Ensure baseline demonstration accounts are provisioned if database is fresh
-                from app.models.user import User, UserRole
-                initial_users = [
-                    ("Dr. Elena Rostova (Admin)", "admin@emergencydrone.org", os.getenv("ADMIN_INITIAL_PASSWORD", "AdminSecurePassword123!"), UserRole.ADMIN.value),
-                    ("Marcus Vance (Fleet Operator)", "operator@emergencydrone.org", os.getenv("OPERATOR_INITIAL_PASSWORD", "OperatorSecurePassword123!"), UserRole.OPERATOR.value),
-                    ("Dr. Sarah Lin (City Hospital Requester)", "requester@hospital.org", os.getenv("REQUESTER_INITIAL_PASSWORD", "RequesterSecurePassword123!"), UserRole.REQUESTER.value),
-                ]
-                for full_name, email, pwd, role in initial_users:
-                    if not User.query.filter_by(email=email).first():
-                        db.session.add(User(full_name=full_name, email=email, password=pwd, role=role))
-                db.session.commit()
-        except Exception as startup_err:
-            flask_app.logger.warning(f"Database startup verification deferred: {startup_err}")
 
     return flask_app
